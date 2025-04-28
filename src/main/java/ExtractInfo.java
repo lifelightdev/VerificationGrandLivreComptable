@@ -5,6 +5,10 @@ import java.util.Map;
 public class ExtractInfo {
 
     private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger();
+    public static final int NAME_JOURNAL_SIZE = 2;
+    public static final String EURO = "€";
+    public static final String REGEX_IS_DATE = "^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/(19|20)\\d{2}$";
+    public static final String REGEX_NUMBER = "^-?[0-9]+$";
 
     public static String syndicName(String ligne) {
         return ligne.replace("|", "");
@@ -17,7 +21,7 @@ public class ExtractInfo {
     private static String findDateIn(String line) {
         String[] words = line.trim().split(" ");
         for (String word : words) {
-            if (word.matches("^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/(19|20)\\d{2}$")) {
+            if (word.matches(REGEX_IS_DATE)) {
                 return word;
             }
         }
@@ -52,7 +56,7 @@ public class ExtractInfo {
         if (firstword.contains("-")) {
             firstword = firstword.replace("-", "");
         }
-        if (firstword.matches("^-?[0-9]+$")) {
+        if (firstword.matches(REGEX_NUMBER)) {
             return findDateIn(line).isEmpty();
         }
         return false;
@@ -60,7 +64,7 @@ public class ExtractInfo {
 
     public static Line line(String line, Map<String, Account> accounts) {
 
-        int nbMonaySign = line.split("€", -1).length - 1;
+        int nbMonaySign = line.split(EURO, -1).length - 1;
         String[] words = line.trim().split(" ");
 
         String document = "";
@@ -83,13 +87,13 @@ public class ExtractInfo {
         }
 
         String journal = "";
-        if (words[indexOfWords].length() == 2) {
+        if (words[indexOfWords].length() == NAME_JOURNAL_SIZE) {
             journal = words[indexOfWords];
             indexOfWords++;
         }
 
         String counterpart = "";
-        if (words[indexOfWords].length() == 5 && words[indexOfWords].matches("^-?[0-9]+$")) {
+        if (words[indexOfWords].length() == 5 && words[indexOfWords].matches(REGEX_NUMBER)) {
             counterpart = words[indexOfWords];
             indexOfWords++;
         }
@@ -97,28 +101,37 @@ public class ExtractInfo {
         StringBuilder debit = new StringBuilder();
         StringBuilder credit = new StringBuilder();
         if (nbMonaySign == 3) {
-            while (!words[indexOfWords].equals("€")) {
+            while (!words[indexOfWords].equals(EURO)) {
                 label.append(" ").append(words[indexOfWords]);
                 indexOfWords++;
             }
             label.append(" ").append(words[indexOfWords]);
             indexOfWords++;
-            while (!words[indexOfWords].equals("€")) {
+            while (!words[indexOfWords].equals(EURO)) {
                 debit.append(" ").append(words[indexOfWords]);
                 indexOfWords++;
             }
             debit.append(" ").append(words[indexOfWords]);
             indexOfWords++;
-            while (!words[indexOfWords].equals("€")) {
+            while (!words[indexOfWords].equals(EURO)) {
                 credit.append(" ").append(words[indexOfWords]);
                 indexOfWords++;
             }
             credit.append(" ").append(words[indexOfWords]);
         } else if (nbMonaySign == 1) {
-            label.append("APPEL FONDS LOI ALUR");
-            credit.append("2 000.00 €");
+            int indexOfWordsStartEnd = words.length - 1;
+            credit = new StringBuilder(words[indexOfWordsStartEnd]);
+            indexOfWordsStartEnd--;
+            while (words[indexOfWordsStartEnd].replace(".","").matches(REGEX_NUMBER)) {
+                credit.insert(0, words[indexOfWordsStartEnd] + " ");
+                indexOfWordsStartEnd--;
+            }
+            for (int i = indexOfWords; i <= indexOfWordsStartEnd; i++) {
+                label.append(" ").append(words[i]);
+            }
         }
 
-        return new Line(document, date, account, journal, counterpart, label.toString().trim(), debit.toString().trim(), credit.toString().trim());
+        return new Line(document, date, account, journal, counterpart, label.toString().trim(),
+                debit.toString().trim(), credit.toString().trim());
     }
 }
