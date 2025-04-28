@@ -44,8 +44,8 @@ public class ExtractInfoTest {
     })
     public void extractAccount(String line, String account, String label) {
         Account result = ExtractInfo.account(line);
-        Assertions.assertEquals(account, result.account);
-        Assertions.assertEquals(label, result.label);
+        Assertions.assertEquals(account, result.account());
+        Assertions.assertEquals(label, result.label());
     }
 
     @ParameterizedTest
@@ -80,13 +80,13 @@ public class ExtractInfoTest {
         accounts.put("10500", new Account("10500", "Fond travaux"));
         Line result = ExtractInfo.line(line, accounts);
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(document, result.document);
-        Assertions.assertEquals(date, result.date);
-        Assertions.assertEquals(account, result.account.account);
-        Assertions.assertEquals(journal, result.journal);
-        Assertions.assertEquals(counterpart, result.counterpart);
-        Assertions.assertEquals(label, result.label);
-        Assertions.assertEquals(debit, result.debit);
-        Assertions.assertEquals(credit, result.credit);
+        Assertions.assertEquals(document, result.document());
+        Assertions.assertEquals(date, result.date());
+        Assertions.assertEquals(account, result.account().account());
+        Assertions.assertEquals(journal, result.journal());
+        Assertions.assertEquals(counterpart, result.counterpart());
+        Assertions.assertEquals(label, result.label());
+        Assertions.assertEquals(debit, result.debit());
+        Assertions.assertEquals(credit, result.credit());
     }
 }

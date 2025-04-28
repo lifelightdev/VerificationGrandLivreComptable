@@ -1,9 +1,11 @@
-public class Account {
-    public String account;
-    public String label;
+public record Account(String account, String label) {
+    @Override
+    public String account() {
+        return account;
+    }
 
-    public Account(String account, String label) {
-        this.account = account;
-        this.label = label;
+    @Override
+    public String label() {
+        return label;
     }
 }
