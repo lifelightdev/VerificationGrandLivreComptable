@@ -45,4 +45,21 @@ public class ExtractInfoTest {
         Assertions.assertEquals(label, result.label);
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "40100-0001 ORANGE, true",
+            "C'est le nom du Syndic, false",
+            "8 AVENUE DES CHAMPS ELYSE 14/04/2025 Page : 10, false",
+            "75000 PARIS | , false",
+            "001 NOM COPROPRIÉTÉ au 31/12/2024 Gestionnaire : NOM PRENOM, false"
+    })
+    public void extractIsLineAccount(String line, boolean is) {
+        boolean result = ExtractInfo.isAcccount(line, "75000", "001");
+        if (is) {
+            Assertions.assertTrue(result);
+        } else {
+            Assertions.assertFalse(result);
+        }
+    }
+
 }
