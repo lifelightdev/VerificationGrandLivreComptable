@@ -12,4 +12,8 @@ public class ExtractInfo {
         }
         return "";
     }
+
+    public static String stopDate(String line) {
+        return printDate(line);
+    }
 }

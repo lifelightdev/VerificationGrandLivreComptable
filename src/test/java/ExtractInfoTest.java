@@ -24,4 +24,14 @@ public class ExtractInfoTest {
         Assertions.assertEquals(printDate, date);
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "01.01.01.01.01 Grand Livre arrêté au 31/12/2024,  31/12/2024",
+            "02.02.02.02.02 Grand Livre arrêté au 31/12/2023,  31/12/2023"
+    })
+    public void extractStopDate(String line, String stopDate) {
+        String date = ExtractInfo.stopDate(line);
+        Assertions.assertEquals(stopDate, date);
+    }
+
 }
