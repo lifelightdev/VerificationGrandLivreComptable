@@ -64,6 +64,7 @@ public class ExtractInfo {
 
     public static Line line(String line, Map<String, Account> accounts) {
 
+        line = line.replace(" | "," ");
         int nbMonaySign = line.split(EURO, -1).length - 1;
         String[] words = line.trim().split(" ");
 
@@ -71,6 +72,8 @@ public class ExtractInfo {
         int indexOfWords = 0;
         if (findDateIn(words[indexOfWords]).isEmpty()) {
             document = words[indexOfWords];
+            if (document.length() == 6)
+                document = document.substring(1, 6);
             indexOfWords++;
         }
 
@@ -97,6 +100,13 @@ public class ExtractInfo {
             counterpart = words[indexOfWords];
             indexOfWords++;
         }
+
+        String checkNumber = "";
+        if ("Virt".equals(words[indexOfWords])) {
+            checkNumber = words[indexOfWords];
+            indexOfWords++;
+        }
+
         StringBuilder label = new StringBuilder();
         StringBuilder debit = new StringBuilder();
         StringBuilder credit = new StringBuilder();
@@ -120,18 +130,24 @@ public class ExtractInfo {
             credit.append(" ").append(words[indexOfWords]);
         } else if (nbMonaySign == 1) {
             int indexOfWordsStartEnd = words.length - 1;
-            credit = new StringBuilder(words[indexOfWordsStartEnd]);
+            StringBuilder amount = new StringBuilder(words[indexOfWordsStartEnd]);
             indexOfWordsStartEnd--;
-            while (words[indexOfWordsStartEnd].replace(".","").matches(REGEX_NUMBER)) {
-                credit.insert(0, words[indexOfWordsStartEnd] + " ");
+            while (words[indexOfWordsStartEnd].replace(".", "").matches(REGEX_NUMBER)) {
+                amount.insert(0, words[indexOfWordsStartEnd] + " ");
                 indexOfWordsStartEnd--;
             }
             for (int i = indexOfWords; i <= indexOfWordsStartEnd; i++) {
                 label.append(" ").append(words[i]);
             }
+
+            if (label.toString().endsWith(" ")){
+                credit =amount;
+            } else {
+                debit =amount;
+            }
         }
 
-        return new Line(document, date, account, journal, counterpart, label.toString().trim(),
-                debit.toString().trim(), credit.toString().trim());
+        return new Line(document, date, account, journal, counterpart, checkNumber,
+                label.toString().trim(), debit.toString().trim(), credit.toString().trim());
     }
 }

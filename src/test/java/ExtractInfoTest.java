@@ -67,12 +67,14 @@ public class ExtractInfoTest {
 
     @ParameterizedTest
     @CsvSource({
-            "01/01/2024 40100-0001 Report de 0.00 € 3 210.69 € 3 210.69 €,        '',    01/01/2024, 40100-0001, '', '',    Report de 0.00 €,       3 210.69 €,  3 210.69 €",
-            "01/01/2024 40100-0002 Report de 0.00 € 432.93 € 432.93 €,            '',    01/01/2024, 40100-0002, '', '',    Report de 0.00 €,         432.93 €,    432.93 €",
-            "01/01/2024 40100-0003 Report de -1 234.56 € 23 456.78 € 24 691.34 €, '',    01/01/2024, 40100-0003, '', '',    Report de -1 234.56 €, 23 456.78 €, 24 691.34 €",
-            "33333 01/01/2024 10500 15 45050 APPEL FONDS LOI ALUR  2 000.00 €,    33333, 01/01/2024, 10500,      15, 45050, APPEL FONDS LOI ALUR,  '',           2 000.00 €"
+            "01/01/2024 40100-0001 Report de 0.00 € 3 210.69 € 3 210.69 €,              '',    01/01/2024, 40100-0001, '', '',    '',   Report de 0.00 €,       3 210.69 €,  3 210.69 €",
+            "01/01/2024 40100-0002 Report de 0.00 € 432.93 € 432.93 €,                  '',    01/01/2024, 40100-0002, '', '',    '',   Report de 0.00 €,         432.93 €,    432.93 €",
+            "01/01/2024 40100-0003 Report de -1 234.56 € 23 456.78 € 24 691.34 €,       '',    01/01/2024, 40100-0003, '', '',    '',   Report de -1 234.56 €, 23 456.78 €, 24 691.34 €",
+            "33333 01/01/2024 10500 15 44444 APPEL FONDS LOI ALUR  2 000.00 €,          33333, 01/01/2024, 10500,      15, 44444, '',   APPEL FONDS LOI ALUR,           '',  2 000.00 €",
+            "111111 01/01/2024 40100-0001 | VI 55555 Virt HONORAIRE COURANT 3 000.00 €, 11111, 01/01/2024, 40100-0001, VI, 55555, Virt, HONORAIRE COURANT,      3 000.00 €,          ''"
     })
-    public void extractline(String line, String document, String date, String account, String journal, String counterpart, String label, String debit, String credit) {
+    public void extractline(String line, String document, String date, String account, String journal,
+                            String counterpart, String checkNumber, String label, String debit, String credit) {
         Map<String, Account> accounts = new HashMap<>();
         accounts.put("40100-0001", new Account("40100-0001", "Orange"));
         accounts.put("40100-0002", new Account("40100-0002", "EDF"));
@@ -85,6 +87,7 @@ public class ExtractInfoTest {
         Assertions.assertEquals(account, result.account().account());
         Assertions.assertEquals(journal, result.journal());
         Assertions.assertEquals(counterpart, result.counterpart());
+        Assertions.assertEquals(checkNumber, result.checkNumber());
         Assertions.assertEquals(label, result.label());
         Assertions.assertEquals(debit, result.debit());
         Assertions.assertEquals(credit, result.credit());

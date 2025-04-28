@@ -1,5 +1,5 @@
 public record Line (String document, String date, Account account, String journal, String counterpart,
-                String label, String debit, String credit) {
+                    String checkNumber,String label, String debit, String credit) {
     @Override
     public String document() {
         return document;
@@ -23,6 +23,11 @@ public record Line (String document, String date, Account account, String journa
     @Override
     public String counterpart() {
         return counterpart;
+    }
+
+    @Override
+    public String checkNumber() {
+        return checkNumber;
     }
 
     @Override
