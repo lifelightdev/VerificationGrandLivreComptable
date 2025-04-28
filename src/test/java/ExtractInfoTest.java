@@ -1,11 +1,16 @@
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 public class ExtractInfoTest {
-    @Test
-    public void extractSyndicName() {
-        String ligne = "C'est le nom du Syndic";
-        String name = ExtractInfo.syndicName(ligne);
-        Assertions.assertEquals(ligne, name);
+
+    @ParameterizedTest
+    @CsvSource({
+            "C'est le nom du Syndic, C'est le nom du Syndic",
+            "C'est le nom du Syndic|, C'est le nom du Syndic"
+    })
+    public void extractSyndicName(String line, String SyndicName) {
+        String name = ExtractInfo.syndicName(line);
+        Assertions.assertEquals(SyndicName, name);
     }
 }
