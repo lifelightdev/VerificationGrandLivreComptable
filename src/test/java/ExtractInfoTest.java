@@ -34,4 +34,15 @@ public class ExtractInfoTest {
         Assertions.assertEquals(stopDate, date);
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "10240 TRAVAUX PORTE PARKING, 10240, TRAVAUX PORTE PARKING",
+            "40100-0001 ORANGE, 40100-0001, ORANGE"
+    })
+    public void extractAccount(String line, String account, String label) {
+        Account result = ExtractInfo.account(line);
+        Assertions.assertEquals(account, result.account);
+        Assertions.assertEquals(label, result.label);
+    }
+
 }
