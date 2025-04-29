@@ -43,9 +43,14 @@ public class ExtractInfoTest {
 
     @ParameterizedTest
     @CsvSource({
-            "10240 TRAVAUX PORTE PARKING,      10240, TRAVAUX PORTE PARKING",
-            "40100-0001 ORANGE,           40100-0001, ORANGE",
-            "40100-0002 _ RELANCE,        40100-0002, RELANCE"
+            "10240 TRAVAUX PORTE PARKING,                      10240, TRAVAUX PORTE PARKING",
+            "40100-0001 ORANGE,                            40100-0001, ORANGE",
+            "40100-0002 _ RELANCE,                         40100-0002, RELANCE",
+            "40100-0609 | VBP HUISSIERS DE JUSTICE,        40100-0609, VBP HUISSIERS DE JUSTICE",
+            "45000-0003 — TRUC MUCHE,                      45000-0003, TRUC MUCHE",
+            "40100-0027 … RENOV,                           40100-0027, RENOV",
+            "40100-0890 | FBI - FUITE BATIMENT INVESTIGA°, 40100-0890, FBI - FUITE BATIMENT INVESTIGA"
+
     })
     public void extractAccount(String line, String account, String label) {
         Account result = ExtractInfo.account(line);
@@ -55,11 +60,11 @@ public class ExtractInfoTest {
 
     @ParameterizedTest
     @CsvSource({
-            "40100-0001 ORANGE, true",
-            "C'est le nom du Syndic, false",
-            "8 AVENUE DES CHAMPS ELYSE 14/04/2025 Page : 10, false",
-            "75000 PARIS | , false",
-            "001 NOM COPROPRIÉTÉ au 31/12/2024 Gestionnaire : NOM PRENOM, false"
+            "40100-0001 ORANGE,                                                 true",
+            "C'est le nom du Syndic,                                            false",
+            "8 AVENUE DES CHAMPS ELYSE 14/04/2025 Page : 10,                    false",
+            "75000 PARIS | ,                                                    false",
+            "001 NOM COPROPRIÉTÉ au 31/12/2024 Gestionnaire : NOM PRENOM,       false"
     })
     public void extractIsLineAccount(String line, boolean is) {
         boolean result = ExtractInfo.isAcccount(line, "75000", "001");
