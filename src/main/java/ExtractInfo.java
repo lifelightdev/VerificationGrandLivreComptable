@@ -66,6 +66,7 @@ public class ExtractInfo {
         // Élimination des caractères parasite
         line = line.replace(" | "," ");
         line = line.replace("| "," ");
+        line = line.replace("|","");
 
         // Correction des espaces avant le signe €
         line = line.replace(" €","€");

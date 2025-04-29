@@ -72,7 +72,8 @@ public class ExtractInfoTest {
             "01/01/2024 40100-0003 Report de -1 234.56 € 23 456.78 € 24 691.34 €,       '',    01/01/2024, 40100-0003, '', '',    '',   Report de -1 234.56€, 23 456.78€, 24 691.34€",
             "33333 01/01/2024 10500 15 44444 APPEL FONDS LOI ALUR  2 000.00 €,          33333, 01/01/2024, 10500,      15, 44444, '',   APPEL FONDS LOI ALUR,         '',  2 000.00€",
             "111111 01/01/2024 40100-0001 | VI 55555 Virt HONORAIRE COURANT 3 000.00 €, 11111, 01/01/2024, 40100-0001, VI, 55555, Virt, HONORAIRE COURANT,     3 000.00€,          ''",
-            "01/01/2024 40100-0001 Report de 0.00 € 100 000.00€| 100 000.00 €,             '', 01/01/2024, 40100-0001, '',    '', '',   Report de 0.00€,     100 000.00€, 100 000.00€"
+            "01/01/2024 40100-0001 Report de 0.00 € 100 000.00€| 100 000.00 €,             '', 01/01/2024, 40100-0001, '',    '', '',   Report de 0.00€,     100 000.00€, 100 000.00€",
+            "|44444 01/10/2024 40100-0001 40 10500 TRAVAUX PORTE PARKING  10 749.26 €|, 44444, 01/10/2024, 40100-0001, 40, 10500, '',   TRAVAUX PORTE PARKING,        '',  10 749.26€"
     })
     public void extractline(String line, String document, String date, String account, String journal,
                             String counterpart, String checkNumber, String label, String debit, String credit) {
