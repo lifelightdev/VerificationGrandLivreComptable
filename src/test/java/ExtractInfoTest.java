@@ -51,7 +51,10 @@ public class ExtractInfoTest {
             "40100-0027 … RENOV,                                             40100-0027, RENOV",
             "40100-0890 | FBI - FUITE BATIMENT INVESTIGA°,                   40100-0890, FBI - FUITE BATIMENT INVESTIGA",
             "45000-0002 CHRISTOPHE******,                                    45000-0002, CHRISTOPHE",
-            "45000-0000 DUPONT / DUPOND # ****** 4% 4444445 5KKEEAXKRRRRRHE, 45000-0000, DUPONT / DUPOND"
+            "45000-0000 DUPONT / DUPOND # ****** 4% 4444445 5KKEEAXKRRRRRHE, 45000-0000, DUPONT / DUPOND",
+            "461VC VENDEURS CREDITEURS,                                           461VC, VENDEURS CREDITEURS",
+            "45000-0001 DUPONT 31/12/2020,                                   45000-0001, DUPONT 31/12/2020",
+            "46200 VIR TRUC 30/03/2021 NON IDENTIFIE,                             46200, VIR TRUC 30/03/2021 NON IDENTIFIE"
 })
     public void extractAccount(String line, String account, String label) {
         Account result = ExtractInfo.account(line);
@@ -65,7 +68,8 @@ public class ExtractInfoTest {
             "C'est le nom du Syndic,                                            false",
             "8 AVENUE DES CHAMPS ELYSE 14/04/2025 Page : 10,                    false",
             "75000 PARIS | ,                                                    false",
-            "001 NOM COPROPRIÉTÉ au 31/12/2024 Gestionnaire : NOM PRENOM,       false"
+            "001 NOM COPROPRIÉTÉ au 31/12/2024 Gestionnaire : NOM PRENOM,       false",
+            "45000-0001 DUPONT 31/12/2020,                                      true"
     })
     public void extractIsLineAccount(String line, boolean is) {
         boolean result = ExtractInfo.isAcccount(line, "75000", "001");

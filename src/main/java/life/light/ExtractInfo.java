@@ -74,7 +74,7 @@ public class ExtractInfo {
             firstword = firstword.replace("-", "");
         }
         if (firstword.matches(REGEX_NUMBER)) {
-            return findDateIn(line).isEmpty();
+            return findDateIn(words[1]).isEmpty() && !line.contains("Page : ");
         }
         return false;
     }
@@ -106,7 +106,7 @@ public class ExtractInfo {
         // Extraction du numéro de compte
         Account account = getAccount(accounts, words, indexOfWords);
         if (account == null) {
-            LOGGER.error("Erreur lors de la recherche du compte {}", words[indexOfWords]);
+            LOGGER.error("Erreur lors de la recherche du compte {} sur la ligne ", words[indexOfWords], line);
             return null;
         }
         indexOfWords++;
@@ -255,6 +255,7 @@ public class ExtractInfo {
         line = line.replace("| ", " ");
         line = line.replace("|", "");
         line = line.replace(" / ", " ");
+        line = line.replace("Reportde", "Report de");
         if (line.endsWith("l")){
             line = line.replace("l", "");
         }
@@ -329,7 +330,7 @@ public class ExtractInfo {
             }
         }
         if (account == null) {
-            LOGGER.error("Erreur lors de la recherche du compte {}", label);
+            LOGGER.error("Erreur lors de la recherche du compte sur le total du compte {} de la ligne {}", label, line);
             return null;
         }
 
