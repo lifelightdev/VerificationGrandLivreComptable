@@ -49,8 +49,8 @@ public class ExtractInfoTest {
             "40100-0609 | VBP HUISSIERS DE JUSTICE,        40100-0609, VBP HUISSIERS DE JUSTICE",
             "45000-0003 — TRUC MUCHE,                      45000-0003, TRUC MUCHE",
             "40100-0027 … RENOV,                           40100-0027, RENOV",
-            "40100-0890 | FBI - FUITE BATIMENT INVESTIGA°, 40100-0890, FBI - FUITE BATIMENT INVESTIGA"
-
+            "40100-0890 | FBI - FUITE BATIMENT INVESTIGA°, 40100-0890, FBI - FUITE BATIMENT INVESTIGA",
+            "45000-0002 CHRISTOPHE******,                  45000-0002, CHRISTOPHE"
     })
     public void extractAccount(String line, String account, String label) {
         Account result = ExtractInfo.account(line);

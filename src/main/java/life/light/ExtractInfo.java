@@ -41,6 +41,7 @@ public class ExtractInfo {
         line = line.replace(" — "," ");
         line = line.replace(" … "," ");
         line = line.replace("°","");
+        line = line.replace("*","");
         String[] words = splittingLineIntoWordTable(line);
         String account = words[0];
         StringBuilder label = new StringBuilder();
