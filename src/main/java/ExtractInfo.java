@@ -67,6 +67,7 @@ public class ExtractInfo {
         line = line.replace(" | "," ");
         line = line.replace("| "," ");
         line = line.replace("|","");
+        line = line.replace(" / "," ");
 
         // Correction des espaces avant le signe €
         line = line.replace(" €","€");
