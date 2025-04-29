@@ -1,5 +1,7 @@
+package life.light;
+
 public record Line (String document, String date, Account account, String journal, String counterpart,
-                    String checkNumber,String label, String debit, String credit) {
+                    String checkNumber, String label, String debit, String credit) {
     @Override
     public String document() {
         return document;

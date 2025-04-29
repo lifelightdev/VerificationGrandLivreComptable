@@ -1,3 +1,5 @@
+package life.light;
+
 public record Account(String account, String label) {
     @Override
     public String account() {

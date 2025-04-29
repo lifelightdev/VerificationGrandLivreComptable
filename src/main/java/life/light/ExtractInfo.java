@@ -1,3 +1,5 @@
+package life.light;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -71,8 +73,8 @@ public class ExtractInfo {
         // Correction des espaces avant le signe €
         line = fixedSpacesBeforeEuroSign(line);
 
-        // Calcul du nombre de montant sur la ligne grace au signe €
-        int nbMonaySign = line.split(EURO, -1).length - 1;
+        // Calcule de nombre de montants sur la ligne grâce au signe €
+        int numberOfAmounts = getNumberOfAmountsOn(line);
 
         // Découpage de la ligne en un tableau de mot
         String[] words = splittingLineIntoWordTable(line);
@@ -121,7 +123,7 @@ public class ExtractInfo {
         StringBuilder label = new StringBuilder();
         StringBuilder debit = new StringBuilder();
         StringBuilder credit = new StringBuilder();
-        if (nbMonaySign == 3) {
+        if (numberOfAmounts == 3) {
             // S'il y a trois montants, c'est un report donc
             // le premier montant est dans le libellé
             // le second montant est le débit
@@ -143,7 +145,7 @@ public class ExtractInfo {
                 indexOfWords++;
             }
             credit.append(" ").append(words[indexOfWords]);
-        } else if (nbMonaySign == 1) {
+        } else if (numberOfAmounts == 1) {
             // S'il n'y a qu'un seul montant
             // c'est ne nombre d'espace entre le libellé et le montant qui determine s'il est au debit ou au crédit
             // zero espace = debit
@@ -168,6 +170,10 @@ public class ExtractInfo {
 
         return new Line(document, date, account, journal, counterpart, checkNumber,
                 label.toString().trim(), debit.toString().trim(), credit.toString().trim());
+    }
+
+    private static int getNumberOfAmountsOn(String line) {
+        return line.split(EURO, -1).length - 1;
     }
 
     private static Account getAccount(Map<String, Account> accounts, String[] words, int indexOfWords) {
@@ -223,6 +229,10 @@ public class ExtractInfo {
     public static TotalAccount totalAccount(String line, Map<String, Account> accounts) {
         // Correction des espaces avant le signe €
         line = fixedSpacesBeforeEuroSign(line);
+
+        // Calcule de nombre de montants sur la ligne grâce au signe €
+        int numberOfAmounts = getNumberOfAmountsOn(line);
+
         // Découpage de la ligne en un tableau de mot
         String[] words = splittingLineIntoWordTable(line);
         int indexOfWords = 0;
@@ -233,19 +243,29 @@ public class ExtractInfo {
         }
         label.append(" ").append(words[indexOfWords]);
         indexOfWords++;
+
         StringBuilder debit = new StringBuilder();
         StringBuilder credit = new StringBuilder();
-        while (!words[indexOfWords].endsWith(EURO)) {
+        if (numberOfAmounts == 3) {
+            while (!words[indexOfWords].endsWith(EURO)) {
+                debit.append(" ").append(words[indexOfWords]);
+                indexOfWords++;
+            }
             debit.append(" ").append(words[indexOfWords]);
             indexOfWords++;
-        }
-        debit.append(" ").append(words[indexOfWords]);
-        indexOfWords++;
-        while (!words[indexOfWords].endsWith(EURO)) {
+            while (!words[indexOfWords].endsWith(EURO)) {
+                credit.append(" ").append(words[indexOfWords]);
+                indexOfWords++;
+            }
             credit.append(" ").append(words[indexOfWords]);
-            indexOfWords++;
+        } else {
+            while (!words[indexOfWords].endsWith(EURO)) {
+                debit.append(" ").append(words[indexOfWords]);
+                indexOfWords++;
+            }
+            debit.append(" ").append(words[indexOfWords]);
+            credit = debit;
         }
-        credit.append(" ").append(words[indexOfWords]);
 
         // Extraction du numéro de compte
         String[] labels = splittingLineIntoWordTable(label.toString());

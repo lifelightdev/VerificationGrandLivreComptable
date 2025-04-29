@@ -1,3 +1,5 @@
+package life.light;
+
 public record TotalAccount(String label, Account account, String debit, String credit) {
 
     @Override
