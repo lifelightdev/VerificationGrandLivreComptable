@@ -33,6 +33,7 @@ public class ExtractInfo {
     }
 
     public static Account account(String line) {
+        line = line.replace(" _ "," ");
         String[] words = line.trim().split(" ");
         String account = words[0];
         StringBuilder label = new StringBuilder();

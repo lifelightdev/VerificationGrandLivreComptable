@@ -39,8 +39,9 @@ public class ExtractInfoTest {
 
     @ParameterizedTest
     @CsvSource({
-            "10240 TRAVAUX PORTE PARKING, 10240, TRAVAUX PORTE PARKING",
-            "40100-0001 ORANGE, 40100-0001, ORANGE"
+            "10240 TRAVAUX PORTE PARKING,      10240, TRAVAUX PORTE PARKING",
+            "40100-0001 ORANGE,           40100-0001, ORANGE",
+            "40100-0002 _ RELANCE,        40100-0002, RELANCE"
     })
     public void extractAccount(String line, String account, String label) {
         Account result = ExtractInfo.account(line);
