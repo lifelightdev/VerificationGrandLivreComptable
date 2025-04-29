@@ -37,11 +37,14 @@ public class ExtractInfo {
 
     public static Account account(String line) {
         line = line.replace(" _ "," ");
+        line = line.replace("_ "," ");
         line = line.replace(" | "," ");
         line = line.replace(" — "," ");
         line = line.replace(" … "," ");
-        line = line.replace("°","");
-        line = line.replace("#","");
+        line = line.replace("°"," ");
+        line = line.replace("#"," ");
+        line = line.replace("‘"," ");
+        line = line.replace("=—"," ");
         String[] words = splittingLineIntoWordTable(line);
         String account = words[0];
         StringBuilder label = new StringBuilder();
@@ -267,13 +270,15 @@ public class ExtractInfo {
                 indexOfWords++;
             }
             credit.append(" ").append(words[indexOfWords]);
-        } else {
+        } else if (numberOfAmounts >= 2) {
             while (!words[indexOfWords].endsWith(EURO)) {
                 debit.append(" ").append(words[indexOfWords]);
                 indexOfWords++;
             }
             debit.append(" ").append(words[indexOfWords]);
             credit = debit;
+        } else {
+            LOGGER.error("Erreur, il manque des montants sur la ligne de total {}", line);
         }
 
         // Extraction du numéro de compte

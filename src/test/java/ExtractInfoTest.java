@@ -128,9 +128,10 @@ public class ExtractInfoTest {
 
     @ParameterizedTest
     @CsvSource({
-            "Total compte 40100-0001 (Solde : 0.00 €) 100 000.00 € 100 000.00 €, Total compte 40100-0001 (Solde : 0.00€), 40100-0001, 100 000.00€, 100 000.00€",
-            "Total compte 40100-0002 (Solde : 0.00 €) 999 999.99 € 999 999.99 €, Total compte 40100-0002 (Solde : 0.00€), 40100-0002, 999 999.99€, 999 999.99€",
-            "Total compte 40100-0002 (Solde : 0.00 €) 1 238.40 € ,               Total compte 40100-0002 (Solde : 0.00€), 40100-0002,   1 238.40€,   1 238.40€"
+            "Total compte 40100-0001 (Solde : 0.00 €) 100 000.00 € 100 000.00 €, Total compte 40100-0001 (Solde : 0.00€),                40100-0001, 100 000.00€, 100 000.00€",
+            "Total compte 40100-0002 (Solde : 0.00 €) 999 999.99 € 999 999.99 €, Total compte 40100-0002 (Solde : 0.00€),                40100-0002, 999 999.99€, 999 999.99€",
+            "Total compte 40100-0002 (Solde : 0.00 €) 1 238.40 € ,               Total compte 40100-0002 (Solde : 0.00€),                40100-0002,   1 238.40€,   1 238.40€",
+            "Total compte 40100-0001 (Solde créditeur : -3 896.22 €),            Total compte 40100-0001 (Solde créditeur : -3 896.22€), 40100-0001,          '',           '' "
     })
     public void extractTotalAccount(String line, String label, String account, String debit, String credit) {
         Map<String, Account> accounts = new HashMap<>();
