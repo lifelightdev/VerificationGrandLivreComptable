@@ -63,11 +63,20 @@ public class ExtractInfo {
     }
 
     public static Line line(String line, Map<String, Account> accounts) {
-
+        // Élimination des caractères parasite
         line = line.replace(" | "," ");
+        line = line.replace("| "," ");
+
+        // Correction des espaces avant le signe €
+        line = line.replace(" €","€");
+
+        // Calcul du nombre de montant sur la ligne grace au signe €
         int nbMonaySign = line.split(EURO, -1).length - 1;
+
+        // Découpage de la ligne en un tableau de mot
         String[] words = line.trim().split(" ");
 
+        // Extraction du numéro de pièce
         String document = "";
         int indexOfWords = 0;
         if (findDateIn(words[indexOfWords]).isEmpty()) {
@@ -77,9 +86,11 @@ public class ExtractInfo {
             indexOfWords++;
         }
 
+        // Extraction de la date de l'opération
         String date = words[indexOfWords];
         indexOfWords++;
 
+        // Extraction du numéro de compte
         Account account;
         if (accounts.containsKey(words[indexOfWords])) {
             account = accounts.get(words[indexOfWords]);
@@ -89,46 +100,58 @@ public class ExtractInfo {
             return null;
         }
 
+        // Extraction du code du journal
         String journal = "";
         if (words[indexOfWords].length() == NAME_JOURNAL_SIZE) {
             journal = words[indexOfWords];
             indexOfWords++;
         }
 
+        // Extraction du compte de contrepartie
         String counterpart = "";
         if (words[indexOfWords].length() == 5 && words[indexOfWords].matches(REGEX_NUMBER)) {
             counterpart = words[indexOfWords];
             indexOfWords++;
         }
 
+        // Extraction du numéro de chéque
         String checkNumber = "";
         if ("Virt".equals(words[indexOfWords])) {
             checkNumber = words[indexOfWords];
             indexOfWords++;
         }
 
+        // Extraction du libellé et des montants
         StringBuilder label = new StringBuilder();
         StringBuilder debit = new StringBuilder();
         StringBuilder credit = new StringBuilder();
         if (nbMonaySign == 3) {
-            while (!words[indexOfWords].equals(EURO)) {
+            // S'il y a trois montants, c'est un report donc
+            // le premier montant est dans le libellé
+            // le second montant est le débit
+            // le troisème montant est le crédit
+            while (!words[indexOfWords].endsWith(EURO)) {
                 label.append(" ").append(words[indexOfWords]);
                 indexOfWords++;
             }
             label.append(" ").append(words[indexOfWords]);
             indexOfWords++;
-            while (!words[indexOfWords].equals(EURO)) {
+            while (!words[indexOfWords].endsWith(EURO)) {
                 debit.append(" ").append(words[indexOfWords]);
                 indexOfWords++;
             }
             debit.append(" ").append(words[indexOfWords]);
             indexOfWords++;
-            while (!words[indexOfWords].equals(EURO)) {
+            while (!words[indexOfWords].endsWith(EURO)) {
                 credit.append(" ").append(words[indexOfWords]);
                 indexOfWords++;
             }
             credit.append(" ").append(words[indexOfWords]);
         } else if (nbMonaySign == 1) {
+            // S'il n'y a qu'un seul montant
+            // c'est ne nombre d'espace entre le libellé et le montant qui determine s'il est au debit ou au crédit
+            // zero espace = debit
+            // un espace = crédit
             int indexOfWordsStartEnd = words.length - 1;
             StringBuilder amount = new StringBuilder(words[indexOfWordsStartEnd]);
             indexOfWordsStartEnd--;
