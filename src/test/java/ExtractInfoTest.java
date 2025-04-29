@@ -116,4 +116,16 @@ public class ExtractInfoTest {
         }
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "Total compte 40100-0001 (Solde : 0.00 €) 100 000.00 € 100 000.00 €, Total compte 40100-0001 (Solde : 0.00 €), 40100-0001, 100 000.00€, 100 000.00€"
+    })
+    public void extractTotalAccount(String line, String label, String account, String debit, String credit) {
+        TotalAccount result = ExtractInfo.totalAccount(line);
+        Assertions.assertEquals(label, result.label());
+        Assertions.assertEquals(account, result.account().account());
+        Assertions.assertEquals(debit, result.debit());
+        Assertions.assertEquals(credit, result.credit());
+    }
+
 }

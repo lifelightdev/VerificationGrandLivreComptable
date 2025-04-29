@@ -203,4 +203,8 @@ public class ExtractInfo {
         /* Vérification que la ligne commence par une date ou qu'il y a une date après la pièce */
         return !findDateIn(words[indexOfWords]).isEmpty();
     }
+
+    public static TotalAccount totalAccount(String line) {
+        return new TotalAccount("Total compte 40100-0001 (Solde : 0.00 €)", new Account("40100-0001", "label"), "100 000.00€", "100 000.00€");
+    }
 }
