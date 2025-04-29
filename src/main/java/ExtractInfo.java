@@ -64,11 +64,8 @@ public class ExtractInfo {
     }
 
     public static Line line(String line, Map<String, Account> accounts) {
-        // Élimination des caractères parasite
-        line = line.replace(" | "," ");
-        line = line.replace("| "," ");
-        line = line.replace("|","");
-        line = line.replace(" / "," ");
+        // Supprime les caractères parasites
+        line = removesStrayCharactersInLine(line);
 
         // Correction des espaces avant le signe €
         line = line.replace(" €","€");
@@ -79,13 +76,10 @@ public class ExtractInfo {
         // Découpage de la ligne en un tableau de mot
         String[] words = line.trim().split(" ");
 
-        // Extraction du numéro de pièce
-        String document = "";
         int indexOfWords = 0;
-        if (findDateIn(words[indexOfWords]).isEmpty()) {
-            document = words[indexOfWords];
-            if (document.length() == 6)
-                document = document.substring(1, 6);
+
+        String document = getDocument(words, indexOfWords);
+        if (!document.isEmpty()) {
             indexOfWords++;
         }
 
@@ -175,5 +169,38 @@ public class ExtractInfo {
 
         return new Line(document, date, account, journal, counterpart, checkNumber,
                 label.toString().trim(), debit.toString().trim(), credit.toString().trim());
+    }
+
+    private static String getDocument(String[] words, int indexOfWords) {
+        // Extraction du numéro de pièce
+        String document = "";
+        if (findDateIn(words[indexOfWords]).isEmpty()) {
+            document = words[indexOfWords];
+            if (document.length() == 6)
+                document = document.substring(1, 6);
+        }
+        return document;
+    }
+
+    private static String removesStrayCharactersInLine(String line) {
+        line = line.replace(" | "," ");
+        line = line.replace("| "," ");
+        line = line.replace("|","");
+        line = line.replace(" / "," ");
+        return line;
+    }
+
+    public static boolean isLigne(String line) {
+        line = removesStrayCharactersInLine(line);
+        // Découpage de la ligne en un tableau de mot
+        String[] words = line.trim().split(" ");
+        int indexOfWords = 0;
+        // Vérification que la ligne commence par une pièce
+        String document = getDocument(words, indexOfWords);
+        if (!document.isEmpty()) {
+            indexOfWords++;
+        }
+        /* Vérification que la ligne commence par une date ou qu'il y a une date après la pièce */
+        return !findDateIn(words[indexOfWords]).isEmpty();
     }
 }
