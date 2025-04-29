@@ -43,15 +43,16 @@ public class ExtractInfoTest {
 
     @ParameterizedTest
     @CsvSource({
-            "10240 TRAVAUX PORTE PARKING,                      10240, TRAVAUX PORTE PARKING",
-            "40100-0001 ORANGE,                            40100-0001, ORANGE",
-            "40100-0002 _ RELANCE,                         40100-0002, RELANCE",
-            "40100-0609 | VBP HUISSIERS DE JUSTICE,        40100-0609, VBP HUISSIERS DE JUSTICE",
-            "45000-0003 — TRUC MUCHE,                      45000-0003, TRUC MUCHE",
-            "40100-0027 … RENOV,                           40100-0027, RENOV",
-            "40100-0890 | FBI - FUITE BATIMENT INVESTIGA°, 40100-0890, FBI - FUITE BATIMENT INVESTIGA",
-            "45000-0002 CHRISTOPHE******,                  45000-0002, CHRISTOPHE"
-    })
+            "10240 TRAVAUX PORTE PARKING,                                         10240, TRAVAUX PORTE PARKING",
+            "40100-0001 ORANGE,                                              40100-0001, ORANGE",
+            "40100-0002 _ RELANCE,                                           40100-0002, RELANCE",
+            "40100-0609 | VBP HUISSIERS DE JUSTICE,                          40100-0609, VBP HUISSIERS DE JUSTICE",
+            "45000-0003 — TRUC MUCHE,                                        45000-0003, TRUC MUCHE",
+            "40100-0027 … RENOV,                                             40100-0027, RENOV",
+            "40100-0890 | FBI - FUITE BATIMENT INVESTIGA°,                   40100-0890, FBI - FUITE BATIMENT INVESTIGA",
+            "45000-0002 CHRISTOPHE******,                                    45000-0002, CHRISTOPHE",
+            "45000-0000 DUPONT / DUPOND # ****** 4% 4444445 5KKEEAXKRRRRRHE, 45000-0000, DUPONT / DUPOND"
+})
     public void extractAccount(String line, String account, String label) {
         Account result = ExtractInfo.account(line);
         Assertions.assertEquals(account, result.account());

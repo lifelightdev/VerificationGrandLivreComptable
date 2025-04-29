@@ -41,7 +41,7 @@ public class ExtractInfo {
         line = line.replace(" — "," ");
         line = line.replace(" … "," ");
         line = line.replace("°","");
-        line = line.replace("*","");
+        line = line.replace("#","");
         String[] words = splittingLineIntoWordTable(line);
         String account = words[0];
         StringBuilder label = new StringBuilder();
@@ -49,6 +49,10 @@ public class ExtractInfo {
             if (!account.equals(word)) {
                 label.append(" ").append(word);
             }
+        }
+        if (label.toString().contains("*")) {
+            int index = label.toString().indexOf("*");
+            label = new StringBuilder(label.substring(0, index));
         }
         return new Account(account, label.toString().trim());
     }
