@@ -118,10 +118,15 @@ public class ExtractInfoTest {
 
     @ParameterizedTest
     @CsvSource({
-            "Total compte 40100-0001 (Solde : 0.00 €) 100 000.00 € 100 000.00 €, Total compte 40100-0001 (Solde : 0.00 €), 40100-0001, 100 000.00€, 100 000.00€"
+            "Total compte 40100-0001 (Solde : 0.00 €) 100 000.00 € 100 000.00 €, Total compte 40100-0001 (Solde : 0.00€), 40100-0001, 100 000.00€, 100 000.00€",
+            "Total compte 40100-0002 (Solde : 0.00 €) 999 999.99 € 999 999.99 €, Total compte 40100-0002 (Solde : 0.00€), 40100-0002, 999 999.99€, 999 999.99€"
     })
     public void extractTotalAccount(String line, String label, String account, String debit, String credit) {
-        TotalAccount result = ExtractInfo.totalAccount(line);
+        Map<String, Account> accounts = new HashMap<>();
+        accounts.put("40100-0001", new Account("40100-0001", "Orange"));
+        accounts.put("40100-0002", new Account("40100-0002", "EDF"));
+        TotalAccount result = ExtractInfo.totalAccount(line, accounts);
+        Assertions.assertNotNull(result);
         Assertions.assertEquals(label, result.label());
         Assertions.assertEquals(account, result.account().account());
         Assertions.assertEquals(debit, result.debit());

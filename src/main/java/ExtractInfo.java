@@ -1,10 +1,11 @@
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Map;
 
 public class ExtractInfo {
 
-    private static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final int NAME_JOURNAL_SIZE = 2;
     public static final String EURO = "€";
     public static final String REGEX_IS_DATE = "^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/(19|20)\\d{2}$";
@@ -19,7 +20,7 @@ public class ExtractInfo {
     }
 
     private static String findDateIn(String line) {
-        String[] words = line.trim().split(" ");
+        String[] words = splittingLineIntoWordTable(line);
         for (String word : words) {
             if (word.matches(REGEX_IS_DATE)) {
                 return word;
@@ -34,7 +35,7 @@ public class ExtractInfo {
 
     public static Account account(String line) {
         line = line.replace(" _ "," ");
-        String[] words = line.trim().split(" ");
+        String[] words = splittingLineIntoWordTable(line);
         String account = words[0];
         StringBuilder label = new StringBuilder();
         for (String word : words) {
@@ -46,7 +47,7 @@ public class ExtractInfo {
     }
 
     public static boolean isAcccount(String line, String postalCode, String id) {
-        String[] words = line.trim().split(" ");
+        String[] words = splittingLineIntoWordTable(line);
         String firstword = words[0];
         if (firstword.equals(postalCode)) {
             return false;
@@ -68,13 +69,13 @@ public class ExtractInfo {
         line = removesStrayCharactersInLine(line);
 
         // Correction des espaces avant le signe €
-        line = line.replace(" €","€");
+        line = fixedSpacesBeforeEuroSign(line);
 
         // Calcul du nombre de montant sur la ligne grace au signe €
         int nbMonaySign = line.split(EURO, -1).length - 1;
 
         // Découpage de la ligne en un tableau de mot
-        String[] words = line.trim().split(" ");
+        String[] words = splittingLineIntoWordTable(line);
 
         int indexOfWords = 0;
 
@@ -88,14 +89,12 @@ public class ExtractInfo {
         indexOfWords++;
 
         // Extraction du numéro de compte
-        Account account;
-        if (accounts.containsKey(words[indexOfWords])) {
-            account = accounts.get(words[indexOfWords]);
-            indexOfWords++;
-        } else {
+        Account account = getAccount(accounts, words, indexOfWords);
+        if (account == null) {
             LOGGER.error("Erreur lors de la recherche du compte {}", words[indexOfWords]);
             return null;
         }
+        indexOfWords++;
 
         // Extraction du code du journal
         String journal = "";
@@ -171,6 +170,23 @@ public class ExtractInfo {
                 label.toString().trim(), debit.toString().trim(), credit.toString().trim());
     }
 
+    private static Account getAccount(Map<String, Account> accounts, String[] words, int indexOfWords) {
+        Account account = null;
+        if (accounts.containsKey(words[indexOfWords])) {
+            account = accounts.get(words[indexOfWords]);
+        }
+        return account;
+    }
+
+    private static String fixedSpacesBeforeEuroSign(String line) {
+        line = line.replace(" €","€");
+        return line;
+    }
+
+    private static String[] splittingLineIntoWordTable(String line) {
+        return line.trim().split(" ");
+    }
+
     private static String getDocument(String[] words, int indexOfWords) {
         // Extraction du numéro de pièce
         String document = "";
@@ -193,7 +209,7 @@ public class ExtractInfo {
     public static boolean isLigne(String line) {
         line = removesStrayCharactersInLine(line);
         // Découpage de la ligne en un tableau de mot
-        String[] words = line.trim().split(" ");
+        String[] words = splittingLineIntoWordTable(line);
         int indexOfWords = 0;
         // Vérification que la ligne commence par une pièce
         String document = getDocument(words, indexOfWords);
@@ -204,7 +220,47 @@ public class ExtractInfo {
         return !findDateIn(words[indexOfWords]).isEmpty();
     }
 
-    public static TotalAccount totalAccount(String line) {
-        return new TotalAccount("Total compte 40100-0001 (Solde : 0.00 €)", new Account("40100-0001", "label"), "100 000.00€", "100 000.00€");
+    public static TotalAccount totalAccount(String line, Map<String, Account> accounts) {
+        // Correction des espaces avant le signe €
+        line = fixedSpacesBeforeEuroSign(line);
+        // Découpage de la ligne en un tableau de mot
+        String[] words = splittingLineIntoWordTable(line);
+        int indexOfWords = 0;
+        StringBuilder label = new StringBuilder();
+        while (!words[indexOfWords].endsWith(")")) {
+            label.append(" ").append(words[indexOfWords]);
+            indexOfWords++;
+        }
+        label.append(" ").append(words[indexOfWords]);
+        indexOfWords++;
+        StringBuilder debit = new StringBuilder();
+        StringBuilder credit = new StringBuilder();
+        while (!words[indexOfWords].endsWith(EURO)) {
+            debit.append(" ").append(words[indexOfWords]);
+            indexOfWords++;
+        }
+        debit.append(" ").append(words[indexOfWords]);
+        indexOfWords++;
+        while (!words[indexOfWords].endsWith(EURO)) {
+            credit.append(" ").append(words[indexOfWords]);
+            indexOfWords++;
+        }
+        credit.append(" ").append(words[indexOfWords]);
+
+        // Extraction du numéro de compte
+        String[] labels = splittingLineIntoWordTable(label.toString());
+        Account account = null;
+        for (int indexOfLabel = 0; indexOfLabel < labels.length; indexOfLabel++) {
+            account = getAccount(accounts, labels, indexOfLabel);
+            if (account != null){
+                break;
+            }
+        }
+        if (account == null) {
+            LOGGER.error("Erreur lors de la recherche du compte {}", label);
+            return null;
+        }
+
+        return new TotalAccount(label.toString().trim(),account, debit.toString().trim(), credit.toString().trim());
     }
 }
