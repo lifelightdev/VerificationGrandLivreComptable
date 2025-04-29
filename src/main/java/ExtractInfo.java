@@ -265,6 +265,6 @@ public class ExtractInfo {
     }
 
     public static boolean isTotalAccount(String line) {
-        return false;
+        return line.startsWith("Total compte ");
     }
 }
