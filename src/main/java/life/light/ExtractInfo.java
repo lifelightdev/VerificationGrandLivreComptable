@@ -73,7 +73,7 @@ public class ExtractInfo {
         if (firstword.contains("-")) {
             firstword = firstword.replace("-", "");
         }
-        if (firstword.matches(REGEX_NUMBER)) {
+        if (firstword.matches(REGEX_NUMBER) || "461VC".equals(firstword)) {
             return findDateIn(words[1]).isEmpty() && !line.contains("Page : ");
         }
         return false;
@@ -106,7 +106,7 @@ public class ExtractInfo {
         // Extraction du numéro de compte
         Account account = getAccount(accounts, words, indexOfWords);
         if (account == null) {
-            LOGGER.error("Erreur lors de la recherche du compte {} sur la ligne ", words[indexOfWords], line);
+            LOGGER.error("Erreur lors de la recherche du compte {} sur la ligne {}", words[indexOfWords], line);
             return null;
         }
         indexOfWords++;
