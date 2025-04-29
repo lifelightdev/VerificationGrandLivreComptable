@@ -263,4 +263,8 @@ public class ExtractInfo {
 
         return new TotalAccount(label.toString().trim(),account, debit.toString().trim(), credit.toString().trim());
     }
+
+    public static boolean isTotalAccount(String line) {
+        return false;
+    }
 }

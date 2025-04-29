@@ -133,4 +133,24 @@ public class ExtractInfoTest {
         Assertions.assertEquals(credit, result.credit());
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "40100-0001 ORANGE,                                                  false",
+            "C'est le nom du Syndic,                                             false",
+            "8 AVENUE DES CHAMPS ELYSE 14/04/2025 Page : 10,                     false",
+            "75000 PARIS | ,                                                     false",
+            "001 NOM COPROPRIÉTÉ au 31/12/2024 Gestionnaire : NOM PRENOM,        false",
+            "01/01/2024 40100-0001 Report de 0.00 € 3 210.69 € 3 210.69 €,       false",
+            "33333 01/01/2024 10500 15 44444 APPEL FONDS LOI ALUR  2 000.00 € ,  false",
+            "Total compte 40100-0001 (Solde : 0.00 €) 100 000.00 € 100 000.00 €, true"
+    })
+    public void extractIsTotalAccount(String line, boolean is) {
+        boolean result = ExtractInfo.isTotalAccount(line);
+        if (is) {
+            Assertions.assertTrue(result);
+        } else {
+            Assertions.assertFalse(result);
+        }
+    }
+
 }
