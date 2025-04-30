@@ -1,0 +1,100 @@
+package life.light;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.*;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
+
+import static life.light.WriteFile.*;
+
+public class Main {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+
+    public static void main(String[] args) {
+        LocalDateTime debut = LocalDateTime.now();
+        System.out.println("Début à " + debut.getHour() + ":" + debut.getMinute() + ":" + debut.getSecond());
+        // Lire le fichier texte
+        String fileName = ".\\temp\\fichier_fusionner.txt";
+        String syndicName = "";
+        String printDate = "";
+        String stopDate = "";
+        String postalCode = "";
+        // Récuperation des informations pour la génération du nom de fichier
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            syndicName = ExtractInfo.syndicName(reader.readLine());
+            printDate = ExtractInfo.printDate(reader.readLine());
+            String line = reader.readLine();
+            stopDate = ExtractInfo.stopDate(line);
+            postalCode = ExtractInfo.postalCode(line);
+        } catch (IOException e) {
+            LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
+        }
+        LOGGER.info("Le nom du syndic est : {}", syndicName);
+        LOGGER.info("La date d'édition est le {}", printDate);
+        LOGGER.info("La date d'arrêt des comptes est le {}", stopDate);
+        LOGGER.info("Le code postal du syndic est {}", postalCode);
+
+        // Génération de la liste des comptes
+        Map<String, Account> accounts = new HashMap<>();
+        int numberOfLineInFile = 0;
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (ExtractInfo.isAcccount(line, postalCode, "018")) {
+                    Account account = ExtractInfo.account(line);
+                    accounts.put(account.account(), account);
+                }
+                if (!line.isEmpty()) {
+                    numberOfLineInFile++;
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
+        }
+        LOGGER.info("Il y a {} comptes dans le grandlivre", accounts.size());
+
+        writeFileAccounts(accounts);
+        writeFileExcelAccounts(accounts);
+
+        // Géneration du grand livre
+        Object[] grandLivres = new Object[numberOfLineInFile];
+        int indexInGrandLivres = 0;
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.isEmpty()) {
+                    if (ExtractInfo.isLigne(line)) {
+                        Line lineOfGrandLivre = ExtractInfo.line(line, accounts);
+                        if (lineOfGrandLivre != null) {
+                            grandLivres[indexInGrandLivres] = lineOfGrandLivre;
+                            indexInGrandLivres++;
+                        }
+                    } else if (ExtractInfo.isTotalAccount(line)) {
+                        TotalAccount totalAccount = ExtractInfo.totalAccount(line, accounts);
+                        if (totalAccount != null) {
+                            grandLivres[indexInGrandLivres] = totalAccount;
+                            indexInGrandLivres++;
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
+        }
+
+        writeFileGrandLivre(grandLivres);
+        writeFileExcelGrandLivre(grandLivres, printDate, syndicName, stopDate);
+
+        // TODO Génération des journaux
+        // TODO Écriture des journaux dans des fichiers Excel (un par journal)
+        LocalDateTime fin = LocalDateTime.now();
+        System.out.println("Début à " + debut.getHour() + ":" + debut.getMinute() + ":" + debut.getSecond());
+        System.out.println("Fin à " + fin.getHour() + ":" + fin.getMinute() + ":" + fin.getSecond());
+        System.out.println("La durée du traitement est de " + ChronoUnit.SECONDS.between(debut, fin) + " secondes");
+    }
+}
