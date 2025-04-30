@@ -43,6 +43,15 @@ public class ExtractInfoTest {
 
     @ParameterizedTest
     @CsvSource({
+            "75000 PARIS Grand Livre arrêté au 31/12/2024, 75000"
+    })
+    public void extractPostalCode(String line, String postalCode) {
+        String code = ExtractInfo.postalCode(line);
+        Assertions.assertEquals(postalCode, code);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
             "10240 TRAVAUX PORTE PARKING,                                         10240, TRAVAUX PORTE PARKING",
             "40100-0001 ORANGE,                                              40100-0001, ORANGE",
             "40100-0002 _ RELANCE,                                           40100-0002, RELANCE",

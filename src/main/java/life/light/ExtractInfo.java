@@ -347,4 +347,8 @@ public class ExtractInfo {
     public static boolean isTotalAccount(String line) {
         return line.startsWith("Total compte ");
     }
+
+    public static String postalCode(String line) {
+        return line.split(" ")[0];
+    }
 }
