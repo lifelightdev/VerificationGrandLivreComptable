@@ -8,13 +8,15 @@ import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
+import java.text.DecimalFormat;
 import java.util.Map;
 
 public class WriteFile {
 
     // RGB
-    public static final XSSFColor BACKGROUND_COLOR_BLUE = new XSSFColor(new java.awt.Color(240, 255, 255), null);// RGB
+    public static final XSSFColor BACKGROUND_COLOR_BLUE = new XSSFColor(new java.awt.Color(240, 255, 255), null);
     public static final XSSFColor BACKGROUND_COLOR_GRAY = new XSSFColor(new java.awt.Color(200, 200, 200), null);
+    public static final XSSFColor BACKGROUND_COLOR_RED = new XSSFColor(new java.awt.Color(255, 0, 0), null);
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String[] NOM_ENTETE_COLONNE = {"Compte", "Intitulé du compte", "Pièce", "Date", "Journal",
             "Contrepartie", "N° chèque", "Libellé", "Débit", "Crédit", "Solde (Calculé)", "Verification des montants"};
@@ -159,7 +161,7 @@ public class WriteFile {
         }
     }
 
-    public static void writeFileExcelGrandLivre(Object[] grandLivres, String nameFile ) {
+    public static void writeFileExcelGrandLivre(Object[] grandLivres, String nameFile) {
         String exitFile = "." + File.separator + "temp" + File.separator + nameFile;
         try {
             // Créer un nouveau classeur Excel
@@ -263,7 +265,7 @@ public class WriteFile {
                 cell.setCellValue(account);
             }
         }
-        addlineBlue(rowNum,  getCellStyleAlignmentLeft(workbook), cell);
+        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
 
         cellNum++;
         cell = row.createCell(cellNum);
@@ -356,17 +358,30 @@ public class WriteFile {
 
         cellNum++;
         cell = row.createCell(cellNum);
+        addlineBlue(rowNum, getCellStyleAmount(workbook), cell);
         if (grandLivre.label().startsWith("Report de ")) {
             cell.setCellValue("KO");
+            CellStyle style = getCellStyleAlignmentLeft(workbook);
+            style.setFont(getFontBold(workbook));
+            style.setFillForegroundColor(BACKGROUND_COLOR_RED);
+            style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            cell.setCellStyle(style);
             String amount = grandLivre.label().substring("Report de ".length(), grandLivre.label().length() - 1).trim().replace(" ", "");
             if (isDouble(amount)) {
                 double amountDouble = Double.parseDouble(amount);
-                if (amountDouble == (debit - credit)) {
+                DecimalFormat df = new DecimalFormat("#.00");
+                String nombreFormate = df.format((debit - credit)).replace(",", ".");
+                if (amountDouble == Double.parseDouble(nombreFormate)) {
                     cell.setCellValue("OK");
+                    addlineBlue(rowNum, getCellStyleAmount(workbook), cell);
+                } else {
+                    String message = "KO le montant du report est de " + amount + " le solde est de  " + Double.parseDouble(nombreFormate)
+                            + " le débit est de " + debit + " le credit est de " + credit;
+                    LOGGER.info(message + " le compte est " + grandLivre.account().account());
+                    cell.setCellValue(message);
                 }
             }
         }
-        addlineBlue(rowNum, getCellStyleAmount(workbook), cell);
     }
 
     private static void addlineBlue(int rowNum, CellStyle cellStyle, Cell cell) {
