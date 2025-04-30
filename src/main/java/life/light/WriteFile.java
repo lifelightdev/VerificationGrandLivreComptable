@@ -170,13 +170,15 @@ public class WriteFile {
             Sheet sheet = workbook.createSheet("Grand Livre");
             getCellsEntete(sheet, workbook);
             int rowNum = 1;
+            int lastRowNumTotal = 0;
             for (Object grandLivre : grandLivres) {
                 Row row = sheet.createRow(rowNum);
                 if (grandLivre instanceof Line) {
                     getLine((Line) grandLivre, row, workbook, rowNum);
                 }
                 if (grandLivre instanceof TotalAccount) {
-                    getTotalAccount((TotalAccount) grandLivre, row, workbook);
+                    getTotalAccount((TotalAccount) grandLivre, row, workbook, lastRowNumTotal);
+                    lastRowNumTotal = rowNum;
                 }
                 rowNum++;
             }
@@ -198,7 +200,7 @@ public class WriteFile {
         }
     }
 
-    private static void getTotalAccount(TotalAccount grandLivre, Row row, Workbook workbook) {
+    private static void getTotalAccount(TotalAccount grandLivre, Row row, Workbook workbook, int lastRowNumTotal) {
         Cell cell;
         double debit = 0;
         double credit = 0;
@@ -233,6 +235,9 @@ public class WriteFile {
                 debit = Double.parseDouble(grandLivre.debit());
                 debitCell.setCellValue(debit);
             }
+            CellAddress cellAddressFirst = new CellAddress(lastRowNumTotal + 1, debitCell.getAddress().getColumn());
+            CellAddress cellAddressEnd = new CellAddress(debitCell.getAddress().getRow() - 1, debitCell.getAddress().getColumn());
+            debitCell.setCellFormula("SUM(" + cellAddressFirst + ":" + cellAddressEnd + ")");
             debitCell.setCellStyle(getCellStyleTotalAmount(workbook));
         }
         Cell creditCell = row.createCell(cellNum++);
@@ -243,10 +248,34 @@ public class WriteFile {
                 creditCell.setCellValue(credit);
             }
             creditCell.setCellStyle(getCellStyleTotalAmount(workbook));
+            CellAddress cellAddressFirst = new CellAddress(lastRowNumTotal + 1, creditCell.getAddress().getColumn());
+            CellAddress cellAddressEnd = new CellAddress(creditCell.getAddress().getRow() - 1, creditCell.getAddress().getColumn());
+            creditCell.setCellFormula("SUM(" + cellAddressFirst + ":" + cellAddressEnd + ")");
         }
+        Cell soldeCell = row.createCell(cellNum++);
+        soldeCell.setCellValue(debit - credit);
+        soldeCell.setCellFormula(creditCell.getAddress() + "-" + debitCell.getAddress());
+        soldeCell.setCellStyle(getCellStyleTotalAmount(workbook));
+
         cell = row.createCell(cellNum);
         cell.setCellValue(debit - credit);
-        cell.setCellFormula(creditCell.getAddress() + "-" + debitCell.getAddress());
+        String amount = grandLivre.label().substring("Total compte (Solde :".length(), grandLivre.label().length() - 1)
+                .replace("créditeur", " ")
+                .replace("débiteur", " ")
+                .replace("ébiteur : ", "")
+                .replace("réditeur", "")
+                .replace(" : ", "")
+                .replace("€", "")
+                .replace(" ", "")
+                .trim();
+        if (grandLivre.label().contains("créditeur")) {
+            amount = amount.replace("-", "");
+        }
+        String formuleIfSolde = "IF(" + soldeCell.getAddress() + "=" + Double.parseDouble(amount)
+                + ", \"Total debit, credit et solde sont OK\", \"Le solde n'est pas égale " + Double.parseDouble(amount) + " et " + soldeCell.getNumericCellValue() + "\")";
+        String formuleIfCredit = "IF(" + creditCell.getAddress() + "=" + credit + ", " + formuleIfSolde + ", \"Le total credit n'est pas égale a " + credit + "\")";
+        String formuleIfDebit = "IF(" + debitCell.getAddress() + "=" + debit + ", " + formuleIfCredit + ", \"Le total débit n'est pas égale a " + debit + "\")";
+        cell.setCellFormula(formuleIfDebit);
         cell.setCellStyle(getCellStyleTotalAmount(workbook));
     }
 
