@@ -3,6 +3,8 @@ package life.light;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellAddress;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
@@ -11,6 +13,8 @@ import java.util.Map;
 public class WriteFile {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String[] NOM_ENTETE_COLONNE = {"Compte", "Intitulé du compte", "Pièce", "Date", "Journal",
+            "Contrepartie", "N° chèque", "Libellé", "Débit", "Crédit", "Solde (Calculé)", "Verification des montants"};
 
     // TODO faire la gestion des fichiers (existe, n'existe pas, pas de dossier ...)
 
@@ -161,192 +165,22 @@ public class WriteFile {
             Workbook workbook = new XSSFWorkbook();
             // Créer une nouvelle feuille dans le classeur
             Sheet sheet = workbook.createSheet("Grand Livre");
-            int rowNum = 0;
-            int cellNumEntete = 0;
-
-            // Créer la ligne d'en-tête
-            Row headerRow = sheet.createRow(rowNum);
-            Cell cell = headerRow.createCell(cellNumEntete++);
-            cell.setCellValue("Compte");
-            cell.setCellStyle(getCellStyleEntete(workbook));
-            cell = headerRow.createCell(cellNumEntete++);
-            cell.setCellValue("Intitulé du compte");
-            cell.setCellStyle(getCellStyleEntete(workbook));
-            cell = headerRow.createCell(cellNumEntete++);
-            cell.setCellValue("Pièce");
-            cell.setCellStyle(getCellStyleEntete(workbook));
-            cell = headerRow.createCell(cellNumEntete++);
-            cell.setCellValue("Date");
-            cell.setCellStyle(getCellStyleEntete(workbook));
-            cell = headerRow.createCell(cellNumEntete++);
-            cell.setCellValue("Journal");
-            cell.setCellStyle(getCellStyleEntete(workbook));
-            cell = headerRow.createCell(cellNumEntete++);
-            cell.setCellValue("Contrepartie");
-            cell.setCellStyle(getCellStyleEntete(workbook));
-            cell = headerRow.createCell(cellNumEntete++);
-            cell.setCellValue("N° chèque");
-            cell.setCellStyle(getCellStyleEntete(workbook));
-            cell = headerRow.createCell(cellNumEntete++);
-            cell.setCellValue("Libellé");
-            cell.setCellStyle(getCellStyleEntete(workbook));
-            cell = headerRow.createCell(cellNumEntete++);
-            cell.setCellValue("Débit");
-            cell.setCellStyle(getCellStyleEntete(workbook));
-            cell = headerRow.createCell(cellNumEntete++);
-            cell.setCellValue("Crédit");
-            cell.setCellStyle(getCellStyleEntete(workbook));
-            cell = headerRow.createCell(cellNumEntete++);
-            cell.setCellValue("Solde");
-            cell.setCellStyle(getCellStyleEntete(workbook));
-            rowNum++;
-
+            getCellsEntete(sheet, workbook);
+            int rowNum = 1;
             for (Object grandLivre : grandLivres) {
                 Row row = sheet.createRow(rowNum);
-                int cellNum = 0;
                 if (grandLivre instanceof Line) {
-                    if (!((Line) grandLivre).account().account().isEmpty()) {
-                        cell = row.createCell(cellNum);
-                        cell.setCellValue(((Line) grandLivre).account().account());
-                        if (isDouble(((Line) grandLivre).account().account())) {
-                            double account = Double.parseDouble(((Line) grandLivre).account().account());
-                            cell.setCellValue(account);
-                        }
-                        cell.setCellStyle(getCellStyleAlignmentLeft(workbook));
-                    }
-                    cellNum++;
-                    if (!((Line) grandLivre).account().account().isEmpty()) {
-                        row.createCell(cellNum).setCellValue(((Line) grandLivre).account().label());
-                        row.getCell(cellNum).setCellStyle(getCellStyleAlignmentLeft(workbook));
-                    } else {
-                        row.createCell(cellNum).setCellValue(" ");
-                    }
-                    cellNum++;
-                    if (!((Line) grandLivre).document().isEmpty()) {
-                        int document = Integer.parseInt(((Line) grandLivre).document());
-                        row.createCell(cellNum).setCellValue(document);
-                    } else {
-                        row.createCell(cellNum).setCellValue(" ");
-                    }
-                    cellNum++;
-                    if (!((Line) grandLivre).date().isEmpty()) {
-                        row.createCell(cellNum).setCellValue(((Line) grandLivre).date());
-                    } else {
-                        row.createCell(cellNum).setCellValue(" ");
-                    }
-                    cellNum++;
-                    if (!((Line) grandLivre).journal().isEmpty()) {
-                        if (isDouble(((Line) grandLivre).journal())) {
-                            int journal = Integer.parseInt(((Line) grandLivre).journal());
-                            row.createCell(cellNum).setCellValue(journal);
-                        } else {
-                            row.createCell(cellNum).setCellValue(((Line) grandLivre).journal());
-                        }
-                        row.getCell(cellNum).setCellStyle(getCellStyleAlignmentLeft(workbook));
-                    } else {
-                        row.createCell(cellNum).setCellValue(" ");
-                        row.getCell(cellNum).setCellStyle(getCellStyleAlignmentLeft(workbook));
-                    }
-                    cellNum++;
-                    if (!((Line) grandLivre).counterpart().isEmpty()) {
-                        if (isDouble(((Line) grandLivre).counterpart())) {
-                            int counterpart = Integer.parseInt(((Line) grandLivre).counterpart());
-                            row.createCell(cellNum).setCellValue(counterpart);
-                        } else {
-                            row.createCell(cellNum).setCellValue(((Line) grandLivre).counterpart());
-                        }
-                    } else {
-                        row.createCell(cellNum).setCellValue(" ");
-                    }
-                    cellNum++;
-                    if (!((Line) grandLivre).checkNumber().isEmpty()) {
-                        if (isDouble(((Line) grandLivre).checkNumber())) {
-                            int checkNumber = Integer.parseInt(((Line) grandLivre).checkNumber());
-                            row.createCell(cellNum).setCellValue(checkNumber);
-                            row.getCell(cellNum).setCellStyle(getCellStyleAlignmentLeft(workbook));
-                        } else {
-                            row.createCell(cellNum).setCellValue(((Line) grandLivre).checkNumber());
-                        }
-                    } else {
-                        row.createCell(cellNum).setCellValue(" ");
-                    }
-                    cellNum++;
-                    if (!((Line) grandLivre).label().isEmpty()) {
-                        if (isDouble(((Line) grandLivre).checkNumber())) {
-                            int label = Integer.parseInt(((Line) grandLivre).label());
-                            row.createCell(cellNum).setCellValue(label);
-                        } else {
-                            row.createCell(cellNum).setCellValue(((Line) grandLivre).label());
-                        }
-                    } else {
-                        row.createCell(cellNum).setCellValue(" ");
-                    }
-                    cellNum++;
-                    if (!((Line) grandLivre).debit().isEmpty()) {
-                        cell = row.createCell(cellNum);
-                        cell.setCellValue(((Line) grandLivre).debit());
-                        if (isDouble(((Line) grandLivre).debit())) {
-                            double debit = Double.parseDouble(((Line) grandLivre).debit());
-                            cell.setCellValue(debit);
-                        }
-                        cell.setCellStyle(getCellStyleAmount(workbook));
-                    }
-                    cellNum++;
-                    if (!((Line) grandLivre).credit().isEmpty()) {
-                        cell = row.createCell(cellNum);
-                        cell.setCellValue(((Line) grandLivre).credit());
-                        if (isDouble(((Line) grandLivre).credit())) {
-                            double credit = Double.parseDouble(((Line) grandLivre).credit());
-                            cell.setCellValue(credit);
-                        }
-                        cell.setCellStyle(getCellStyleAmount(workbook));
-                    }
+                    getLine((Line) grandLivre, row, workbook, rowNum);
                 }
                 if (grandLivre instanceof TotalAccount) {
-                    if (!((TotalAccount) grandLivre).account().account().isEmpty()) {
-                        cell = row.createCell(0);
-                        cell.setCellValue(((TotalAccount) grandLivre).account().account());
-                        if (isDouble(((TotalAccount) grandLivre).account().account())) {
-                            double account = Double.parseDouble(((TotalAccount) grandLivre).account().account());
-                            cell.setCellValue(account);
-                        }
-                        cell.setCellStyle(getCellStyleTotal(workbook));
-                    }
-                    if (!((TotalAccount) grandLivre).account().label().isEmpty()) {
-                        cell = row.createCell(1);
-                        cell.setCellValue(((TotalAccount) grandLivre).account().label());
-                        cell.setCellStyle(getCellStyleTotal(workbook));
-                    }
-                    if (!((TotalAccount) grandLivre).label().isEmpty()) {
-                        cell = row.createCell(7);
-                        cell.setCellValue(((TotalAccount) grandLivre).label());
-                        cell.setCellStyle(getCellStyleTotal(workbook));
-                    }
-                    if (!((TotalAccount) grandLivre).debit().isEmpty()) {
-                        cell = row.createCell(8);
-                        cell.setCellValue(((TotalAccount) grandLivre).debit());
-                        if (isDouble(((TotalAccount) grandLivre).debit())) {
-                            double debit = Double.parseDouble(((TotalAccount) grandLivre).debit());
-                            cell.setCellValue(debit);
-                        }
-                        cell.setCellStyle(getCellStyleTotalAmount(workbook));
-                    }
-                    if (!((TotalAccount) grandLivre).credit().isEmpty()) {
-                        cell = row.createCell(9);
-                        cell.setCellValue(((TotalAccount) grandLivre).credit());
-                        if (isDouble(((TotalAccount) grandLivre).credit())) {
-                            double credit = Double.parseDouble(((TotalAccount) grandLivre).credit());
-                            cell.setCellValue(credit);
-                        }
-                        cell.setCellStyle(getCellStyleTotalAmount(workbook));
-                    }
+                    getTotalAccount((TotalAccount) grandLivre, row, workbook);
                 }
                 rowNum++;
             }
+            int cellNumEntete = NOM_ENTETE_COLONNE.length;
             for (int idCollum = 0; idCollum < cellNumEntete; idCollum++) {
                 sheet.autoSizeColumn(idCollum);
             }
-
             // Écrire le contenu du classeur dans un fichier
             try (FileOutputStream outputStream = new FileOutputStream(exitFile)) {
                 workbook.write(outputStream);
@@ -361,9 +195,222 @@ public class WriteFile {
         }
     }
 
+    private static void getTotalAccount(TotalAccount grandLivre, Row row, Workbook workbook) {
+        Cell cell;
+        double debit = 0;
+        double credit = 0;
+        if (!grandLivre.account().account().isEmpty()) {
+            cell = row.createCell(0);
+            cell.setCellValue(grandLivre.account().account());
+            if (isDouble(grandLivre.account().account())) {
+                double account = Double.parseDouble(grandLivre.account().account());
+                cell.setCellValue(account);
+            }
+            cell.setCellStyle(getCellStyleTotal(workbook));
+        }
+        if (!grandLivre.account().label().isEmpty()) {
+            cell = row.createCell(1);
+            cell.setCellValue(grandLivre.account().label());
+            cell.setCellStyle(getCellStyleTotal(workbook));
+        }
+        for (int idCell = 2; idCell < 7; idCell++) {
+            cell = row.createCell(idCell);
+            cell.setCellStyle(getCellStyleTotal(workbook));
+        }
+        int cellNum = 7;
+        if (!grandLivre.label().isEmpty()) {
+            cell = row.createCell(cellNum++);
+            cell.setCellValue(grandLivre.label());
+            cell.setCellStyle(getCellStyleTotal(workbook));
+        }
+        Cell debitCell = row.createCell(cellNum++);
+        if (!grandLivre.debit().isEmpty()) {
+            debitCell.setCellValue(grandLivre.debit());
+            if (isDouble(grandLivre.debit())) {
+                debit = Double.parseDouble(grandLivre.debit());
+                debitCell.setCellValue(debit);
+            }
+            debitCell.setCellStyle(getCellStyleTotalAmount(workbook));
+        }
+        Cell creditCell = row.createCell(cellNum++);
+        if (!grandLivre.credit().isEmpty()) {
+            creditCell.setCellValue(grandLivre.credit());
+            if (isDouble(grandLivre.credit())) {
+                credit = Double.parseDouble(grandLivre.credit());
+                creditCell.setCellValue(credit);
+            }
+            creditCell.setCellStyle(getCellStyleTotalAmount(workbook));
+        }
+        cell = row.createCell(cellNum);
+        cell.setCellValue(debit - credit);
+        cell.setCellFormula(creditCell.getAddress() + "-" + debitCell.getAddress());
+        cell.setCellStyle(getCellStyleTotalAmount(workbook));
+    }
+
+    private static void getLine(Line grandLivre, Row row, Workbook workbook, int rowNum) {
+        Cell cell;
+        int cellNum = 0;
+        String numAccount = grandLivre.account().account();
+        boolean isNotEmptyAccount = !numAccount.isEmpty();
+        double debit = 0;
+        double credit = 0;
+        cell = row.createCell(cellNum);
+        cell.setCellValue(numAccount);
+        if (isNotEmptyAccount) {
+            if (isDouble(numAccount)) {
+                double account = Double.parseDouble(numAccount);
+                cell.setCellValue(account);
+            }
+        }
+        CellStyle cellStyle = getCellStyleAlignmentLeft(workbook);
+        addlineBlue(rowNum, cellStyle, cell);
+
+        cellNum++;
+        cell = row.createCell(cellNum);
+        if (isNotEmptyAccount) {
+            cell.setCellValue(grandLivre.account().label());
+        }
+        cellStyle = getCellStyleAlignmentLeft(workbook);
+        addlineBlue(rowNum, cellStyle, cell);
+
+        cellNum++;
+        cell = row.createCell(cellNum);
+        cell.setCellValue(grandLivre.document());
+        if (isDouble(grandLivre.document())) {
+            double document = Double.parseDouble(grandLivre.document());
+            cell.setCellValue(document);
+        }
+        cellStyle = getCellStyleAlignmentLeft(workbook);
+        addlineBlue(rowNum, cellStyle, cell);
+
+        cellNum++;
+        cell = row.createCell(cellNum);
+        cell.setCellValue(grandLivre.date());
+        cellStyle = getCellStyleAlignmentLeft(workbook);
+        addlineBlue(rowNum, cellStyle, cell);
+
+        cellNum++;
+        cell = row.createCell(cellNum);
+        cell.setCellValue(grandLivre.journal());
+        if (isDouble(grandLivre.journal())) {
+            double journal = Double.parseDouble(grandLivre.journal());
+            cell.setCellValue(journal);
+        }
+        cellStyle = getCellStyleAlignmentLeft(workbook);
+        addlineBlue(rowNum, cellStyle, cell);
+
+        cellNum++;
+        cell = row.createCell(cellNum);
+        cell.setCellValue(grandLivre.counterpart());
+        if (isDouble(grandLivre.counterpart())) {
+            double counterpart = Double.parseDouble(grandLivre.counterpart());
+            cell.setCellValue(counterpart);
+        }
+        cellStyle = getCellStyleAlignmentLeft(workbook);
+        addlineBlue(rowNum, cellStyle, cell);
+
+        cellNum++;
+        cell = row.createCell(cellNum);
+        cell.setCellValue(grandLivre.checkNumber());
+        if (isDouble(grandLivre.checkNumber())) {
+            double checkNumber = Double.parseDouble(grandLivre.checkNumber());
+            cell.setCellValue(checkNumber);
+        }
+        cellStyle = getCellStyleAlignmentLeft(workbook);
+        addlineBlue(rowNum, cellStyle, cell);
+
+        cellNum++;
+        cell = row.createCell(cellNum);
+        cell.setCellValue(grandLivre.label());
+        cellStyle = getCellStyleAlignmentLeft(workbook);
+        addlineBlue(rowNum, cellStyle, cell);
+
+        cellNum++;
+        Cell debitCell = row.createCell(cellNum);
+        debitCell.setCellValue(grandLivre.debit());
+        if (isDouble(grandLivre.debit())) {
+            debit = Double.parseDouble(grandLivre.debit());
+            debitCell.setCellValue(debit);
+        } else {
+            debitCell.setCellValue(0);
+        }
+        cellStyle = getCellStyleAmount(workbook);
+        addlineBlue(rowNum, cellStyle, debitCell);
+
+        cellNum++;
+        Cell creditCell = row.createCell(cellNum);
+        creditCell.setCellValue(grandLivre.credit());
+        if (isDouble(grandLivre.credit())) {
+            credit = Double.parseDouble(grandLivre.credit());
+            creditCell.setCellValue(credit);
+        } else {
+            creditCell.setCellValue(0);
+        }
+        cellStyle = getCellStyleAmount(workbook);
+        addlineBlue(rowNum, cellStyle, creditCell);
+
+        cellNum++;
+        Cell soldeCell = row.createCell(cellNum);
+        String formule;
+        if (grandLivre.label().startsWith("Report de ")) {
+            formule = creditCell.getAddress() + "-" + debitCell.getAddress();
+        } else {
+            int rowIndex = soldeCell.getRowIndex() - 1;
+            int col = soldeCell.getColumnIndex();
+            CellAddress beforeSoldeCellAddress = new CellAddress(rowIndex, col);
+            formule = beforeSoldeCellAddress + "+" + debitCell.getAddress() + "-" + creditCell.getAddress();
+        }
+        soldeCell.setCellFormula(formule);
+        cellStyle = getCellStyleAmount(workbook);
+        addlineBlue(rowNum, cellStyle, soldeCell);
+
+        cellNum++;
+        cell = row.createCell(cellNum);
+        if (grandLivre.label().startsWith("Report de ")) {
+            cell.setCellValue("KO");
+            String amount = grandLivre.label().substring("Report de ".length(), grandLivre.label().length() - 1).trim().replace(" ", "");
+            System.out.println("amountDouble =" + amount + " et debit-credit = " + (debit - credit) + " et est un double " + isDouble(amount));
+            if (isDouble(amount)) {
+                double amountDouble = Double.parseDouble(amount);
+                if (amountDouble == (debit - credit)) {
+                    cell.setCellValue("OK");
+                }
+            }
+        }
+        cellStyle = getCellStyleAmount(workbook);
+        addlineBlue(rowNum, cellStyle, cell);
+    }
+
+    private static void addlineBlue(int rowNum, CellStyle cellStyle, Cell cell) {
+        if (rowNum % 2 == 0) {
+            cellStyle = getCellStyleBlue(cellStyle);
+        }
+        cell.setCellStyle(cellStyle);
+    }
+
+    private static void getCellsEntete(Sheet sheet, Workbook workbook) {
+        int index = 0;
+        Row headerRow = sheet.createRow(index);
+        for (String label : NOM_ENTETE_COLONNE) {
+            Cell cell = headerRow.createCell(index++);
+            cell.setCellValue(label);
+            cell.setCellStyle(getCellStyleEntete(workbook));
+        }
+    }
+
+    private static CellStyle getCellStyleBlue(CellStyle cellStyle) {
+        XSSFColor backgroundColorBlue = new XSSFColor(new java.awt.Color(240, 255, 255), null); // RGB
+        cellStyle.setFillForegroundColor(backgroundColorBlue);
+        cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        return cellStyle;
+    }
+
     private static CellStyle getCellStyleTotalAmount(Workbook workbook) {
         CellStyle styleTotalAmount = getCellStyleAmount(workbook);
         styleTotalAmount.setFont(getFontBold(workbook));
+        XSSFColor backgroundColorGray = new XSSFColor(new java.awt.Color(200, 200, 200), null); // RGB
+        styleTotalAmount.setFillForegroundColor(backgroundColorGray);
+        styleTotalAmount.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return styleTotalAmount;
     }
 
@@ -381,6 +428,9 @@ public class WriteFile {
     private static CellStyle getCellStyleTotal(Workbook workbook) {
         CellStyle styleTotal = getCellStyleAlignmentLeft(workbook);
         styleTotal.setFont(getFontBold(workbook));
+        XSSFColor backgroundColorGray = new XSSFColor(new java.awt.Color(200, 200, 200), null); // RGB
+        styleTotal.setFillForegroundColor(backgroundColorGray);
+        styleTotal.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return styleTotal;
     }
 
@@ -395,6 +445,9 @@ public class WriteFile {
         CellStyle styleEntete = workbook.createCellStyle();
         styleEntete.setAlignment(HorizontalAlignment.CENTER);
         styleEntete.setFont(font);
+        XSSFColor backgroundColorGray = new XSSFColor(new java.awt.Color(200, 200, 200), null); // RGB
+        styleEntete.setFillForegroundColor(backgroundColorGray);
+        styleEntete.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return styleEntete;
     }
 
