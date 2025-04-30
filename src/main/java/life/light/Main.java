@@ -88,7 +88,11 @@ public class Main {
         }
 
         writeFileGrandLivre(grandLivres);
-        writeFileExcelGrandLivre(grandLivres, printDate, syndicName, stopDate);
+        String nameFile = printDate.substring(6) + "-" + printDate.substring(3, 5) + "-" + printDate.substring(0, 2)
+                + " Grand livre " + syndicName.substring(0, syndicName.length() - 1).trim()
+                + " au " + stopDate.substring(6) + "-" + stopDate.substring(3, 5) + "-" + stopDate.substring(0, 2)
+                + ".xlsx";
+        writeFileExcelGrandLivre(grandLivres, nameFile);
 
         // TODO Génération des journaux
         // TODO Écriture des journaux dans des fichiers Excel (un par journal)

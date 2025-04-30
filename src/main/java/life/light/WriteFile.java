@@ -12,6 +12,9 @@ import java.util.Map;
 
 public class WriteFile {
 
+    // RGB
+    public static final XSSFColor BACKGROUND_COLOR_BLUE = new XSSFColor(new java.awt.Color(240, 255, 255), null);// RGB
+    public static final XSSFColor BACKGROUND_COLOR_GRAY = new XSSFColor(new java.awt.Color(200, 200, 200), null);
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String[] NOM_ENTETE_COLONNE = {"Compte", "Intitulé du compte", "Pièce", "Date", "Journal",
             "Contrepartie", "N° chèque", "Libellé", "Débit", "Crédit", "Solde (Calculé)", "Verification des montants"};
@@ -44,8 +47,10 @@ public class WriteFile {
             Row headerRow = sheet.createRow(colNum);
             Cell cell = headerRow.createCell(colNum++);
             cell.setCellValue("Compte");
+            sheet.autoSizeColumn(colNum);
             cell = headerRow.createCell(colNum++);
             cell.setCellValue("Libelle");
+            sheet.autoSizeColumn(colNum);
             rowNum++;
             for (Map.Entry<String, Account> entry : accounts.entrySet()) {
                 Row row = sheet.createRow(rowNum);
@@ -154,12 +159,8 @@ public class WriteFile {
         }
     }
 
-    public static void writeFileExcelGrandLivre(Object[] grandLivres, String printDate, String syndicName, String stopDate) {
-        String exitFile = "." + File.separator + "temp" + File.separator
-                + printDate.substring(6) + "-" + printDate.substring(3, 5) + "-" + printDate.substring(0, 2)
-                + " Grand livre " + syndicName.substring(0, syndicName.length() - 1).trim()
-                + " au " + stopDate.substring(6) + "-" + stopDate.substring(3, 5) + "-" + stopDate.substring(0, 2)
-                + ".xlsx";
+    public static void writeFileExcelGrandLivre(Object[] grandLivres, String nameFile ) {
+        String exitFile = "." + File.separator + "temp" + File.separator + nameFile;
         try {
             // Créer un nouveau classeur Excel
             Workbook workbook = new XSSFWorkbook();
@@ -262,16 +263,14 @@ public class WriteFile {
                 cell.setCellValue(account);
             }
         }
-        CellStyle cellStyle = getCellStyleAlignmentLeft(workbook);
-        addlineBlue(rowNum, cellStyle, cell);
+        addlineBlue(rowNum,  getCellStyleAlignmentLeft(workbook), cell);
 
         cellNum++;
         cell = row.createCell(cellNum);
         if (isNotEmptyAccount) {
             cell.setCellValue(grandLivre.account().label());
         }
-        cellStyle = getCellStyleAlignmentLeft(workbook);
-        addlineBlue(rowNum, cellStyle, cell);
+        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
 
         cellNum++;
         cell = row.createCell(cellNum);
@@ -280,14 +279,12 @@ public class WriteFile {
             double document = Double.parseDouble(grandLivre.document());
             cell.setCellValue(document);
         }
-        cellStyle = getCellStyleAlignmentLeft(workbook);
-        addlineBlue(rowNum, cellStyle, cell);
+        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
 
         cellNum++;
         cell = row.createCell(cellNum);
         cell.setCellValue(grandLivre.date());
-        cellStyle = getCellStyleAlignmentLeft(workbook);
-        addlineBlue(rowNum, cellStyle, cell);
+        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
 
         cellNum++;
         cell = row.createCell(cellNum);
@@ -296,8 +293,7 @@ public class WriteFile {
             double journal = Double.parseDouble(grandLivre.journal());
             cell.setCellValue(journal);
         }
-        cellStyle = getCellStyleAlignmentLeft(workbook);
-        addlineBlue(rowNum, cellStyle, cell);
+        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
 
         cellNum++;
         cell = row.createCell(cellNum);
@@ -306,8 +302,7 @@ public class WriteFile {
             double counterpart = Double.parseDouble(grandLivre.counterpart());
             cell.setCellValue(counterpart);
         }
-        cellStyle = getCellStyleAlignmentLeft(workbook);
-        addlineBlue(rowNum, cellStyle, cell);
+        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
 
         cellNum++;
         cell = row.createCell(cellNum);
@@ -316,14 +311,12 @@ public class WriteFile {
             double checkNumber = Double.parseDouble(grandLivre.checkNumber());
             cell.setCellValue(checkNumber);
         }
-        cellStyle = getCellStyleAlignmentLeft(workbook);
-        addlineBlue(rowNum, cellStyle, cell);
+        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
 
         cellNum++;
         cell = row.createCell(cellNum);
         cell.setCellValue(grandLivre.label());
-        cellStyle = getCellStyleAlignmentLeft(workbook);
-        addlineBlue(rowNum, cellStyle, cell);
+        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
 
         cellNum++;
         Cell debitCell = row.createCell(cellNum);
@@ -334,8 +327,7 @@ public class WriteFile {
         } else {
             debitCell.setCellValue(0);
         }
-        cellStyle = getCellStyleAmount(workbook);
-        addlineBlue(rowNum, cellStyle, debitCell);
+        addlineBlue(rowNum, getCellStyleAmount(workbook), debitCell);
 
         cellNum++;
         Cell creditCell = row.createCell(cellNum);
@@ -346,8 +338,7 @@ public class WriteFile {
         } else {
             creditCell.setCellValue(0);
         }
-        cellStyle = getCellStyleAmount(workbook);
-        addlineBlue(rowNum, cellStyle, creditCell);
+        addlineBlue(rowNum, getCellStyleAmount(workbook), creditCell);
 
         cellNum++;
         Cell soldeCell = row.createCell(cellNum);
@@ -361,15 +352,13 @@ public class WriteFile {
             formule = beforeSoldeCellAddress + "+" + debitCell.getAddress() + "-" + creditCell.getAddress();
         }
         soldeCell.setCellFormula(formule);
-        cellStyle = getCellStyleAmount(workbook);
-        addlineBlue(rowNum, cellStyle, soldeCell);
+        addlineBlue(rowNum, getCellStyleAmount(workbook), soldeCell);
 
         cellNum++;
         cell = row.createCell(cellNum);
         if (grandLivre.label().startsWith("Report de ")) {
             cell.setCellValue("KO");
             String amount = grandLivre.label().substring("Report de ".length(), grandLivre.label().length() - 1).trim().replace(" ", "");
-            System.out.println("amountDouble =" + amount + " et debit-credit = " + (debit - credit) + " et est un double " + isDouble(amount));
             if (isDouble(amount)) {
                 double amountDouble = Double.parseDouble(amount);
                 if (amountDouble == (debit - credit)) {
@@ -377,8 +366,7 @@ public class WriteFile {
                 }
             }
         }
-        cellStyle = getCellStyleAmount(workbook);
-        addlineBlue(rowNum, cellStyle, cell);
+        addlineBlue(rowNum, getCellStyleAmount(workbook), cell);
     }
 
     private static void addlineBlue(int rowNum, CellStyle cellStyle, Cell cell) {
@@ -399,8 +387,7 @@ public class WriteFile {
     }
 
     private static CellStyle getCellStyleBlue(CellStyle cellStyle) {
-        XSSFColor backgroundColorBlue = new XSSFColor(new java.awt.Color(240, 255, 255), null); // RGB
-        cellStyle.setFillForegroundColor(backgroundColorBlue);
+        cellStyle.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
         cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return cellStyle;
     }
@@ -408,8 +395,7 @@ public class WriteFile {
     private static CellStyle getCellStyleTotalAmount(Workbook workbook) {
         CellStyle styleTotalAmount = getCellStyleAmount(workbook);
         styleTotalAmount.setFont(getFontBold(workbook));
-        XSSFColor backgroundColorGray = new XSSFColor(new java.awt.Color(200, 200, 200), null); // RGB
-        styleTotalAmount.setFillForegroundColor(backgroundColorGray);
+        styleTotalAmount.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
         styleTotalAmount.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return styleTotalAmount;
     }
@@ -428,8 +414,7 @@ public class WriteFile {
     private static CellStyle getCellStyleTotal(Workbook workbook) {
         CellStyle styleTotal = getCellStyleAlignmentLeft(workbook);
         styleTotal.setFont(getFontBold(workbook));
-        XSSFColor backgroundColorGray = new XSSFColor(new java.awt.Color(200, 200, 200), null); // RGB
-        styleTotal.setFillForegroundColor(backgroundColorGray);
+        styleTotal.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
         styleTotal.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return styleTotal;
     }
@@ -445,8 +430,7 @@ public class WriteFile {
         CellStyle styleEntete = workbook.createCellStyle();
         styleEntete.setAlignment(HorizontalAlignment.CENTER);
         styleEntete.setFont(font);
-        XSSFColor backgroundColorGray = new XSSFColor(new java.awt.Color(200, 200, 200), null); // RGB
-        styleEntete.setFillForegroundColor(backgroundColorGray);
+        styleEntete.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
         styleEntete.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return styleEntete;
     }
