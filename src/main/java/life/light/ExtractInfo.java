@@ -203,6 +203,9 @@ public class ExtractInfo {
             debit = new StringBuilder(debit.substring(0, debit.toString().length() - 3) + "." + debit.substring(debit.toString().length() - 3));
         }
 
+        debit = new StringBuilder(debit.toString().replace(" ", "").replace("€", "").trim());
+        credit = new StringBuilder(credit.toString().replace(" ", "").replace("€", "").trim());
+
         return new Line(document, date, account, journal, counterpart, checkNumber,
                 label.toString().trim(), debit.toString().trim(), credit.toString().trim());
     }
@@ -256,7 +259,7 @@ public class ExtractInfo {
         line = line.replace("|", "");
         line = line.replace(" / ", " ");
         line = line.replace("Reportde", "Report de");
-        if (line.endsWith("l")){
+        if (line.endsWith("l")) {
             line = line.replace("l", "");
         }
         return line;
@@ -326,6 +329,7 @@ public class ExtractInfo {
         for (int indexOfLabel = 0; indexOfLabel < labels.length; indexOfLabel++) {
             account = getAccount(accounts, labels, indexOfLabel);
             if (account != null) {
+                label = new StringBuilder(label.toString().replace(account.account(), "").replace("  ", " "));
                 break;
             }
         }
@@ -334,7 +338,10 @@ public class ExtractInfo {
             return null;
         }
 
-        return new TotalAccount(label.toString().trim(), account, debit.toString().trim(), credit.toString().replace("—", "").trim());
+        debit = new StringBuilder(debit.toString().replace(" ", "").replace("€", "").trim());
+        credit = new StringBuilder(credit.toString().replace(" ", "").replace("€", "").trim());
+
+        return new TotalAccount(label.toString().trim(), account, debit.toString(), credit.toString().replace("—", "").trim());
     }
 
     public static boolean isTotalAccount(String line) {
