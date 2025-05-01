@@ -64,7 +64,8 @@ public class ExtractInfoTest {
             "45000-0000 DUPONT / DUPOND # ****** 4% 4444445 5KKEEAXKRRRRRHE, 45000-0000, DUPONT / DUPOND",
             "461VC VENDEURS CREDITEURS,                                           461VC, VENDEURS CREDITEURS",
             "45000-0001 DUPONT 31/12/2020,                                   45000-0001, DUPONT 31/12/2020",
-            "46200 VIR TRUC 30/03/2021 NON IDENTIFIE,                             46200, VIR TRUC 30/03/2021 NON IDENTIFIE"
+            "46200 VIR TRUC 30/03/2021 NON IDENTIFIE,                             46200, VIR TRUC 30/03/2021 NON IDENTIFIE",
+            "4A0100-0077 | ABSA CHRISTAL,                                    40100-0077, ABSA CHRISTAL"
 })
     public void extractAccount(String line, String account, String label) {
         Account result = ExtractInfo.account(line);
