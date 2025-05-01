@@ -57,6 +57,7 @@ public class ExtractInfoTest {
             "40100-0002 _ RELANCE,                                           40100-0002, RELANCE",
             "40100-0609 | VBP HUISSIERS DE JUSTICE,                          40100-0609, VBP HUISSIERS DE JUSTICE",
             "45000-0003 — TRUC MUCHE,                                        45000-0003, TRUC MUCHE",
+            "40100-0001 — NOM du compte,                                     40100-0001, NOM du compte",
             "40100-0027 … RENOV,                                             40100-0027, RENOV",
             "40100-0890 | FBI - FUITE BATIMENT INVESTIGA°,                   40100-0890, FBI - FUITE BATIMENT INVESTIGA",
             "45000-0002 CHRISTOPHE******,                                    45000-0002, CHRISTOPHE",
@@ -102,7 +103,8 @@ public class ExtractInfoTest {
             "01/01/2024 40100-0001 Report de 0.00 € / 440.12 € / 440.12 €,                    '', 01/01/2024, 40100-0001, '',    '', '',   Report de 0.00€,          440.12,      440.12",
             "01/01/2024 40800-0004 Report de -2 592.52 €  2592.52 €,                          '', 01/01/2024, 40800,      '',    '', '',   Report de -2 592.52€,          '',    2592.52",
             "33333 01/01/2024 45010-0001 20 70120 APPEL DE FONDS 44961 €,                  33333, 01/01/2024, 45000-0001, 20, 70120, '',   APPEL DE FONDS,           449.61,          ''",
-            "|88888 16/04/2024 40100-0002 VI 51220 Virt EDF 08/04/24-28/04/24 1800.00 € l, 88888, 16/04/2024, 40100-0002, VI, 51220, Virt, EDF 08/04/24-28/04/24,   1800.00,           ''"
+            "|88888 16/04/2024 40100-0002 VI 51220 Virt EDF 08/04/24-28/04/24 1800.00 € l, 88888, 16/04/2024, 40100-0002, VI, 51220, Virt, EDF 08/04/24-28/04/24,   1800.00,          ''",
+            "44917 29/03/2024 40100-005 7 AC 61350 PARIS 03/2024 64.89 €,                  44917, 29/03/2024, 40100-0057, AC, 61350, '',   PARIS 03/2024 ,           64.89,          ''"
     })
     public void extractline(String line, String document, String date, String account, String journal,
                             String counterpart, String checkNumber, String label, String debit, String credit) {
@@ -113,6 +115,7 @@ public class ExtractInfoTest {
         accounts.put("10500", new Account("10500", "Fond travaux"));
         accounts.put("40800", new Account("40800", "Un compte"));
         accounts.put("45000-0001", new Account("45000-0001", "Monsieur DUPONT"));
+        accounts.put("40100-0057", new Account("40100-0057", "PARIS"));
         Line result = ExtractInfo.line(line, accounts);
         Assertions.assertNotNull(result);
         Assertions.assertEquals(document, result.document());
@@ -152,12 +155,14 @@ public class ExtractInfoTest {
             "Total compte 40100-0002 (Solde : 0.00 €) 999 999.99 € 999 999.99 €, Total compte (Solde : 0.00€),                40100-0002, 999999.99, 999999.99",
             "Total compte 40100-0002 (Solde : 0.00 €) 1 238.40 € ,               Total compte (Solde : 0.00€),                40100-0002,   1238.40,   1238.40",
             "Total compte 40100-0001 (Solde créditeur : -3 896.22 €),            Total compte (Solde créditeur : -3 896.22€), 40100-0001,        '',        ''",
-            "Total compte 40100-0001 (Solde : 0.00 €) 16144.77€| — 16144.77€,    Total compte (Solde : 0.00€),                40100-0001,   16144.77, 16144.77"
+            "Total compte 40100-0001 (Solde : 0.00 €) 16144.77€| — 16144.77€,    Total compte (Solde : 0.00€),                40100-0001,  16144.77,  16144.77",
+            "Total compte 40100-001 7 (Solde : 0.00 €) 2 377.01 € 2 377.01 €,    Total compte (Solde : 0.00€),                40100-0017,   2377.01,   2377.01"
     })
     public void extractTotalAccount(String line, String label, String account, String debit, String credit) {
         Map<String, Account> accounts = new HashMap<>();
         accounts.put("40100-0001", new Account("40100-0001", "Orange"));
         accounts.put("40100-0002", new Account("40100-0002", "EDF"));
+        accounts.put("40100-0017", new Account("40100-0017", "GDF"));
         TotalAccount result = ExtractInfo.totalAccount(line, accounts);
         Assertions.assertNotNull(result);
         Assertions.assertEquals(label, result.label());

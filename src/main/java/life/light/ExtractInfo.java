@@ -106,6 +106,11 @@ public class ExtractInfo {
         // Extraction du numéro de compte
         Account account = getAccount(accounts, words, indexOfWords);
         if (account == null) {
+            String[] numAccount = {words[indexOfWords] + words[indexOfWords + 1]};
+            account = getAccount(accounts, numAccount, 0);
+            indexOfWords++;
+        }
+        if (account == null) {
             LOGGER.error("Erreur lors de la recherche du compte {} sur la ligne {}", words[indexOfWords], line);
             return null;
         }
@@ -324,13 +329,32 @@ public class ExtractInfo {
         }
 
         // Extraction du numéro de compte
-        String[] labels = splittingLineIntoWordTable(label.toString());
+        String[] labels = splittingLineIntoWordTable(label.toString(). replace("Total compte ", ""));
         Account account = null;
         for (int indexOfLabel = 0; indexOfLabel < labels.length; indexOfLabel++) {
             account = getAccount(accounts, labels, indexOfLabel);
             if (account != null) {
                 label = new StringBuilder(label.toString().replace(account.account(), "").replace("  ", " "));
                 break;
+            }
+        }
+        if (account == null){
+            StringBuilder numAccount = new StringBuilder();
+            StringBuilder accountInLabel = new StringBuilder();
+            for (String word : labels) {
+                if (word.contains("Solde")){
+                    break;
+                }
+                numAccount.append(word);
+                accountInLabel.append(" ").append(word);
+            }
+            if (!numAccount.isEmpty()) {
+                String[] numAccountWord = new String[1];
+                numAccountWord[0] = numAccount.toString();
+                account = getAccount(accounts, numAccountWord, 0);
+                if (account != null) {
+                    label = new StringBuilder(label.toString().replace(accountInLabel.toString(), "").replace("  ", " "));
+                }
             }
         }
         if (account == null) {
