@@ -81,7 +81,8 @@ public class ExtractInfoTest {
             "75000 PARIS | ,                                                    false",
             "001 NOM COPROPRIÉTÉ au 31/12/2024 Gestionnaire : NOM PRENOM,       false",
             "45000-0001 DUPONT 31/12/2020,                                      true",
-            "461VC VENDEURS CREDITEURS,                                         true"
+            "461VC VENDEURS CREDITEURS,                                         true",
+            "4A0100-0077 | ABSA CHRISTAL,                                       true"
     })
     public void extractIsLineAccount(String line, boolean is) {
         boolean result = ExtractInfo.isAcccount(line, "75000", "001");

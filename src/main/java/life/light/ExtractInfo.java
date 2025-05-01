@@ -74,6 +74,9 @@ public class ExtractInfo {
         if (firstword.contains("-")) {
             firstword = firstword.replace("-", "");
         }
+        if (firstword.contains("4A01")) {
+            firstword = firstword.replace("4A01", "401");
+        }
         if (firstword.matches(REGEX_NUMBER) || "461VC".equals(firstword)) {
             return findDateIn(words[1]).isEmpty() && !line.contains("Page : ");
         }
