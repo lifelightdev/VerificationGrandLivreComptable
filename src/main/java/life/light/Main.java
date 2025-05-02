@@ -28,9 +28,8 @@ public class Main {
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             syndicName = ExtractInfo.syndicName(reader.readLine());
             printDate = ExtractInfo.printDate(reader.readLine());
-            String line = reader.readLine();
-            stopDate = ExtractInfo.stopDate(line);
-            postalCode = ExtractInfo.postalCode(line);
+            postalCode = ExtractInfo.postalCode(reader.readLine());
+            stopDate = ExtractInfo.stopDate(reader.readLine());
         } catch (IOException e) {
             LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
         }

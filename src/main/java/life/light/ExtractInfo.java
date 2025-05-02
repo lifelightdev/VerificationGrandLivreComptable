@@ -194,8 +194,17 @@ public class ExtractInfo {
             StringBuilder amount = new StringBuilder(words[indexOfWordsStartEnd]);
             indexOfWordsStartEnd--;
             while (words[indexOfWordsStartEnd].replace(".", "").matches(REGEX_NUMBER)) {
-                amount.insert(0, words[indexOfWordsStartEnd] + " ");
-                indexOfWordsStartEnd--;
+                String word = words[indexOfWordsStartEnd];
+                if (!"2024".equals(word)) {
+                    if (!(word.length() == 9)) {
+                        amount.insert(0, word + " ");
+                        indexOfWordsStartEnd--;
+                    } else {
+                        break;
+                    }
+                } else {
+                    break;
+                }
             }
             for (int i = indexOfWords; i <= indexOfWordsStartEnd; i++) {
                 label.append(" ").append(words[i]);
@@ -268,6 +277,13 @@ public class ExtractInfo {
         line = line.replace("|", "");
         line = line.replace(" / ", " ");
         line = line.replace("Reportde", "Report de");
+        line = line.replace(" ‘", "");
+        line = line.replace(" — ", " ");
+        line = line.replace(" . ", " ");
+        line = line.replace(" =— ", " ");
+        line = line.replace(" _ ", " ");
+        line = line.replace(" - ", " ");
+        line = line.replace(" = ", " ");
         if (line.endsWith("l")) {
             line = line.replace("l", "");
         }
@@ -333,7 +349,7 @@ public class ExtractInfo {
         }
 
         // Extraction du numéro de compte
-        String[] labels = splittingLineIntoWordTable(label.toString(). replace("Total compte ", ""));
+        String[] labels = splittingLineIntoWordTable(label.toString().replace("Total compte ", ""));
         Account account = null;
         for (int indexOfLabel = 0; indexOfLabel < labels.length; indexOfLabel++) {
             account = getAccount(accounts, labels, indexOfLabel);
@@ -342,11 +358,11 @@ public class ExtractInfo {
                 break;
             }
         }
-        if (account == null){
+        if (account == null) {
             StringBuilder numAccount = new StringBuilder();
             StringBuilder accountInLabel = new StringBuilder();
             for (String word : labels) {
-                if (word.contains("Solde")){
+                if (word.contains("Solde")) {
                     break;
                 }
                 numAccount.append(word);

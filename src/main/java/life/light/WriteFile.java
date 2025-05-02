@@ -58,7 +58,7 @@ public class WriteFile {
                 Row row = sheet.createRow(rowNum);
                 colNum = 0;
                 row.createCell(colNum++).setCellValue(entry.getKey());
-                row.createCell(colNum++).setCellValue(entry.getValue().label());
+                row.createCell(colNum).setCellValue(entry.getValue().label());
                 rowNum++;
             }
             // Écrire le contenu du classeur dans un fichier
@@ -271,8 +271,12 @@ public class WriteFile {
         if (grandLivre.label().contains("créditeur")) {
             amount = amount.replace("-", "");
         }
+        if (amount.contains(":")) {
+            amount = amount.replace(":", "");
+        }
+        //LOGGER.info("Verification du total du compte " + grandLivre.account().account() + " montant " + amount + " credit " + credit);
         String formuleIfSolde = "IF(" + soldeCell.getAddress() + "=" + Double.parseDouble(amount)
-                + ", \"Total debit, credit et solde sont OK\", \"Le solde n'est pas égale " + Double.parseDouble(amount) + " et " + soldeCell.getNumericCellValue() + "\")";
+                + ", \"OK pour le total debit, credit et  le solde\", \"Le solde n'est pas égale " + Double.parseDouble(amount) + " et " + soldeCell.getNumericCellValue() + "\")";
         String formuleIfCredit = "IF(" + creditCell.getAddress() + "=" + credit + ", " + formuleIfSolde + ", \"Le total credit n'est pas égale a " + credit + "\")";
         String formuleIfDebit = "IF(" + debitCell.getAddress() + "=" + debit + ", " + formuleIfCredit + ", \"Le total débit n'est pas égale a " + debit + "\")";
         cell.setCellFormula(formuleIfDebit);
@@ -406,7 +410,7 @@ public class WriteFile {
                 } else {
                     String message = "KO le montant du report est de " + amount + " le solde est de  " + Double.parseDouble(nombreFormate)
                             + " le débit est de " + debit + " le credit est de " + credit;
-                    LOGGER.info(message + " le compte est " + grandLivre.account().account());
+                    LOGGER.info(message + " sur le compte " + grandLivre.account().account());
                     cell.setCellValue(message);
                 }
             }
