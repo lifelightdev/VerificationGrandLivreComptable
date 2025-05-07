@@ -19,7 +19,7 @@ public class WriteFile {
     public static final XSSFColor BACKGROUND_COLOR_RED = new XSSFColor(new java.awt.Color(255, 0, 0), null);
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String[] NOM_ENTETE_COLONNE = {"Compte", "Intitulé du compte", "Pièce", "Date", "Journal",
-            "Contrepartie", "N° chèque", "Libellé", "Débit", "Crédit", "Solde (Calculé)", "Verification des montants"};
+            "Contrepartie", "N° chèque", "Libellé", "Débit", "Crédit", "Solde (Calculé)", "Verification", "Commentaire"};
 
     // TODO faire la gestion des fichiers (existe, n'existe pas, pas de dossier ...)
 
@@ -257,7 +257,7 @@ public class WriteFile {
         soldeCell.setCellFormula(creditCell.getAddress() + "-" + debitCell.getAddress());
         soldeCell.setCellStyle(getCellStyleTotalAmount(workbook));
 
-        cell = row.createCell(cellNum);
+        cell = row.createCell(cellNum++);
         cell.setCellValue(debit - credit);
         String amount = grandLivre.label().substring("Total compte (Solde :".length(), grandLivre.label().length() - 1)
                 .replace("créditeur", " ")
@@ -267,6 +267,9 @@ public class WriteFile {
                 .replace(" : ", "")
                 .replace("€", "")
                 .replace(" ", "")
+                .replace("Total compte", "").trim()
+                .replace("(Solde créditeur : -", "")
+                .replace("(Solde : ", "")
                 .trim();
         if (grandLivre.label().contains("créditeur")) {
             amount = amount.replace("-", "");
@@ -274,11 +277,23 @@ public class WriteFile {
         if (amount.contains(":")) {
             amount = amount.replace(":", "");
         }
-        //LOGGER.info("Verification du total du compte " + grandLivre.account().account() + " montant " + amount + " credit " + credit);
+        amount = amount.replace("(Solde", "").replace("lde", "").replace("o", "").replace("de", "")
+                .replace("S0.00", "0.00").replace("S490.75", "490.75");
+        //LOGGER.info("Vérification du total du compte [{}] montant [{}] credit [{}] ligne [{}]", grandLivre.account().account(), amount, credit, grandLivre);
         String formuleIfSolde = "IF(" + soldeCell.getAddress() + "=" + Double.parseDouble(amount)
-                + ", \"OK pour le total debit, credit et  le solde\", \"Le solde n'est pas égale " + Double.parseDouble(amount) + " et " + soldeCell.getNumericCellValue() + "\")";
-        String formuleIfCredit = "IF(" + creditCell.getAddress() + "=" + credit + ", " + formuleIfSolde + ", \"Le total credit n'est pas égale a " + credit + "\")";
-        String formuleIfDebit = "IF(" + debitCell.getAddress() + "=" + debit + ", " + formuleIfCredit + ", \"Le total débit n'est pas égale a " + debit + "\")";
+                + ", \"OK\", \"KO\")";
+        String formuleIfCredit = "IF(" + creditCell.getAddress() + "=" + credit + ", " + formuleIfSolde + ", \"KO\")";
+        String formuleIfDebit = "IF(" + debitCell.getAddress() + "=" + debit + ", " + formuleIfCredit + ", \"KO\")";
+        cell.setCellFormula(formuleIfDebit);
+        cell.setCellStyle(getCellStyleTotalAmount(workbook));
+
+        cell = row.createCell(cellNum++);
+        cell.setCellValue(debit - credit);
+        formuleIfSolde = "IF(" + soldeCell.getAddress() + "=" + Double.parseDouble(amount)
+                + ", \"Le total debit, credit et  le solde\", \"Le solde n'est pas égale " + Double.parseDouble(amount) + " et " + soldeCell.getNumericCellValue() + "\")";
+        formuleIfCredit = "IF(" + creditCell.getAddress() + "=" + credit + ", " + formuleIfSolde + ", \"Le total credit n'est pas égale a " + credit + "\")";
+        formuleIfDebit = "IF(" + debitCell.getAddress() + "=" + debit + ", " + formuleIfCredit + ", \"Le total débit n'est pas égale a " + debit + "\")";
+
         cell.setCellFormula(formuleIfDebit);
         cell.setCellStyle(getCellStyleTotalAmount(workbook));
     }
@@ -389,11 +404,11 @@ public class WriteFile {
         soldeCell.setCellFormula(formule);
         addlineBlue(rowNum, getCellStyleAmount(workbook), soldeCell);
 
+        String message = "";
         cellNum++;
         cell = row.createCell(cellNum);
         addlineBlue(rowNum, getCellStyleAmount(workbook), cell);
         if (grandLivre.label().startsWith("Report de ")) {
-            cell.setCellValue("KO");
             CellStyle style = getCellStyleAlignmentLeft(workbook);
             style.setFont(getFontBold(workbook));
             style.setFillForegroundColor(BACKGROUND_COLOR_RED);
@@ -408,13 +423,64 @@ public class WriteFile {
                     cell.setCellValue("OK");
                     addlineBlue(rowNum, getCellStyleAmount(workbook), cell);
                 } else {
-                    String message = "KO le montant du report est de " + amount + " le solde est de  " + Double.parseDouble(nombreFormate)
+                    message = "Le montant du report est de " + amount + " le solde est de  " + Double.parseDouble(nombreFormate)
                             + " le débit est de " + debit + " le credit est de " + credit;
                     LOGGER.info(message + " sur le compte " + grandLivre.account().account());
-                    cell.setCellValue(message);
+                    cell.setCellValue("KO");
+                }
+            }
+        } else {
+            if (grandLivre.account().account().startsWith("6")) {
+                File pathDirectory = new File("D:\\Le Nidor\\2024\\FACTURES");
+                File[] files = pathDirectory.listFiles();
+                if (null != files) {
+                    boolean find = false;
+                    for (File fichier : files) {
+                        if (fichier.isFile()) {
+                            if (fichier.getName().contains(grandLivre.document())) {
+                                cell.setCellValue("OK");
+                                find = true;
+                                break;
+                            }
+                            message = "Impossible de trouver la facture lier à la piece : " + grandLivre.document()
+                                    + " dans le dossier : " + fichier.getAbsolutePath().replace(fichier.getName(), "");
+                        } else if (fichier.isDirectory()) {
+                            File[] sousDossier = fichier.listFiles();
+                            if (null != sousDossier) {
+                                boolean findSousDossier = false;
+                                for (File fichierDuSousDossier : sousDossier) {
+                                    if (fichierDuSousDossier.isFile()) {
+                                        if (fichierDuSousDossier.getName().contains(grandLivre.document())) {
+                                            cell.setCellValue("KO");
+                                            findSousDossier = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (!findSousDossier) {
+                                    message = "Impossible de trouver la facture lier à la piece : " + grandLivre.document()
+                                            + " dans le sous dossier : " + fichier.getPath();
+                                    LOGGER.info(message + " sur le compte " + grandLivre.account().account() + " pour la ligne : " + grandLivre);
+                                }
+                            }
+                        }
+                    }
+                    if (!find) {
+                        message = "Impossible de trouver la facture lier à la piece : " + grandLivre.document()
+                                + "dans le dossier : " + pathDirectory + "\n";
+                        LOGGER.info(message + " sur le compte " + grandLivre.account().account());
+                    }
                 }
             }
         }
+
+        if (cell.getStringCellValue().equals("KO")) {
+            cellNum++;
+            cell = row.createCell(cellNum);
+            cell.setCellValue(message.trim());
+            addlineBlue(rowNum, getCellStyleAmount(workbook), cell);
+        }
+
     }
 
     private static void addlineBlue(int rowNum, CellStyle cellStyle, Cell cell) {

@@ -63,6 +63,16 @@ public class ExtractInfo {
     }
 
     public static boolean isAcccount(String line, String postalCode, String id) {
+        line = line.replace("  ", " ");
+        if (line.contains(EURO)) {
+            return false;
+        }
+        if ((line.contains("Page")) && (!findDateIn(line).isEmpty())) {
+            return false;
+        }
+        if (line.trim().isEmpty()){
+            return false;
+        }
         String[] words = splittingLineIntoWordTable(line);
         String firstword = words[0];
         if (firstword.equals(postalCode)) {
@@ -78,7 +88,7 @@ public class ExtractInfo {
             firstword = firstword.replace("4A01", "401");
         }
         if (firstword.matches(REGEX_NUMBER) || "461VC".equals(firstword)) {
-            return findDateIn(words[1]).isEmpty() && !line.contains("Page : ");
+            return findDateIn(words[1]).isEmpty();
         }
         return false;
     }
@@ -103,27 +113,52 @@ public class ExtractInfo {
             indexOfWords++;
         }
 
+        indexOfWords = getIndexOfWords(words, indexOfWords);
+
         // Extraction de la date de l'opération
         String date = words[indexOfWords];
         indexOfWords++;
 
-        // Extraction du numéro de compte
-        Account account = getAccount(accounts, words, indexOfWords);
-        if (account == null) {
-            String[] numAccount = {words[indexOfWords] + words[indexOfWords + 1]};
-            account = getAccount(accounts, numAccount, 0);
-            indexOfWords++;
-        }
-        if (account == null) {
-            LOGGER.error("Erreur lors de la recherche du compte {} sur la ligne {}", words[indexOfWords], line);
-            return null;
-        }
-        indexOfWords++;
-
-        // Extraction du code du journal
+        Account account;
         String journal = "";
-        if (words[indexOfWords].length() == NAME_JOURNAL_SIZE) {
-            journal = words[indexOfWords];
+        // Extraction du numéro de compte
+        if (words[indexOfWords].length() > 10) {
+            String numberAccount = words[indexOfWords].substring(0, 10);
+            journal = words[indexOfWords].substring(10);
+            String[] numberAccounts = {numberAccount};
+            account = getAccount(accounts, numberAccounts, 0);
+            if (account == null) {
+                String[] numAccount = {words[indexOfWords] + words[indexOfWords + 1]};
+                account = getAccount(accounts, numAccount, 0);
+            }
+            if (account == null) {
+                LOGGER.error("Erreur lors de la recherche du compte {} sur la ligne {}", words[indexOfWords], line);
+                return null;
+            }
+            indexOfWords++;
+        } else {
+            account = getAccount(accounts, words, indexOfWords);
+            if (account == null) {
+                String[] numAccount = {words[indexOfWords] + words[indexOfWords + 1]};
+                account = getAccount(accounts, numAccount, 0);
+                indexOfWords++;
+            }
+            if (account == null) {
+                LOGGER.error("Erreur lors de la recherche du compte {} sur la ligne {}", words[indexOfWords], line);
+                return null;
+            }
+            indexOfWords++;
+            if (words[indexOfWords].trim().isEmpty()) {
+                indexOfWords++;
+            }
+            // Extraction du code du journal
+            if (words[indexOfWords].length() == NAME_JOURNAL_SIZE) {
+                journal = words[indexOfWords];
+                indexOfWords++;
+            }
+        }
+
+        if (words[indexOfWords].trim().isEmpty()) {
             indexOfWords++;
         }
 
@@ -134,10 +169,18 @@ public class ExtractInfo {
             indexOfWords++;
         }
 
+        if (words[indexOfWords].trim().isEmpty()) {
+            indexOfWords++;
+        }
+
         // Extraction du numéro de chéque
         String checkNumber = "";
         if ("Virt".equals(words[indexOfWords])) {
             checkNumber = words[indexOfWords];
+            indexOfWords++;
+        }
+
+        if (words[indexOfWords].trim().isEmpty()) {
             indexOfWords++;
         }
 
@@ -186,11 +229,10 @@ public class ExtractInfo {
                 debit = amount;
             }
         } else if (numberOfAmounts == 1) {
-            // S'il n'y a qu'un seul montant
-            // c'est ne nombre d'espace entre le libellé et le montant qui determine s'il est au debit ou au crédit
-            // zero espace = debit
-            // un espace = crédit
             int indexOfWordsStartEnd = words.length - 1;
+            if (words[indexOfWordsStartEnd].trim().isEmpty()) {
+                indexOfWordsStartEnd--;
+            }
             StringBuilder amount = new StringBuilder(words[indexOfWordsStartEnd]);
             indexOfWordsStartEnd--;
             while (words[indexOfWordsStartEnd].replace(".", "").matches(REGEX_NUMBER)) {
@@ -209,8 +251,7 @@ public class ExtractInfo {
             for (int i = indexOfWords; i <= indexOfWordsStartEnd; i++) {
                 label.append(" ").append(words[i]);
             }
-
-            if (label.toString().endsWith(" ")) {
+            if (!words[words.length - 1].trim().isEmpty()) {
                 credit = amount;
             } else {
                 debit = amount;
@@ -226,6 +267,13 @@ public class ExtractInfo {
 
         return new Line(document, date, account, journal, counterpart, checkNumber,
                 label.toString().trim(), debit.toString().trim(), credit.toString().trim());
+    }
+
+    private static int getIndexOfWords(String[] words, int indexOfWords) {
+        if (words[indexOfWords].trim().isEmpty()) {
+            indexOfWords++;
+        }
+        return indexOfWords;
     }
 
     private static int getNumberOfAmountsOn(String line) {
@@ -254,7 +302,29 @@ public class ExtractInfo {
     }
 
     private static String[] splittingLineIntoWordTable(String line) {
-        return line.trim().split(" ");
+        String[] words = line.split(" ");
+        String[] resultTemp = new String[words.length + 1];
+        int idResult = 0;
+        for (String word : words) {
+            if ("".equals(word)) {
+                if (idResult > 0 && resultTemp[idResult - 1].contains(" ")) {
+                    resultTemp[idResult - 1] = resultTemp[idResult - 1] + " ";
+                } else {
+                    resultTemp[idResult] = " ";
+                    idResult++;
+                }
+            } else {
+                resultTemp[idResult] = word;
+                idResult++;
+            }
+        }
+        if (line.endsWith(" ")) {
+            resultTemp[idResult] = " ";
+            idResult++;
+        }
+        String[] result = new String[idResult];
+        System.arraycopy(resultTemp, 0, result, 0, idResult);
+        return result;
     }
 
     private static String getDocument(String[] words, int indexOfWords) {
@@ -349,7 +419,7 @@ public class ExtractInfo {
         }
 
         // Extraction du numéro de compte
-        String[] labels = splittingLineIntoWordTable(label.toString().replace("Total compte ", ""));
+        String[] labels = splittingLineIntoWordTable(label.toString().replace("Total compte ", "").trim());
         Account account = null;
         for (int indexOfLabel = 0; indexOfLabel < labels.length; indexOfLabel++) {
             account = getAccount(accounts, labels, indexOfLabel);

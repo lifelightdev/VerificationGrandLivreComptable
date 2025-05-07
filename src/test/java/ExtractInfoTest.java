@@ -78,11 +78,15 @@ public class ExtractInfoTest {
             "40100-0001 ORANGE,                                                 true",
             "C'est le nom du Syndic,                                            false",
             "8 AVENUE DES CHAMPS ELYSE 14/04/2025 Page : 10,                    false",
+            "8 AVENUE DES CHAMPS ELYSE 11/04/2025 Page: 63,                     false",
             "75000 PARIS | ,                                                    false",
             "001 NOM COPROPRIÉTÉ au 31/12/2024 Gestionnaire : NOM PRENOM,       false",
             "45000-0001 DUPONT 31/12/2020,                                      true",
             "461VC VENDEURS CREDITEURS,                                         true",
-            "4A0100-0077 | ABSA CHRISTAL,                                       true"
+            "4A0100-0077 | ABSA CHRISTAL,                                       true",
+            "43575  01/01/2024 51220 OD 45000 VOTRE VIREMENT 100.00€,           false",
+            "42206  26/06/2024 70246  P4 45020  APRT TX  JARD,                  false",
+            "1 238.40 €,                                                        false"
     })
     public void extractIsLineAccount(String line, boolean is) {
         boolean result = ExtractInfo.isAcccount(line, "75000", "001");
@@ -93,23 +97,29 @@ public class ExtractInfoTest {
         }
     }
 
+
     @ParameterizedTest
     @CsvSource({
-            "01/01/2024 40100-0001 Report de 0.00 € 3 210.69 € 3 210.69 €,                    '', 01/01/2024, 40100-0001, '', '',    '',   Report de 0.00€,         3210.69,     3210.69",
-            "01/01/2024 40100-0002 Report de 0.00 € 432.93 € 432.93 €,                        '', 01/01/2024, 40100-0002, '', '',    '',   Report de 0.00€,          432.93,      432.93",
-            "01/01/2024 40100-0003 Report de -1 234.56 € 23 456.78 € 24 691.34 €,             '', 01/01/2024, 40100-0003, '', '',    '',   Report de -1 234.56€,   23456.78,    24691.34",
-            "33333 01/01/2024 10500 15 44444 APPEL FONDS LOI ALUR  2 000.00 €,             33333, 01/01/2024, 10500,      15, 44444, '',   APPEL FONDS LOI ALUR,          '',    2000.00",
-            "111111 01/01/2024 40100-0001 | VI 55555 Virt HONORAIRE COURANT 3 000.00 €,    11111, 01/01/2024, 40100-0001, VI, 55555, Virt, HONORAIRE COURANT,       3000.00,          ''",
-            "01/01/2024 40100-0001 Report de 0.00 € 100 000.00€| 100 000.00 €,                '', 01/01/2024, 40100-0001, '',    '', '',   Report de 0.00€,       100000.00,   100000.00",
-            "|44444 01/10/2024 40100-0001 40 10500 TRAVAUX PORTE PARKING  10 749.26 €|,    44444, 01/10/2024, 40100-0001, 40, 10500, '',   TRAVAUX PORTE PARKING,         '',   10749.26",
-            "01/01/2024 40100-0001 Report de 0.00 € / 440.12 € / 440.12 €,                    '', 01/01/2024, 40100-0001, '',    '', '',   Report de 0.00€,          440.12,      440.12",
-            "01/01/2024 40800-0004 Report de -2 592.52 €  2592.52 €,                          '', 01/01/2024, 40800,      '',    '', '',   Report de -2 592.52€,          '',    2592.52",
-            "33333 01/01/2024 45010-0001 20 70120 APPEL DE FONDS 44961 €,                  33333, 01/01/2024, 45000-0001, 20, 70120, '',   APPEL DE FONDS,           449.61,          ''",
-            "|88888 16/04/2024 40100-0002 VI 51220 Virt EDF 08/04/24-28/04/24 1800.00 € l, 88888, 16/04/2024, 40100-0002, VI, 51220, Virt, EDF 08/04/24-28/04/24,   1800.00,          ''",
-            "44917 29/03/2024 40100-005 7 AC 61350 PARIS 03/2024 64.89 €,                  44917, 29/03/2024, 40100-0057, AC, 61350, '',   PARIS 03/2024,             64.89,          ''",
-            "35138 29/01/2024 40100-0001 VI 51220 Virt Orange 2024 2 361.62 €,             35138, 29/01/2024, 40100-0001, VI, 51220, Virt, Orange 2024,             2361.62,          ''",
-            "144796 05/09/2024 40100-0001 — AC 61500 Orange  1 599.40 €|,                  44796, 05/09/2024, 40100-0001, AC, 61500, '',   Orange,                       '',     1599.40",
-            "144796 27/09/2024 40100-0001 . VI 51221 Virt Orange 1 599.40 € |,              44796, 27/09/2024, 40100-0001, VI,51221, Virt, Orange,                  1599.40,          ''"
+            "01/01/2024 40100-0001 Report de 0.00 € 3 210.69 € 3 210.69 €,                      '', 01/01/2024, 40100-0001, '',    '', '',   Report de 0.00€,         3210.69,   3210.69",
+            "01/01/2024 40800  Report de 0.00 €  107 551.98 €  107 551.98 €,                    '', 01/01/2024, 40800,      '',    '', '',   Report de 0.00€,       107551.98, 107551.98",
+            "01/01/2024 40100-0002 Report de 0.00 € 432.93 € 432.93 €,                          '', 01/01/2024, 40100-0002, '',    '', '',   Report de 0.00€,          432.93,    432.93",
+            "01/01/2024 40100-0003 Report de -1 234.56 € 23 456.78 € 24 691.34 €,               '', 01/01/2024, 40100-0003, '',    '', '',   Report de -1 234.56€,   23456.78,  24691.34",
+            "33333  01/01/2024 10500 15 44444 APPEL FONDS LOI ALUR  2 000.00 €,              33333, 01/01/2024, 10500,      15, 44444, '',   APPEL FONDS LOI ALUR,         '',   2000.00",
+            "'111111 01/01/2024 40100-0001 | VI 55555 Virt HONORAIRE COURANT 3 000.00 € ',   11111, 01/01/2024, 40100-0001, VI, 55555, Virt, HONORAIRE COURANT,       3000.00,        ''",
+            "01/01/2024 40100-0001 Report de 0.00 € 100 000.00€| 100 000.00 €,                  '', 01/01/2024, 40100-0001, '',    '', '',   Report de 0.00€,       100000.00, 100000.00",
+            "|44444 01/10/2024 40100-0001 40 10500 TRAVAUX PORTE PARKING  10 749.26 €|,      44444, 01/10/2024, 40100-0001, 40, 10500, '',   TRAVAUX PORTE PARKING,        '',  10749.26",
+            "01/01/2024 40100-0001 Report de 0.00 € / 440.12 € / 440.12 €,                      '', 01/01/2024, 40100-0001, '',    '', '',   Report de 0.00€,          440.12,    440.12",
+            "01/01/2024 40800-0004 Report de -2 592.52 €  2592.52 €,                            '', 01/01/2024, 40800,      '',    '', '',   Report de -2 592.52€,         '',   2592.52",
+            "'33333 01/01/2024 45010-0001 20 70120 APPEL DE FONDS 44961 € ',                 33333, 01/01/2024, 45000-0001, 20, 70120, '',   APPEL DE FONDS,           449.61,        ''",
+            "|88888 16/04/2024 40100-0002 VI 51220 Virt EDF 08/04/24-28/04/24 1800.00 € l,   88888, 16/04/2024, 40100-0002, VI, 51220, Virt, EDF 08/04/24-28/04/24,   1800.00,        ''",
+            "'44917 29/03/2024 40100-005 7 AC 61350 PARIS 03/2024 64.89 € ',                 44917, 29/03/2024, 40100-0057, AC, 61350, '',   PARIS 03/2024,             64.89,        ''",
+            "'35138 29/01/2024 40100-0001 VI 51220 Virt Orange 2024 2 361.62 € ',            35138, 29/01/2024, 40100-0001, VI, 51220, Virt, Orange 2024,             2361.62,        ''",
+            "144796 05/09/2024 40100-0001 — AC 61500 Orange  1 599.40 €|,                    44796, 05/09/2024, 40100-0001, AC, 61500, '',   Orange,                       '',   1599.40",
+            "144796 27/09/2024 40100-0001 . VI 51221 Virt Orange 1 599.40 € |,               44796, 27/09/2024, 40100-0001, VI, 51221, Virt, Orange,                  1599.40,        ''",
+            "'140040 30/04/2024 40100-0057OD 51220  PRLVT ORANGE 84.89 € ',                  40040, 30/04/2024, 40100-0057, OD, 51220,   '', PRLVT ORANGE,              84.89,        ''",
+            "'45476 01/10/2024 40800  40 45020  TRAVAUX PORTE PARKING  10 749.26 € ',        45476, 01/10/2024, 40800,      40, 45020,   '', TRAVAUX PORTE PARKING,  10749.26,        ''",
+            "'55617 31/12/2024 40800  OD 45020 TRAVAUX PORTE PARKING  10 749.26 €',          55617, 31/12/2024, 40800,      OD, 45020,   '', TRAVAUX PORTE PARKING,        '',  10749.26",
+            "41751 01/07/2024 40100-0001  OD 62100  HONORAIRES 3T2024 (00001806) 3 000.00 €, 41751, 01/07/2024, 40100-0001, OD, 62100, '', HONORAIRES SYNDIC 3T2024 (00001806), '', 3000.00"
     })
     public void extractline(String line, String document, String date, String account, String journal,
                             String counterpart, String checkNumber, String label, String debit, String credit) {
@@ -121,6 +131,7 @@ public class ExtractInfoTest {
         accounts.put("40800", new Account("40800", "Un compte"));
         accounts.put("45000-0001", new Account("45000-0001", "Monsieur DUPONT"));
         accounts.put("40100-0057", new Account("40100-0057", "PARIS"));
+        accounts.put("51220", new Account("51220", "Banque"));
         Line result = ExtractInfo.line(line, accounts);
         Assertions.assertNotNull(result);
         Assertions.assertEquals(document, result.document());
@@ -136,14 +147,15 @@ public class ExtractInfoTest {
 
     @ParameterizedTest
     @CsvSource({
-            "40100-0001 ORANGE,                                                 false",
-            "C'est le nom du Syndic,                                            false",
-            "8 AVENUE DES CHAMPS ELYSE 14/04/2025 Page : 10,                    false",
-            "75000 PARIS | ,                                                    false",
-            "001 NOM COPROPRIÉTÉ au 31/12/2024 Gestionnaire : NOM PRENOM,       false",
-            "01/01/2024 40100-0001 Report de 0.00 € 3 210.69 € 3 210.69 €,      true",
-            "33333 01/01/2024 10500 15 44444 APPEL FONDS LOI ALUR  2 000.00 € , true",
-            "01.01.01.01.01,                                                    false"
+            "40100-0001 ORANGE,                                                               false",
+            "C'est le nom du Syndic,                                                          false",
+            "8 AVENUE DES CHAMPS ELYSE 14/04/2025 Page : 10,                                  false",
+            "75000 PARIS | ,                                                                  false",
+            "001 NOM COPROPRIÉTÉ au 31/12/2024 Gestionnaire : NOM PRENOM,                     false",
+            "01/01/2024  40100-0001 Report de 0.00 € 3 210.69 € 3 210.69 €,                   true",
+            "33333 01/01/2024 10500 15 44444 APPEL FONDS LOI ALUR  2 000.00 € ,               true",
+            "01.01.01.01.01,                                                                  false",
+            "41751 01/07/2024 40100-0001  OD 62100  HONORAIRES 3T2024 (00001806)  3 000.00 €, true"
     })
     public void extractIsLine(String line, boolean is) {
         boolean result = ExtractInfo.isLigne(line);

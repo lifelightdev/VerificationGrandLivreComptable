@@ -17,24 +17,23 @@ public class Main {
 
     public static void main(String[] args) {
         LocalDateTime debut = LocalDateTime.now();
-        System.out.println("Début à " + debut.getHour() + ":" + debut.getMinute() + ":" + debut.getSecond());
+        LOGGER.info("Début à {}:{}:{}", debut.getHour(), debut.getMinute(), debut.getSecond());
         // Lire le fichier texte
-        File dossierEnLigne = new File(".\\temp\\TXT\\EnModeLigne");
-        File[] fichiersEnLigne = dossierEnLigne.listFiles();
+        String fileName = ".\\temp\\fichier_fusionner.txt";
         String syndicName = "";
         String printDate = "";
         String stopDate = "";
         String postalCode = "";
         // Récuperation des informations pour la génération du nom de fichier
-        try (BufferedReader reader = new BufferedReader(new FileReader(fichiersEnLigne[0]))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String line = reader.readLine();
             syndicName = ExtractInfo.syndicName(line);
             line = reader.readLine();
             printDate = ExtractInfo.printDate(line);
             line = reader.readLine();
             line = reader.readLine();
-            postalCode = ExtractInfo.postalCode(line);
             stopDate = ExtractInfo.stopDate(line);
+            postalCode = ExtractInfo.postalCode(line);
         } catch (IOException e) {
             LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
         }
@@ -46,135 +45,49 @@ public class Main {
         // Génération de la liste des comptes
         Map<String, Account> accounts = new HashMap<>();
         int numberOfLineInFile = 0;
-        if (fichiersEnLigne != null) {
-            for (File fichier : fichiersEnLigne) {
-                if (fichier.getName().contains("-EnModeLigne")) {
-                    try (BufferedReader reader = new BufferedReader(new FileReader(fichier.getAbsoluteFile()))) {
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            if (ExtractInfo.isAcccount(line, postalCode, "018")) {
-                                Account account = ExtractInfo.account(line);
-                                accounts.put(account.account(), account);
-                            }
-                            if (!line.isEmpty()) {
-                                numberOfLineInFile++;
-                            }
-                        }
-                    } catch (IOException e) {
-                        LOGGER.error("Erreur lors de la lecture du fichier {} avec cette erreur {}", fichier.getName(), e.getMessage());
-                    }
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (ExtractInfo.isAcccount(line, postalCode, "018")) {
+                    Account account = ExtractInfo.account(line);
+                    accounts.put(account.account(), account);
+                }
+                if (!line.isEmpty()) {
+                    numberOfLineInFile++;
                 }
             }
+        } catch (IOException e) {
+            LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
         }
         LOGGER.info("Il y a {} comptes dans le grandlivre", accounts.size());
 
-        //writeFileAccounts(accounts);
-        //writeFileExcelAccounts(accounts);
+        writeFileAccounts(accounts);
+        writeFileExcelAccounts(accounts);
 
         // Géneration du grand livre
         Object[] grandLivres = new Object[numberOfLineInFile];
         int indexInGrandLivres = 0;
-        int numeroDePage = 1;
-        File dossierEnColonne = new File(".\\temp\\TXT\\EnModeColonne");
-        File[] fichiersEnColonne = dossierEnColonne.listFiles();
-        if (fichiersEnLigne != null) {
-            for (File fichierLigne : fichiersEnLigne) {
-                if (fichierLigne.getName().contains(addZeros(numeroDePage))) {
-                    if (fichierLigne.getName().contains("-EnModeLigne")) {
-                        try (BufferedReader reader = new BufferedReader(new FileReader(fichierLigne.getAbsoluteFile()))) {
-                            String line;
-                            while ((line = reader.readLine()) != null) {
-                                if (!line.isEmpty()) {
-                                    if (ExtractInfo.isLigne(line)) {
-                                        Line lineOfGrandLivre = ExtractInfo.line(line, accounts);
-                                        if (lineOfGrandLivre != null) {
-                                            grandLivres[indexInGrandLivres] = lineOfGrandLivre;
-                                            indexInGrandLivres++;
-                                        }
-                                    } else if (ExtractInfo.isTotalAccount(line)) {
-                                        TotalAccount totalAccount = ExtractInfo.totalAccount(line, accounts);
-                                        if (totalAccount != null) {
-                                            grandLivres[indexInGrandLivres] = totalAccount;
-                                            indexInGrandLivres++;
-                                        }
-                                    }
-                                }
-                            }
-                        } catch (IOException e) {
-                            LOGGER.error("Erreur lors de la lecture du fichier {} avec cette erreur {}", fichierLigne.getName(), e.getMessage());
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.isEmpty()) {
+                    if (ExtractInfo.isLigne(line)) {
+                        Line lineOfGrandLivre = ExtractInfo.line(line, accounts);
+                        if (lineOfGrandLivre != null) {
+                            grandLivres[indexInGrandLivres] = lineOfGrandLivre;
+                            indexInGrandLivres++;
+                        }
+                    } else if (ExtractInfo.isTotalAccount(line)) {
+                        TotalAccount totalAccount = ExtractInfo.totalAccount(line, accounts);
+                        if (totalAccount != null) {
+                            grandLivres[indexInGrandLivres] = totalAccount;
+                            indexInGrandLivres++;
                         }
                     }
                 }
-
-                File fichierColonne = fichiersEnColonne[numeroDePage - 1];
-                if (fichierColonne.getName().contains(addZeros(numeroDePage))) {
-                    if (fichierColonne.getName().contains("-EnModeColonne")) {
-                        String typpeColonne = "";
-                        String colonneDebit = "";
-                        String ligneDebit = "";
-                        String colonneCredit = "";
-                        String ligneCredit = "";
-                        try (BufferedReader reader = new BufferedReader(new FileReader(fichierColonne.getAbsoluteFile()))) {
-                            String line;
-                            while ((line = reader.readLine()) != null) {
-                                if ("Page :".equals(line)) {
-                                    // C'est la colonne débit
-                                    typpeColonne = "Debit";
-                                    line = reader.readLine();
-                                    indexInGrandLivres = 0;
-                                    colonneDebit = "";
-                                }
-                                if ("C peb] — créan".equals(line)) {
-                                    // C'est la colonne crédit
-                                    typpeColonne = "Credit";
-                                    line = reader.readLine();
-                                    indexInGrandLivres = 0;
-                                    colonneCredit = "";
-                                }
-                                if (grandLivres[indexInGrandLivres] instanceof Line) {
-                                    if ("Debit".equals(typpeColonne)) {
-                                        colonneDebit += "{" + line + "}";
-                                        Line lineOfGrandLivre = (Line) grandLivres[indexInGrandLivres];
-                                        ligneDebit += "{" + lineOfGrandLivre.debit() + "}";
-                                        if (!lineOfGrandLivre.debit().equals(line)) {
-                                            Line lineDebit = new Line(lineOfGrandLivre.document(),
-                                                    lineOfGrandLivre.date(), lineOfGrandLivre.account(),
-                                                    lineOfGrandLivre.journal(), lineOfGrandLivre.counterpart(),
-                                                    lineOfGrandLivre.checkNumber(), lineOfGrandLivre.label(),
-                                                    line, lineOfGrandLivre.credit());
-                                            grandLivres[indexInGrandLivres] = lineDebit;
-                                            indexInGrandLivres++;
-                                        }
-                                    }
-                                }
-                                if (grandLivres[indexInGrandLivres] instanceof Line) {
-                                    if ("Credit".equals(typpeColonne)) {
-                                        colonneCredit += "{" + line.replace("\\","").replace("%","") + "}";
-                                        Line lineOfGrandLivre = (Line) grandLivres[indexInGrandLivres];
-                                        ligneCredit += "{" + lineOfGrandLivre.credit() + "}";
-                                        if (!lineOfGrandLivre.credit().equals(line)) {
-                                            Line lineCredit = new Line(lineOfGrandLivre.document(),
-                                                    lineOfGrandLivre.date(), lineOfGrandLivre.account(),
-                                                    lineOfGrandLivre.journal(), lineOfGrandLivre.counterpart(),
-                                                    lineOfGrandLivre.checkNumber(), lineOfGrandLivre.label(),
-                                                    lineOfGrandLivre.debit(), line);
-                                            grandLivres[indexInGrandLivres] = lineCredit;
-                                            indexInGrandLivres++;
-                                        }
-                                    }
-                                }
-                            }
-                            LOGGER.info("Colonne débit = {}", colonneDebit);
-                            LOGGER.info("Ligne débit = {}", ligneDebit);
-                            LOGGER.info("Colonne crédit = {}", colonneCredit);
-                            LOGGER.info("Ligne crédit = {}", ligneCredit);
-                        } catch (IOException e) {
-                            LOGGER.error("Erreur lors de la lecture du fichier {} avec cette erreur {}", fichierColonne.getName(), e.getMessage());
-                        }
-                    }
-                }
-                numeroDePage++;
             }
+        } catch (IOException e) {
+            LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
         }
 
         writeFileGrandLivre(grandLivres);
@@ -182,22 +95,11 @@ public class Main {
                 + " Grand livre " + syndicName.substring(0, syndicName.length() - 1).trim()
                 + " au " + stopDate.substring(6) + "-" + stopDate.substring(3, 5) + "-" + stopDate.substring(0, 2)
                 + ".xlsx";
-        //writeFileExcelGrandLivre(grandLivres, nameFile);
+        writeFileExcelGrandLivre(grandLivres, nameFile);
 
         // TODO Génération des journaux
         // TODO Écriture des journaux dans des fichiers Excel (un par journal)
         LocalDateTime fin = LocalDateTime.now();
-        System.out.println("Début à " + debut.getHour() + ":" + debut.getMinute() + ":" + debut.getSecond());
-        System.out.println("Fin à " + fin.getHour() + ":" + fin.getMinute() + ":" + fin.getSecond());
-        System.out.println("La durée du traitement est de " + ChronoUnit.SECONDS.between(debut, fin) + " secondes");
-    }
-
-    private static String addZeros(int number) {
-        int length = 3;
-        StringBuilder numberString = new StringBuilder(String.valueOf(number));
-        while (numberString.length() < length) {
-            numberString.insert(0, "0");
-        }
-        return numberString.toString();
+        LOGGER.info("La durée du traitement est de {} secondes", ChronoUnit.SECONDS.between(debut, fin));
     }
 }
