@@ -70,7 +70,7 @@ public class ExtractInfo {
         if ((line.contains("Page")) && (!findDateIn(line).isEmpty())) {
             return false;
         }
-        if (line.trim().isEmpty()){
+        if (line.trim().isEmpty()) {
             return false;
         }
         String[] words = splittingLineIntoWordTable(line);
@@ -368,6 +368,9 @@ public class ExtractInfo {
         // Vérification que la ligne commence par une pièce
         String document = getDocument(words, indexOfWords);
         if (!document.isEmpty()) {
+            indexOfWords++;
+        }
+        while (words[indexOfWords].trim().isEmpty()) {
             indexOfWords++;
         }
         /* Vérification que la ligne commence par une date ou qu'il y a une date après la pièce */

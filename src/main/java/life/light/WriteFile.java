@@ -19,7 +19,7 @@ public class WriteFile {
     public static final XSSFColor BACKGROUND_COLOR_RED = new XSSFColor(new java.awt.Color(255, 0, 0), null);
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String[] NOM_ENTETE_COLONNE = {"Compte", "Intitulé du compte", "Pièce", "Date", "Journal",
-            "Contrepartie", "N° chèque", "Libellé", "Débit", "Crédit", "Solde (Calculé)", "Verification", "Commentaire"};
+            "Contrepartie", "N° chèque", "Libellé", "Débit", "Crédit", "Solde (Calculé)", "Vérification", "Commentaire"};
 
     // TODO faire la gestion des fichiers (existe, n'existe pas, pas de dossier ...)
 
@@ -202,8 +202,6 @@ public class WriteFile {
 
     private static void getTotalAccount(TotalAccount grandLivre, Row row, Workbook workbook, int lastRowNumTotal) {
         Cell cell;
-        double debit = 0;
-        double credit = 0;
         if (!grandLivre.account().account().isEmpty()) {
             cell = row.createCell(0);
             cell.setCellValue(grandLivre.account().account());
@@ -229,73 +227,76 @@ public class WriteFile {
             cell.setCellStyle(getCellStyleTotal(workbook));
         }
         Cell debitCell = row.createCell(cellNum++);
-        if (!grandLivre.debit().isEmpty()) {
-            debitCell.setCellValue(grandLivre.debit());
-            if (isDouble(grandLivre.debit())) {
-                debit = Double.parseDouble(grandLivre.debit());
-                debitCell.setCellValue(debit);
-            }
-            CellAddress cellAddressFirst = new CellAddress(lastRowNumTotal + 1, debitCell.getAddress().getColumn());
-            CellAddress cellAddressEnd = new CellAddress(debitCell.getAddress().getRow() - 1, debitCell.getAddress().getColumn());
-            debitCell.setCellFormula("SUM(" + cellAddressFirst + ":" + cellAddressEnd + ")");
-            debitCell.setCellStyle(getCellStyleTotalAmount(workbook));
-        }
-        Cell creditCell = row.createCell(cellNum++);
-        if (!grandLivre.credit().isEmpty()) {
-            creditCell.setCellValue(grandLivre.credit());
-            if (isDouble(grandLivre.credit())) {
-                credit = Double.parseDouble(grandLivre.credit());
-                creditCell.setCellValue(credit);
-            }
-            creditCell.setCellStyle(getCellStyleTotalAmount(workbook));
-            CellAddress cellAddressFirst = new CellAddress(lastRowNumTotal + 1, creditCell.getAddress().getColumn());
-            CellAddress cellAddressEnd = new CellAddress(creditCell.getAddress().getRow() - 1, creditCell.getAddress().getColumn());
-            creditCell.setCellFormula("SUM(" + cellAddressFirst + ":" + cellAddressEnd + ")");
-        }
-        Cell soldeCell = row.createCell(cellNum++);
-        soldeCell.setCellValue(debit - credit);
-        soldeCell.setCellFormula(creditCell.getAddress() + "-" + debitCell.getAddress());
-        soldeCell.setCellStyle(getCellStyleTotalAmount(workbook));
+        CellAddress debitCellAddressFirst = new CellAddress(lastRowNumTotal + 1, debitCell.getAddress().getColumn());
+        CellAddress debitCellAddressEnd = new CellAddress(debitCell.getAddress().getRow() - 1, debitCell.getAddress().getColumn());
+        debitCell.setCellFormula("SUM(" + debitCellAddressFirst + ":" + debitCellAddressEnd + ")");
+        workbook.setForceFormulaRecalculation(true);
+        debitCell.setCellStyle(getCellStyleTotalAmount(workbook));
 
-        cell = row.createCell(cellNum++);
-        cell.setCellValue(debit - credit);
-        String amount = grandLivre.label().substring("Total compte (Solde :".length(), grandLivre.label().length() - 1)
+        Cell creditCell = row.createCell(cellNum++);
+        creditCell.setCellStyle(getCellStyleTotalAmount(workbook));
+        CellAddress creditCellAddressFirst = new CellAddress(lastRowNumTotal + 1, creditCell.getAddress().getColumn());
+        CellAddress creditCellAddressEnd = new CellAddress(creditCell.getAddress().getRow() - 1, creditCell.getAddress().getColumn());
+        creditCell.setCellFormula("SUM(" + creditCellAddressFirst + ":" + creditCellAddressEnd + ")");
+
+        Cell soldeCell = row.createCell(cellNum++);
+        soldeCell.setCellFormula(debitCell.getAddress() + "-" + creditCell.getAddress());
+        soldeCell.setCellStyle(getCellStyleTotalAmount(workbook));
+        workbook.setForceFormulaRecalculation(true);
+
+        Cell cellVerif = row.createCell(cellNum++);
+        String amount = grandLivre.label()
+                .replace("Total", " ")
+                .replace("compte", " ")
+                .replace("(Solde", " ")
                 .replace("créditeur", " ")
                 .replace("débiteur", " ")
-                .replace("ébiteur : ", "")
-                .replace("réditeur", "")
                 .replace(" : ", "")
+                .replace(":", "")
                 .replace("€", "")
+                .replace(")", "")
                 .replace(" ", "")
-                .replace("Total compte", "").trim()
-                .replace("(Solde créditeur : -", "")
-                .replace("(Solde : ", "")
                 .trim();
-        if (grandLivre.label().contains("créditeur")) {
-            amount = amount.replace("-", "");
+        String verif = "";
+        workbook.setForceFormulaRecalculation(true);
+        FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+        double solde = (double) Math.round(evaluator.evaluate(soldeCell).getNumberValue() * 100) / 100;
+        double debitExcel = (double) Math.round(evaluator.evaluate(debitCell).getNumberValue() * 100) / 100;
+        Double debitGrandLivre = Double.parseDouble(grandLivre.debit());
+        double creditExcel = (double) Math.round(evaluator.evaluate(creditCell).getNumberValue() * 100) / 100;
+        Double creditGrandLivre = Double.parseDouble(grandLivre.credit());
+        if (Double.parseDouble(amount) == solde) {
+            if (debitExcel == debitGrandLivre) {
+                if (creditExcel == creditGrandLivre) {
+                    verif = "OK";
+                    cellVerif.setCellStyle(getCellStyleTotalAmount(workbook));
+                } else {
+                    verif = "KO";
+                }
+            } else {
+                verif = "KO";
+            }
+        } else {
+            verif = "KO";
         }
-        if (amount.contains(":")) {
-            amount = amount.replace(":", "");
+        if (verif.equals("KO")) {
+            cellVerif.setCellStyle(getCellStyleVerifRed(workbook));
+            LOGGER.info("Vérification du total du compte [{}] Solde PDF [{}] Solde Excel [{}] débit PDF [{}] débit Excel [{}] crédit PDF [{}] crédit Excel [{}] ligne [{}]",
+                    grandLivre.account().account(), amount, solde,
+                    debitGrandLivre, debitExcel,
+                    creditGrandLivre, creditExcel,
+                    grandLivre);
         }
-        amount = amount.replace("(Solde", "").replace("lde", "").replace("o", "").replace("de", "")
-                .replace("S0.00", "0.00").replace("S490.75", "490.75");
-        //LOGGER.info("Vérification du total du compte [{}] montant [{}] credit [{}] ligne [{}]", grandLivre.account().account(), amount, credit, grandLivre);
-        String formuleIfSolde = "IF(" + soldeCell.getAddress() + "=" + Double.parseDouble(amount)
-                + ", \"OK\", \"KO\")";
-        String formuleIfCredit = "IF(" + creditCell.getAddress() + "=" + credit + ", " + formuleIfSolde + ", \"KO\")";
-        String formuleIfDebit = "IF(" + debitCell.getAddress() + "=" + debit + ", " + formuleIfCredit + ", \"KO\")";
-        cell.setCellFormula(formuleIfDebit);
-        cell.setCellStyle(getCellStyleTotalAmount(workbook));
+        cellVerif.setCellValue(verif);
 
-        cell = row.createCell(cellNum++);
-        cell.setCellValue(debit - credit);
-        formuleIfSolde = "IF(" + soldeCell.getAddress() + "=" + Double.parseDouble(amount)
-                + ", \"Le total debit, credit et  le solde\", \"Le solde n'est pas égale " + Double.parseDouble(amount) + " et " + soldeCell.getNumericCellValue() + "\")";
-        formuleIfCredit = "IF(" + creditCell.getAddress() + "=" + credit + ", " + formuleIfSolde + ", \"Le total credit n'est pas égale a " + credit + "\")";
-        formuleIfDebit = "IF(" + debitCell.getAddress() + "=" + debit + ", " + formuleIfCredit + ", \"Le total débit n'est pas égale a " + debit + "\")";
+        Cell cellMessqage = row.createCell(cellNum++);
+        String formuleIfSolde = "IF(ROUND(" + soldeCell.getAddress() + ",2)=" + Double.parseDouble(amount)
+                + ", \" \", \"Le solde n'est pas égale \")";
+        String formuleIfCredit = "IF(" + creditCell.getAddress() + "=" + creditGrandLivre + ", " + formuleIfSolde + ", \"Le total credit n'est pas égale " + creditGrandLivre + " \")";
+        String formuleIfDebit = "IF(" + debitCell.getAddress() + "=" + debitGrandLivre + ", " + formuleIfCredit + ", \"Le total débit n'est pas égale " + debitGrandLivre + " \")";
 
-        cell.setCellFormula(formuleIfDebit);
-        cell.setCellStyle(getCellStyleTotalAmount(workbook));
+        cellMessqage.setCellFormula(formuleIfDebit);
+        cellMessqage.setCellStyle(getCellStyleTotalAmount(workbook));
     }
 
     private static void getLine(Line grandLivre, Row row, Workbook workbook, int rowNum) {
@@ -409,10 +410,7 @@ public class WriteFile {
         cell = row.createCell(cellNum);
         addlineBlue(rowNum, getCellStyleAmount(workbook), cell);
         if (grandLivre.label().startsWith("Report de ")) {
-            CellStyle style = getCellStyleAlignmentLeft(workbook);
-            style.setFont(getFontBold(workbook));
-            style.setFillForegroundColor(BACKGROUND_COLOR_RED);
-            style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            CellStyle style = getCellStyleVerifRed(workbook);
             cell.setCellStyle(style);
             String amount = grandLivre.label().substring("Report de ".length(), grandLivre.label().length() - 1).trim().replace(" ", "");
             if (isDouble(amount)) {
@@ -481,6 +479,14 @@ public class WriteFile {
             addlineBlue(rowNum, getCellStyleAmount(workbook), cell);
         }
 
+    }
+
+    private static CellStyle getCellStyleVerifRed(Workbook workbook) {
+        CellStyle style = getCellStyleAlignmentLeft(workbook);
+        style.setFont(getFontBold(workbook));
+        style.setFillForegroundColor(BACKGROUND_COLOR_RED);
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        return style;
     }
 
     private static void addlineBlue(int rowNum, CellStyle cellStyle, Cell cell) {

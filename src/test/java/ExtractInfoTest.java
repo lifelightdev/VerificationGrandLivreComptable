@@ -119,7 +119,8 @@ public class ExtractInfoTest {
             "'140040 30/04/2024 40100-0057OD 51220  PRLVT ORANGE 84.89 € ',                  40040, 30/04/2024, 40100-0057, OD, 51220,   '', PRLVT ORANGE,              84.89,        ''",
             "'45476 01/10/2024 40800  40 45020  TRAVAUX PORTE PARKING  10 749.26 € ',        45476, 01/10/2024, 40800,      40, 45020,   '', TRAVAUX PORTE PARKING,  10749.26,        ''",
             "'55617 31/12/2024 40800  OD 45020 TRAVAUX PORTE PARKING  10 749.26 €',          55617, 31/12/2024, 40800,      OD, 45020,   '', TRAVAUX PORTE PARKING,        '',  10749.26",
-            "41751 01/07/2024 40100-0001  OD 62100  HONORAIRES 3T2024 (00001806) 3 000.00 €, 41751, 01/07/2024, 40100-0001, OD, 62100, '', HONORAIRES SYNDIC 3T2024 (00001806), '', 3000.00"
+            "41751 01/07/2024 40100-0001  OD 62100  HONORAIRES 3T2024 (00001806) 3 000.00 €, 41751, 01/07/2024, 40100-0001, OD, 62100,   '', HONORAIRES 3T2024 (00001806), '',   3000.00",
+            "'42201  01/06/2024 45000-0001 P2 10500  APUREMENT CHARGES 2 312.66 € ',         42201, 01/06/2024, 45000-0001, P2, 10500,   '', APUREMENT CHARGES,       2312.66,        ''"
     })
     public void extractline(String line, String document, String date, String account, String journal,
                             String counterpart, String checkNumber, String label, String debit, String credit) {
@@ -155,7 +156,8 @@ public class ExtractInfoTest {
             "01/01/2024  40100-0001 Report de 0.00 € 3 210.69 € 3 210.69 €,                   true",
             "33333 01/01/2024 10500 15 44444 APPEL FONDS LOI ALUR  2 000.00 € ,               true",
             "01.01.01.01.01,                                                                  false",
-            "41751 01/07/2024 40100-0001  OD 62100  HONORAIRES 3T2024 (00001806)  3 000.00 €, true"
+            "41751 01/07/2024 40100-0001  OD 62100  HONORAIRES 3T2024 (00001806)  3 000.00 €, true",
+            "'42201  01/06/2024 45000-0001 P2 10500  APUREMENT CHARGES 2 312.66 € ',          true"
     })
     public void extractIsLine(String line, boolean is) {
         boolean result = ExtractInfo.isLigne(line);
