@@ -2,6 +2,7 @@ package life.light;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.xssf.usermodel.XSSFColor;
@@ -257,14 +258,14 @@ public class WriteFile {
                 .replace(")", "")
                 .replace(" ", "")
                 .trim();
-        String verif = "";
+        String verif;
         workbook.setForceFormulaRecalculation(true);
         FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
         double solde = (double) Math.round(evaluator.evaluate(soldeCell).getNumberValue() * 100) / 100;
         double debitExcel = (double) Math.round(evaluator.evaluate(debitCell).getNumberValue() * 100) / 100;
-        Double debitGrandLivre = Double.parseDouble(grandLivre.debit());
+        double debitGrandLivre = Double.parseDouble(grandLivre.debit());
         double creditExcel = (double) Math.round(evaluator.evaluate(creditCell).getNumberValue() * 100) / 100;
-        Double creditGrandLivre = Double.parseDouble(grandLivre.credit());
+        double creditGrandLivre = Double.parseDouble(grandLivre.credit());
         if (Double.parseDouble(amount) == solde) {
             if (debitExcel == debitGrandLivre) {
                 if (creditExcel == creditGrandLivre) {
@@ -290,8 +291,7 @@ public class WriteFile {
         cellVerif.setCellValue(verif);
 
         Cell cellMessqage = row.createCell(cellNum++);
-        String formuleIfSolde = "IF(ROUND(" + soldeCell.getAddress() + ",2)=" + Double.parseDouble(amount)
-                + ", \" \", \"Le solde n'est pas égale \")";
+        String formuleIfSolde = "IF(ROUND(" + soldeCell.getAddress() + ",2)=" + Double.parseDouble(amount) + ", \" \", \"Le solde n'est pas égale \")";
         String formuleIfCredit = "IF(" + creditCell.getAddress() + "=" + creditGrandLivre + ", " + formuleIfSolde + ", \"Le total credit n'est pas égale " + creditGrandLivre + " \")";
         String formuleIfDebit = "IF(" + debitCell.getAddress() + "=" + debitGrandLivre + ", " + formuleIfCredit + ", \"Le total débit n'est pas égale " + debitGrandLivre + " \")";
 
@@ -406,6 +406,8 @@ public class WriteFile {
         addlineBlue(rowNum, getCellStyleAmount(workbook), soldeCell);
 
         String message = "";
+        CreationHelper createHelper = workbook.getCreationHelper();
+        Hyperlink link = createHelper.createHyperlink(HyperlinkType.FILE);
         cellNum++;
         cell = row.createCell(cellNum);
         addlineBlue(rowNum, getCellStyleAmount(workbook), cell);
@@ -429,7 +431,7 @@ public class WriteFile {
             }
         } else {
             if (grandLivre.account().account().startsWith("6")) {
-                File pathDirectory = new File("D:\\Le Nidor\\2024\\FACTURES");
+                File pathDirectory = new File("");
                 File[] files = pathDirectory.listFiles();
                 if (null != files) {
                     boolean find = false;
@@ -438,47 +440,46 @@ public class WriteFile {
                             if (fichier.getName().contains(grandLivre.document())) {
                                 cell.setCellValue("OK");
                                 find = true;
+                                message = "La pièce est disponible ici : " + fichier.getAbsoluteFile();
+                                link.setAddress(fichier.toURI().toString());
                                 break;
                             }
-                            message = "Impossible de trouver la facture lier à la piece : " + grandLivre.document()
-                                    + " dans le dossier : " + fichier.getAbsolutePath().replace(fichier.getName(), "");
                         } else if (fichier.isDirectory()) {
                             File[] sousDossier = fichier.listFiles();
                             if (null != sousDossier) {
-                                boolean findSousDossier = false;
                                 for (File fichierDuSousDossier : sousDossier) {
                                     if (fichierDuSousDossier.isFile()) {
                                         if (fichierDuSousDossier.getName().contains(grandLivre.document())) {
-                                            cell.setCellValue("KO");
-                                            findSousDossier = true;
+                                            cell.setCellValue("OK");
+                                            find = true;
+                                            message = "La pièce est disponible ici : " + fichierDuSousDossier.getAbsoluteFile();
+                                            link.setAddress(fichierDuSousDossier.toURI().toString());
                                             break;
                                         }
                                     }
-                                }
-                                if (!findSousDossier) {
-                                    message = "Impossible de trouver la facture lier à la piece : " + grandLivre.document()
-                                            + " dans le sous dossier : " + fichier.getPath();
-                                    LOGGER.info(message + " sur le compte " + grandLivre.account().account() + " pour la ligne : " + grandLivre);
                                 }
                             }
                         }
                     }
                     if (!find) {
-                        message = "Impossible de trouver la facture lier à la piece : " + grandLivre.document()
-                                + "dans le dossier : " + pathDirectory + "\n";
-                        LOGGER.info(message + " sur le compte " + grandLivre.account().account());
+                        message = "Impossible de trouver la pièce";
+                        LOGGER.info(message + " : " + grandLivre.document()
+                                + " dans le dossier : " + pathDirectory
+                                + " sur le compte " + grandLivre.account().account()
+                                + " libelle de l'opération " + grandLivre.label()
+                        );
                     }
                 }
             }
         }
 
-        if (cell.getStringCellValue().equals("KO")) {
-            cellNum++;
-            cell = row.createCell(cellNum);
-            cell.setCellValue(message.trim());
-            addlineBlue(rowNum, getCellStyleAmount(workbook), cell);
+        cellNum++;
+        cell = row.createCell(cellNum);
+        if (link.getAddress() != null) {
+            cell.setHyperlink(link);
         }
-
+        cell.setCellValue(message.trim());
+        addlineBlue(rowNum, getCellStyleAmount(workbook), cell);
     }
 
     private static CellStyle getCellStyleVerifRed(Workbook workbook) {

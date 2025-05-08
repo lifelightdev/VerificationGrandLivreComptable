@@ -164,7 +164,7 @@ public class ExtractInfo {
 
         // Extraction du compte de contrepartie
         String counterpart = "";
-        if (words[indexOfWords].length() == 5 && words[indexOfWords].matches(REGEX_NUMBER)) {
+        if (words[indexOfWords].matches(REGEX_NUMBER)) {
             counterpart = words[indexOfWords];
             indexOfWords++;
         }
