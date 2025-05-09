@@ -53,22 +53,23 @@ public class WriteFile {
             Sheet sheet = workbook.createSheet("Plan comptable");
             int rowNum = 0;
             // Créer la ligne d'en-tête
-            int colNum = 0;
-            Row headerRow = sheet.createRow(colNum);
-            Cell cell = headerRow.createCell(colNum++);
+            Row headerRow = sheet.createRow(0);
+            Cell cell = headerRow.createCell(0);
             cell.setCellValue("Compte");
-            sheet.autoSizeColumn(colNum);
-            cell = headerRow.createCell(colNum++);
+            cell = headerRow.createCell(1);
             cell.setCellValue("Libelle");
-            sheet.autoSizeColumn(colNum);
+
             rowNum++;
             for (Map.Entry<String, Account> entry : accounts.entrySet()) {
                 Row row = sheet.createRow(rowNum);
-                colNum = 0;
+                int colNum = 0;
                 row.createCell(colNum++).setCellValue(entry.getKey());
                 row.createCell(colNum).setCellValue(entry.getValue().label());
                 rowNum++;
             }
+            sheet.createFreezePane(0, 1);
+            sheet.autoSizeColumn(0);
+            sheet.autoSizeColumn(1);
             // Écrire le contenu du classeur dans un fichier
             try (FileOutputStream outputStream = new FileOutputStream(exitFile)) {
                 workbook.write(outputStream);
@@ -212,6 +213,7 @@ public class WriteFile {
             for (int idCollum = 0; idCollum < cellNumEntete; idCollum++) {
                 sheet.autoSizeColumn(idCollum);
             }
+            sheet.createFreezePane(0, 1);
             // Écrire le contenu du classeur dans un fichier
             try (FileOutputStream outputStream = new FileOutputStream(exitFile)) {
                 workbook.write(outputStream);
@@ -432,8 +434,8 @@ public class WriteFile {
                     if (fichier.getName().contains(grandLivre.document())) {
                         verifCell.setCellValue("OK");
                         find = true;
-                        message = fichier.getAbsoluteFile() + "";
-                        link.setAddress(fichier.toURI().toString());
+                        message = fichier.getAbsoluteFile().toString().replace("F:","D:");
+                        link.setAddress(fichier.toURI().toString().replace("F:","D:"));
                         break;
                     }
                 } else if (fichier.isDirectory()) {
@@ -444,8 +446,8 @@ public class WriteFile {
                                 if (fichierDuSousDossier.getName().contains(grandLivre.document())) {
                                     verifCell.setCellValue("OK");
                                     find = true;
-                                    message = fichierDuSousDossier.getAbsoluteFile() + "";
-                                    link.setAddress(fichierDuSousDossier.toURI().toString());
+                                    message = fichierDuSousDossier.getAbsoluteFile().toString().replace("F:","D:");
+                                    link.setAddress(fichierDuSousDossier.toURI().toString().replace("F:","D:"));
                                     break;
                                 }
                             }
