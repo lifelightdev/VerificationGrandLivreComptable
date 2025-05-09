@@ -391,7 +391,8 @@ public class WriteFile {
         if (grandLivre.label().startsWith(REPORT_DE)) {
             message = getMessageVerifLineReport(grandLivre, row, workbook, verifCell, message);
         } else {
-            if (grandLivre.account().account().startsWith(CLASSE_6) && grandLivre.account().account().startsWith("401")) {
+            if (grandLivre.account().account().startsWith(CLASSE_6)
+                    || (grandLivre.account().account().startsWith("401")) && (grandLivre.accountCounterpart().account().startsWith(CLASSE_6))){
                 message = getMessageFindDocument(grandLivre, verifCell, message, link);
             }
             if (grandLivre.accountCounterpart() == null) {
