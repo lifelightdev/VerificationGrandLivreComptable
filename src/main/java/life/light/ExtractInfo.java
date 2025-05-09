@@ -256,6 +256,11 @@ public class ExtractInfo {
             } else {
                 debit = amount;
             }
+        } else if (numberOfAmounts == 0) {
+            while (indexOfWords < words.length) {
+                label.append(" ").append(words[indexOfWords]);
+                indexOfWords++;
+            }
         }
 
         if (!debit.toString().contains(".") && !debit.toString().isEmpty()) {

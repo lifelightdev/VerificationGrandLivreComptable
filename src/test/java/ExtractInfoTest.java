@@ -120,7 +120,8 @@ public class ExtractInfoTest {
             "'45476 01/10/2024 40800  40 45020  TRAVAUX PORTE PARKING  10 749.26 € ',        45476, 01/10/2024, 40800,      40, 45020,   '', TRAVAUX PORTE PARKING,  10749.26,        ''",
             "'55617 31/12/2024 40800  OD 45020 TRAVAUX PORTE PARKING  10 749.26 €',          55617, 31/12/2024, 40800,      OD, 45020,   '', TRAVAUX PORTE PARKING,        '',  10749.26",
             "41751 01/07/2024 40100-0001  OD 62100  HONORAIRES 3T2024 (00001806) 3 000.00 €, 41751, 01/07/2024, 40100-0001, OD, 62100,   '', HONORAIRES 3T2024 (00001806), '',   3000.00",
-            "'42201  01/06/2024 45000-0001 P2 10500  APUREMENT CHARGES 2 312.66 € ',         42201, 01/06/2024, 45000-0001, P2, 10500,   '', APUREMENT CHARGES,       2312.66,        ''"
+            "'42201  01/06/2024 45000-0001 P2 10500  APUREMENT CHARGES 2 312.66 € ',         42201, 01/06/2024, 45000-0001, P2, 10500,   '', APUREMENT CHARGES,       2312.66,        ''",
+            "55555 01/01/2024 10500 P4 40800 TRAVAUX,                                        55555, 01/01/2024, 10500,      P4, 40800,   '', TRAVAUX,                      '',        ''"
     })
     public void extractline(String line, String document, String date, String account, String journal,
                             String counterpart, String checkNumber, String label, String debit, String credit) {

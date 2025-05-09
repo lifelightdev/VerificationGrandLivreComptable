@@ -21,6 +21,10 @@ public class WriteFile {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String[] NOM_ENTETE_COLONNE = {"Compte", "Intitulé du compte", "Pièce", "Date", "Journal",
             "Contrepartie", "N° chèque", "Libellé", "Débit", "Crédit", "Solde (Calculé)", "Vérification", "Commentaire"};
+    public static final String REPORT_DE = "Report de";
+    public static final String PATH_DIRECTORY_INVOICE = "";
+    public static final String CLASSE_6 = "6";
+    public static final String KO = "KO";
 
     // TODO faire la gestion des fichiers (existe, n'existe pas, pas de dossier ...)
 
@@ -175,7 +179,7 @@ public class WriteFile {
             for (Object grandLivre : grandLivres) {
                 Row row = sheet.createRow(rowNum);
                 if (grandLivre instanceof Line) {
-                    getLine((Line) grandLivre, row, workbook, rowNum);
+                    getLine((Line) grandLivre, row, workbook);
                 }
                 if (grandLivre instanceof TotalAccount) {
                     getTotalAccount((TotalAccount) grandLivre, row, workbook, lastRowNumTotal);
@@ -299,84 +303,142 @@ public class WriteFile {
         cellMessqage.setCellStyle(getCellStyleTotalAmount(workbook));
     }
 
-    private static void getLine(Line grandLivre, Row row, Workbook workbook, int rowNum) {
+    private static void getLine(Line grandLivre, Row row, Workbook workbook) {
         int cellNum = 0;
-        double debit = 0;
-        double credit = 0;
 
         cellNum = addAccountCell(grandLivre, row, workbook, cellNum);
+        cellNum = addDocumentCell(grandLivre, row, workbook, cellNum);
+        cellNum = addDateCell(grandLivre, row, workbook, cellNum);
+        cellNum = addJournalCell(grandLivre, row, workbook, cellNum);
+        cellNum = addCounterPartCell(grandLivre, row, workbook, cellNum);
+        cellNum = addCheckNumberCell(grandLivre, row, workbook, cellNum);
+        cellNum = addLabelCell(grandLivre, row, workbook, cellNum);
 
-        Cell documentCell = row.createCell(cellNum);
-        documentCell.setCellValue(grandLivre.document());
-        if (isDouble(grandLivre.document())) {
-            double document = Double.parseDouble(grandLivre.document());
-            documentCell.setCellValue(document);
-        }
-        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), documentCell);
-
+        Cell debitCell = addDebitCell(grandLivre, row, workbook, cellNum);
         cellNum++;
-        Cell cell = row.createCell(cellNum);
-        cell.setCellValue(grandLivre.date());
-        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
 
+        Cell creditCell = addCreditCell(grandLivre, row, workbook, cellNum);
         cellNum++;
-        cell = row.createCell(cellNum);
-        cell.setCellValue(grandLivre.journal());
-        if (isDouble(grandLivre.journal())) {
-            double journal = Double.parseDouble(grandLivre.journal());
-            cell.setCellValue(journal);
-        }
-        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
 
-        cellNum++;
-        cell = row.createCell(cellNum);
-        cell.setCellValue(grandLivre.counterpart());
-        if (isDouble(grandLivre.counterpart())) {
-            double counterpart = Double.parseDouble(grandLivre.counterpart());
-            cell.setCellValue(counterpart);
-        }
-        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
+        cellNum = addSoldeCell(grandLivre, row, workbook, cellNum, creditCell, debitCell);
 
-        cellNum++;
-        cell = row.createCell(cellNum);
-        cell.setCellValue(grandLivre.checkNumber());
-        if (isDouble(grandLivre.checkNumber())) {
-            double checkNumber = Double.parseDouble(grandLivre.checkNumber());
-            cell.setCellValue(checkNumber);
-        }
-        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
+        cellNum = addVerifCells(grandLivre, row, workbook, cellNum);
 
-        cellNum++;
-        cell = row.createCell(cellNum);
-        cell.setCellValue(grandLivre.label());
-        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
+    }
 
-        cellNum++;
-        Cell debitCell = row.createCell(cellNum);
-        debitCell.setCellValue(grandLivre.debit());
-        if (isDouble(grandLivre.debit())) {
-            debit = Double.parseDouble(grandLivre.debit());
-            debitCell.setCellValue(debit);
+    private static int addVerifCells(Line grandLivre, Row row, Workbook workbook, int cellNum) {
+        String message = "";
+        CreationHelper createHelper = workbook.getCreationHelper();
+        Hyperlink link = createHelper.createHyperlink(HyperlinkType.FILE);
+        Cell verifCell = row.createCell(cellNum);
+        if (grandLivre.label().startsWith(REPORT_DE)) {
+            message = getMessageVerifLineReport(grandLivre, row, workbook, verifCell, message);
         } else {
-            debitCell.setCellValue(0);
+            if (grandLivre.account().account().startsWith(CLASSE_6)) {
+                message = getMessageFindDocument(grandLivre, verifCell, message, link);
+            }
+            if (grandLivre.debit().isEmpty() && grandLivre.credit().isEmpty()){
+                verifCell.setCellValue(KO);
+                message = "Il n'y a aucun montant";
+                LOGGER.info("{} sur cette ligne : {}",message, grandLivre);
+            }
         }
-        addlineBlue(rowNum, getCellStyleAmount(workbook), debitCell);
-
-        cellNum++;
-        Cell creditCell = row.createCell(cellNum);
-        creditCell.setCellValue(grandLivre.credit());
-        if (isDouble(grandLivre.credit())) {
-            credit = Double.parseDouble(grandLivre.credit());
-            creditCell.setCellValue(credit);
+        if (verifCell.getStringCellValue().equals(KO)) {
+            verifCell.setCellStyle(getCellStyleVerifRed(workbook));
         } else {
-            creditCell.setCellValue(0);
+            addlineBlue(row.getRowNum(), getCellStyleAmount(workbook), verifCell);
         }
-        addlineBlue(rowNum, getCellStyleAmount(workbook), creditCell);
 
         cellNum++;
+        Cell messageCell = row.createCell(cellNum);
+        if (link.getAddress() != null) {
+            messageCell.setHyperlink(link);
+        }
+        messageCell.setCellValue(message.trim());
+        addlineBlue(row.getRowNum(), getCellStyleAmount(workbook), messageCell);
+        return cellNum;
+    }
+
+    private static String getMessageFindDocument(Line grandLivre, Cell verifCell, String message, Hyperlink link) {
+        File pathDirectoryInvoice = new File(PATH_DIRECTORY_INVOICE);
+        File[] files = pathDirectoryInvoice.listFiles();
+        if (null != files) {
+            boolean find = false;
+            for (File fichier : files) {
+                if (fichier.isFile()) {
+                    if (fichier.getName().contains(grandLivre.document())) {
+                        verifCell.setCellValue("OK");
+                        find = true;
+                        message = "La pièce est disponible ici : " + fichier.getAbsoluteFile();
+                        link.setAddress(fichier.toURI().toString());
+                        break;
+                    }
+                } else if (fichier.isDirectory()) {
+                    File[] sousDossier = fichier.listFiles();
+                    if (null != sousDossier) {
+                        for (File fichierDuSousDossier : sousDossier) {
+                            if (fichierDuSousDossier.isFile()) {
+                                if (fichierDuSousDossier.getName().contains(grandLivre.document())) {
+                                    verifCell.setCellValue("OK");
+                                    find = true;
+                                    message = "La pièce est disponible ici : " + fichierDuSousDossier.getAbsoluteFile();
+                                    link.setAddress(fichierDuSousDossier.toURI().toString());
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (!find) {
+                message = "Impossible de trouver la pièce";
+                LOGGER.info(message + " : " + grandLivre.document()
+                        + " dans le dossier : " + pathDirectoryInvoice
+                        + " sur le compte " + grandLivre.account().account()
+                        + " libelle de l'opération " + grandLivre.label()
+                );
+            }
+        }
+        return message;
+    }
+
+    private static String getMessageVerifLineReport(Line grandLivre, Row row, Workbook workbook, Cell verifCell, String message) {
+        CellStyle style = getCellStyleVerifRed(workbook);
+        verifCell.setCellStyle(style);
+        String amount = getAmountInLineReport(grandLivre);
+        if (isDouble(amount)) {
+            double amountDouble = Double.parseDouble(amount);
+            DecimalFormat df = new DecimalFormat("#.00");
+            double debit = 0;
+            if (isDouble(grandLivre.debit())) {
+                debit = Double.parseDouble(grandLivre.debit());
+            }
+            double credit = 0;
+            if (isDouble(grandLivre.credit())) {
+                credit = Double.parseDouble(grandLivre.credit());
+            }
+            String nombreFormate = df.format((debit - credit)).replace(",", ".");
+            if (amountDouble == Double.parseDouble(nombreFormate)) {
+                verifCell.setCellValue("OK");
+                addlineBlue(row.getRowNum(), getCellStyleAmount(workbook), verifCell);
+            } else {
+                message = "Le montant du report est de " + amount + " le solde est de  " + Double.parseDouble(nombreFormate)
+                        + " le débit est de " + Double.parseDouble(grandLivre.debit()) + " le credit est de " + Double.parseDouble(grandLivre.credit());
+                LOGGER.info(message + " sur le compte " + grandLivre.account().account());
+                verifCell.setCellValue(KO);
+            }
+        }
+        return message;
+    }
+
+    private static String getAmountInLineReport(Line grandLivre) {
+        return grandLivre.label().substring(REPORT_DE.length(), grandLivre.label().length() - 1).trim().replace(" ", "");
+    }
+
+    private static int addSoldeCell(Line grandLivre, Row row, Workbook workbook, int cellNum, Cell creditCell, Cell debitCell) {
         Cell soldeCell = row.createCell(cellNum);
         String formule;
-        if (grandLivre.label().startsWith("Report de ")) {
+        if (grandLivre.label().startsWith(REPORT_DE)) {
             formule = creditCell.getAddress() + "-" + debitCell.getAddress();
         } else {
             int rowIndex = soldeCell.getRowIndex() - 1;
@@ -385,83 +447,103 @@ public class WriteFile {
             formule = beforeSoldeCellAddress + "+" + debitCell.getAddress() + "-" + creditCell.getAddress();
         }
         soldeCell.setCellFormula(formule);
-        addlineBlue(rowNum, getCellStyleAmount(workbook), soldeCell);
-
-        String message = "";
-        CreationHelper createHelper = workbook.getCreationHelper();
-        Hyperlink link = createHelper.createHyperlink(HyperlinkType.FILE);
+        addlineBlue(row.getRowNum(), getCellStyleAmount(workbook), soldeCell);
         cellNum++;
-        cell = row.createCell(cellNum);
-        addlineBlue(rowNum, getCellStyleAmount(workbook), cell);
-        if (grandLivre.label().startsWith("Report de ")) {
-            CellStyle style = getCellStyleVerifRed(workbook);
-            cell.setCellStyle(style);
-            String amount = grandLivre.label().substring("Report de ".length(), grandLivre.label().length() - 1).trim().replace(" ", "");
-            if (isDouble(amount)) {
-                double amountDouble = Double.parseDouble(amount);
-                DecimalFormat df = new DecimalFormat("#.00");
-                String nombreFormate = df.format((debit - credit)).replace(",", ".");
-                if (amountDouble == Double.parseDouble(nombreFormate)) {
-                    cell.setCellValue("OK");
-                    addlineBlue(rowNum, getCellStyleAmount(workbook), cell);
-                } else {
-                    message = "Le montant du report est de " + amount + " le solde est de  " + Double.parseDouble(nombreFormate)
-                            + " le débit est de " + debit + " le credit est de " + credit;
-                    LOGGER.info(message + " sur le compte " + grandLivre.account().account());
-                    cell.setCellValue("KO");
-                }
-            }
+        return cellNum;
+    }
+
+    private static Cell addCreditCell(Line grandLivre, Row row, Workbook workbook, int cellNum) {
+        Cell creditCell = row.createCell(cellNum);
+        creditCell.setCellValue(grandLivre.credit());
+        if (isDouble(grandLivre.credit())) {
+            creditCell.setCellValue(Double.parseDouble(grandLivre.credit()));
         } else {
-            if (grandLivre.account().account().startsWith("6")) {
-                File pathDirectory = new File("");
-                File[] files = pathDirectory.listFiles();
-                if (null != files) {
-                    boolean find = false;
-                    for (File fichier : files) {
-                        if (fichier.isFile()) {
-                            if (fichier.getName().contains(grandLivre.document())) {
-                                cell.setCellValue("OK");
-                                find = true;
-                                message = "La pièce est disponible ici : " + fichier.getAbsoluteFile();
-                                link.setAddress(fichier.toURI().toString());
-                                break;
-                            }
-                        } else if (fichier.isDirectory()) {
-                            File[] sousDossier = fichier.listFiles();
-                            if (null != sousDossier) {
-                                for (File fichierDuSousDossier : sousDossier) {
-                                    if (fichierDuSousDossier.isFile()) {
-                                        if (fichierDuSousDossier.getName().contains(grandLivre.document())) {
-                                            cell.setCellValue("OK");
-                                            find = true;
-                                            message = "La pièce est disponible ici : " + fichierDuSousDossier.getAbsoluteFile();
-                                            link.setAddress(fichierDuSousDossier.toURI().toString());
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (!find) {
-                        message = "Impossible de trouver la pièce";
-                        LOGGER.info(message + " : " + grandLivre.document()
-                                + " dans le dossier : " + pathDirectory
-                                + " sur le compte " + grandLivre.account().account()
-                                + " libelle de l'opération " + grandLivre.label()
-                        );
-                    }
-                }
-            }
+            creditCell.setCellValue(0);
         }
+        addlineBlue(row.getRowNum(), getCellStyleAmount(workbook), creditCell);
+        return creditCell;
+    }
 
-        cellNum++;
-        cell = row.createCell(cellNum);
-        if (link.getAddress() != null) {
-            cell.setHyperlink(link);
+    private static Cell addDebitCell(Line grandLivre, Row row, Workbook workbook, int cellNum) {
+        Cell debitCell = row.createCell(cellNum);
+        debitCell.setCellValue(grandLivre.debit());
+        if (isDouble(grandLivre.debit())) {
+            debitCell.setCellValue(Double.parseDouble(grandLivre.debit()));
+        } else {
+            debitCell.setCellValue(0);
         }
-        cell.setCellValue(message.trim());
-        addlineBlue(rowNum, getCellStyleAmount(workbook), cell);
+        addlineBlue(row.getRowNum(), getCellStyleAmount(workbook), debitCell);
+        return debitCell;
+    }
+
+    private static int addLabelCell(Line grandLivre, Row row, Workbook workbook, int cellNum) {
+        Cell labelCell = row.createCell(cellNum);
+        if (!grandLivre.label().isEmpty()) {
+            labelCell.setCellValue(grandLivre.label());
+        } else {
+            LOGGER.error("Le libellé est absent sur la ligne : {}", grandLivre);
+        }
+        addlineBlue(row.getRowNum(), getCellStyleAlignmentLeft(workbook), labelCell);
+        cellNum++;
+        return cellNum;
+    }
+
+    private static int addCheckNumberCell(Line grandLivre, Row row, Workbook workbook, int cellNum) {
+        Cell checkNumberCell = row.createCell(cellNum);
+        checkNumberCell.setCellValue(grandLivre.checkNumber());
+        addlineBlue(row.getRowNum(), getCellStyleAlignmentLeft(workbook), checkNumberCell);
+        cellNum++;
+        return cellNum;
+    }
+
+    private static int addCounterPartCell(Line grandLivre, Row row, Workbook workbook, int cellNum) {
+        Cell counterPartCell = row.createCell(cellNum);
+        counterPartCell.setCellValue(grandLivre.counterpart());
+        if (!grandLivre.counterpart().isEmpty()) {
+            counterPartCell.setCellValue(grandLivre.counterpart());
+        } else if (!grandLivre.label().contains(REPORT_DE)) {
+            LOGGER.error("La contre partie est absente sur la ligne : {}", grandLivre);
+        }
+        addlineBlue(row.getRowNum(), getCellStyleAlignmentLeft(workbook), counterPartCell);
+        cellNum++;
+        return cellNum;
+    }
+
+    private static int addJournalCell(Line grandLivre, Row row, Workbook workbook, int cellNum) {
+        Cell journalCell = row.createCell(cellNum);
+        journalCell.setCellValue(grandLivre.journal());
+        if (!grandLivre.journal().isEmpty()) {
+            journalCell.setCellValue(grandLivre.journal());
+        } else if (!grandLivre.label().contains(REPORT_DE)) {
+            LOGGER.error("Le journal est absent sur la ligne : {}", grandLivre);
+        }
+        addlineBlue(row.getRowNum(), getCellStyleAlignmentLeft(workbook), journalCell);
+        cellNum++;
+        return cellNum;
+    }
+
+    private static int addDateCell(Line grandLivre, Row row, Workbook workbook, int cellNum) {
+        Cell dateCell = row.createCell(cellNum);
+        dateCell.setCellValue(grandLivre.date());
+        addlineBlue(row.getRowNum(), getCellStyleAlignmentLeft(workbook), dateCell);
+        cellNum++;
+        return cellNum;
+    }
+
+    private static int addDocumentCell(Line grandLivre, Row row, Workbook workbook, int cellNum) {
+        Cell documentCell = row.createCell(cellNum);
+        documentCell.setCellValue(grandLivre.document());
+        if (isDouble(grandLivre.document())) {
+            double document = Double.parseDouble(grandLivre.document());
+            documentCell.setCellValue(document);
+        } else if ((!grandLivre.label().contains(REPORT_DE)) && grandLivre.document().isEmpty()) {
+            LOGGER.error("Le numéro de piéce est absente sur la ligne : {}", grandLivre);
+        } else if (!grandLivre.label().contains(REPORT_DE)) {
+            LOGGER.error("Le numéro de piéce n'est pas numérique ({}) sur la ligne : {}", grandLivre.document(), grandLivre);
+        }
+        addlineBlue(row.getRowNum(), getCellStyleAlignmentLeft(workbook), documentCell);
+        cellNum++;
+        return cellNum;
     }
 
     private static int addAccountCell(Line grandLivre, Row row, Workbook workbook, int cellNum) {
