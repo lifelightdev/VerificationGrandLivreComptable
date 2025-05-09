@@ -111,8 +111,8 @@ public class WriteFile {
                     } else {
                         line += " ; ";
                     }
-                    if (!((Line) grandLivre).counterpart().isEmpty()) {
-                        line += ((Line) grandLivre).counterpart() + "; ";
+                    if (((Line) grandLivre).accountCounterpart() != null) {
+                        line += ((Line) grandLivre).accountCounterpart() + "; ";
                     } else {
                         line += " ; ";
                     }
@@ -391,8 +391,13 @@ public class WriteFile {
         if (grandLivre.label().startsWith(REPORT_DE)) {
             message = getMessageVerifLineReport(grandLivre, row, workbook, verifCell, message);
         } else {
-            if (grandLivre.account().account().startsWith(CLASSE_6)) {
+            if (grandLivre.account().account().startsWith(CLASSE_6) && grandLivre.account().account().startsWith("401")) {
                 message = getMessageFindDocument(grandLivre, verifCell, message, link);
+            }
+            if (grandLivre.accountCounterpart() == null) {
+                verifCell.setCellValue(KO);
+                message = "Il n'y a pas de Contrepartie";
+                LOGGER.info("{} sur cette ligne : {}", message, grandLivre);
             }
             if (grandLivre.debit().isEmpty() && grandLivre.credit().isEmpty()) {
                 verifCell.setCellValue(KO);
@@ -426,7 +431,7 @@ public class WriteFile {
                     if (fichier.getName().contains(grandLivre.document())) {
                         verifCell.setCellValue("OK");
                         find = true;
-                        message = "La pièce est disponible ici : " + fichier.getAbsoluteFile();
+                        message = fichier.getAbsoluteFile() + "";
                         link.setAddress(fichier.toURI().toString());
                         break;
                     }
@@ -438,7 +443,7 @@ public class WriteFile {
                                 if (fichierDuSousDossier.getName().contains(grandLivre.document())) {
                                     verifCell.setCellValue("OK");
                                     find = true;
-                                    message = "La pièce est disponible ici : " + fichierDuSousDossier.getAbsoluteFile();
+                                    message = fichierDuSousDossier.getAbsoluteFile() + "";
                                     link.setAddress(fichierDuSousDossier.toURI().toString());
                                     break;
                                 }
@@ -555,9 +560,8 @@ public class WriteFile {
 
     private static int addCounterPartCell(Line grandLivre, Row row, Workbook workbook, int cellNum) {
         Cell counterPartCell = row.createCell(cellNum);
-        counterPartCell.setCellValue(grandLivre.counterpart());
-        if (!grandLivre.counterpart().isEmpty()) {
-            counterPartCell.setCellValue(grandLivre.counterpart());
+        if (grandLivre.accountCounterpart() != null) {
+            counterPartCell.setCellValue(grandLivre.accountCounterpart().account());
         } else if (!grandLivre.label().contains(REPORT_DE)) {
             LOGGER.error("La contre partie est absente sur la ligne : {}", grandLivre);
         }

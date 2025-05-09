@@ -163,10 +163,12 @@ public class ExtractInfo {
         }
 
         // Extraction du compte de contrepartie
-        String counterpart = "";
-        if (words[indexOfWords].matches(REGEX_NUMBER)) {
-            counterpart = words[indexOfWords];
-            indexOfWords++;
+        Account accountCounterpart = null;
+        if (!line.contains("Report de")) {
+            if (words[indexOfWords].matches(REGEX_NUMBER)) {
+                accountCounterpart = getAccount(accounts, words, indexOfWords);
+                indexOfWords++;
+            }
         }
 
         if (words[indexOfWords].trim().isEmpty()) {
@@ -270,7 +272,7 @@ public class ExtractInfo {
         debit = new StringBuilder(debit.toString().replace(" ", "").replace("€", "").trim());
         credit = new StringBuilder(credit.toString().replace(" ", "").replace("€", "").trim());
 
-        return new Line(document, date, account, journal, counterpart, checkNumber,
+        return new Line(document, date, account, journal, accountCounterpart, checkNumber,
                 label.toString().trim(), debit.toString().trim(), credit.toString().trim());
     }
 
@@ -287,16 +289,26 @@ public class ExtractInfo {
 
     private static Account getAccount(Map<String, Account> accounts, String[] words, int indexOfWords) {
         Account account = null;
-        if (accounts.containsKey(words[indexOfWords])) {
-            account = accounts.get(words[indexOfWords]);
+        String key = words[indexOfWords];
+        if (accounts.containsKey(key)) {
+            account = accounts.get(key);
         } else if (words[indexOfWords].contains("-")) {
-            String key = words[indexOfWords].substring(0, words[indexOfWords].indexOf("-"));
+            key = words[indexOfWords].substring(0, words[indexOfWords].indexOf("-"));
             if (key.startsWith("450")) {
                 key = "45000-" + words[indexOfWords].substring(words[indexOfWords].indexOf("-") + 1);
                 account = accounts.get(key);
             } else {
                 account = accounts.get(key);
             }
+        } else if (key.startsWith("450")) {
+            if (accounts.containsKey(key)) {
+                account = accounts.get(key);
+            } else {
+                account = new Account(key, "Compte de tous les copropriétaires");
+            }
+        } else if (key.length() == 9){
+            key = key.substring(0,5) + "-" + key.substring(5);
+            account = accounts.get(key);
         }
         return account;
     }

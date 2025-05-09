@@ -1,6 +1,6 @@
 package life.light;
 
-public record Line (String document, String date, Account account, String journal, String counterpart,
+public record Line (String document, String date, Account account, String journal, Account accountCounterpart,
                     String checkNumber, String label, String debit, String credit) {
     @Override
     public String document() {
@@ -23,8 +23,8 @@ public record Line (String document, String date, Account account, String journa
     }
 
     @Override
-    public String counterpart() {
-        return counterpart;
+    public Account accountCounterpart() {
+        return accountCounterpart;
     }
 
     @Override
