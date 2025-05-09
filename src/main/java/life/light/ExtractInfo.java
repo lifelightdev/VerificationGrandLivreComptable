@@ -165,7 +165,7 @@ public class ExtractInfo {
         // Extraction du compte de contrepartie
         Account accountCounterpart = null;
         if (!line.contains("Report de")) {
-            if (words[indexOfWords].matches(REGEX_NUMBER)) {
+            if (words[indexOfWords].replace("-", "").matches(REGEX_NUMBER)) {
                 accountCounterpart = getAccount(accounts, words, indexOfWords);
                 indexOfWords++;
             }
@@ -306,8 +306,16 @@ public class ExtractInfo {
             } else {
                 account = new Account(key, "Compte de tous les copropriétaires");
             }
-        } else if (key.length() == 9){
-            key = key.substring(0,5) + "-" + key.substring(5);
+        } else if (key.startsWith("40800")) {
+            account = accounts.get("40800");
+        } else if (key.startsWith("42100")) {
+            account = accounts.get("42100");
+        } else if (key.startsWith("43100")) {
+            account = accounts.get("43100");
+        } else if (key.startsWith("43200")) {
+            account = accounts.get("43200");
+        } else if (key.length() == 9) {
+            key = key.substring(0, 5) + "-" + key.substring(5);
             account = accounts.get(key);
         }
         return account;
@@ -526,6 +534,6 @@ public class ExtractInfo {
             }
             credit.append(" ").append(words[indexOfWords]);
         }
-        return new TotalBuilding(label.toString().trim().replace(" )", ")"), debit.toString().trim().replace(" ","").replace(EURO,""), credit.toString().trim().replace(" ","").replace(EURO,""));
+        return new TotalBuilding(label.toString().trim().replace(" )", ")"), debit.toString().trim().replace(" ", "").replace(EURO, ""), credit.toString().trim().replace(" ", "").replace(EURO, ""));
     }
 }
