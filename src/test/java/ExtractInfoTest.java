@@ -211,4 +211,18 @@ public class ExtractInfoTest {
         }
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "Total immeuble (Solde : 0.00 €) 100 000.00 € 100 000.00 €,true",
+            " (Solde : 0.00 €) 10.00 € 100 000.00 €                   ,false",
+    })
+    public void extractIsTotalBuilding(String line, boolean is) {
+        boolean result = ExtractInfo.isTotalBuilding(line);
+        if (is) {
+            Assertions.assertTrue(result);
+        } else {
+            Assertions.assertFalse(result);
+        }
+    }
+
 }

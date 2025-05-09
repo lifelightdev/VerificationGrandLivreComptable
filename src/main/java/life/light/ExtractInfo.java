@@ -473,4 +473,8 @@ public class ExtractInfo {
     public static String postalCode(String line) {
         return line.split(" ")[0];
     }
+
+    public static boolean isTotalBuilding(String line) {
+        return line.startsWith("Total immeuble");
+    }
 }
