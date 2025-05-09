@@ -514,6 +514,6 @@ public class ExtractInfo {
             }
             credit.append(" ").append(words[indexOfWords]);
         }
-        return new TotalBuilding(debit.toString().trim().replace(" ","").replace(EURO,""), credit.toString().trim().replace(" ","").replace(EURO,""));
+        return new TotalBuilding(label.toString().trim().replace(" )", ")"), debit.toString().trim().replace(" ","").replace(EURO,""), credit.toString().trim().replace(" ","").replace(EURO,""));
     }
 }

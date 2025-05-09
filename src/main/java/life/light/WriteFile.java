@@ -5,11 +5,14 @@ import org.apache.logging.log4j.Logger;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class WriteFile {
@@ -158,6 +161,19 @@ public class WriteFile {
                     }
                     line += "\n";
                 }
+                if (grandLivre instanceof TotalBuilding) {
+                    if (!((TotalBuilding) grandLivre).debit().isEmpty()) {
+                        line += ((TotalBuilding) grandLivre).debit() + "; ";
+                    } else {
+                        line += " ; ";
+                    }
+                    if (!((TotalBuilding) grandLivre).credit().isEmpty()) {
+                        line += ((TotalBuilding) grandLivre).credit() + "; ";
+                    } else {
+                        line += " ; ";
+                    }
+                    line += "\n";
+                }
                 writer.write(line);
             }
             LOGGER.info("L'écriture du fichier {} est terminée.", exitFile);
@@ -176,6 +192,7 @@ public class WriteFile {
             getCellsEntete(sheet, workbook);
             int rowNum = 1;
             int lastRowNumTotal = 0;
+            List<Integer> lineTotals = new ArrayList<>();
             for (Object grandLivre : grandLivres) {
                 Row row = sheet.createRow(rowNum);
                 if (grandLivre instanceof Line) {
@@ -184,6 +201,10 @@ public class WriteFile {
                 if (grandLivre instanceof TotalAccount) {
                     getTotalAccount((TotalAccount) grandLivre, row, workbook, lastRowNumTotal);
                     lastRowNumTotal = rowNum;
+                    lineTotals.add(rowNum + 1);
+                }
+                if (grandLivre instanceof TotalBuilding) {
+                    getTotalBuilding((TotalBuilding) grandLivre, row, workbook, lineTotals);
                 }
                 rowNum++;
             }
@@ -203,6 +224,42 @@ public class WriteFile {
         } catch (IOException e) {
             LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", exitFile, e.getMessage());
         }
+    }
+
+    private static void getTotalBuilding(TotalBuilding grandLivre, Row row, Workbook workbook, List<Integer> lineTotals) {
+        Cell cell;
+        for (int idCell = 0; idCell < 8; idCell++) {
+            cell = row.createCell(idCell);
+            cell.setCellStyle(getCellStyleTotal(workbook));
+        }
+        int cellNum = 7;
+        if (!grandLivre.label().isEmpty()) {
+            cell = row.createCell(cellNum++);
+            cell.setCellValue(grandLivre.label());
+            cell.setCellStyle(getCellStyleTotal(workbook));
+        }
+        Cell debitCell = row.createCell(cellNum++);
+        StringBuilder sumDebit = new StringBuilder();
+        for (Integer numRow : lineTotals) {
+            sumDebit.append(CellReference.convertNumToColString(debitCell.getColumnIndex())).append(numRow).append("+");
+        }
+        debitCell.setCellFormula(sumDebit.substring(0, sumDebit.lastIndexOf("+")));
+        workbook.setForceFormulaRecalculation(true);
+        debitCell.setCellStyle(getCellStyleTotalAmount(workbook));
+
+        Cell creditCell = row.createCell(cellNum++);
+        StringBuilder sumCredit = new StringBuilder();
+        for (Integer numRow : lineTotals) {
+            sumCredit.append(CellReference.convertNumToColString(creditCell.getColumnIndex())).append(numRow).append("+");
+        }
+        creditCell.setCellFormula(sumCredit.substring(0, sumCredit.lastIndexOf("+")));
+        workbook.setForceFormulaRecalculation(true);
+        creditCell.setCellStyle(getCellStyleTotalAmount(workbook));
+
+        Cell soldeCell = row.createCell(cellNum);
+        soldeCell.setCellFormula(debitCell.getAddress() + "-" + creditCell.getAddress());
+        soldeCell.setCellStyle(getCellStyleTotalAmount(workbook));
+        workbook.setForceFormulaRecalculation(true);
     }
 
     private static void getTotalAccount(TotalAccount grandLivre, Row row, Workbook workbook, int lastRowNumTotal) {
@@ -282,9 +339,9 @@ public class WriteFile {
                 verif = "KO";
             }
         } else {
-            verif = "KO";
+            verif = KO;
         }
-        if (verif.equals("KO")) {
+        if (verif.equals(KO)) {
             cellVerif.setCellStyle(getCellStyleVerifRed(workbook));
             LOGGER.info("Vérification du total du compte [{}] Solde PDF [{}] Solde Excel [{}] débit PDF [{}] débit Excel [{}] crédit PDF [{}] crédit Excel [{}] ligne [{}]",
                     grandLivre.account().account(), amount, solde,
@@ -337,10 +394,10 @@ public class WriteFile {
             if (grandLivre.account().account().startsWith(CLASSE_6)) {
                 message = getMessageFindDocument(grandLivre, verifCell, message, link);
             }
-            if (grandLivre.debit().isEmpty() && grandLivre.credit().isEmpty()){
+            if (grandLivre.debit().isEmpty() && grandLivre.credit().isEmpty()) {
                 verifCell.setCellValue(KO);
                 message = "Il n'y a aucun montant";
-                LOGGER.info("{} sur cette ligne : {}",message, grandLivre);
+                LOGGER.info("{} sur cette ligne : {}", message, grandLivre);
             }
         }
         if (verifCell.getStringCellValue().equals(KO)) {
@@ -610,7 +667,7 @@ public class WriteFile {
 
     private static short getFormatAmount(Workbook workbook) {
         DataFormat dataFormat = workbook.createDataFormat();
-        return dataFormat.getFormat("# ##0.00 €;[red]# ##0.00 €");
+        return dataFormat.getFormat("# ### ##0.00 €;[red]# ### ##0.00 €");
     }
 
     private static CellStyle getCellStyleTotal(Workbook workbook) {

@@ -83,6 +83,12 @@ public class Main {
                             grandLivres[indexInGrandLivres] = totalAccount;
                             indexInGrandLivres++;
                         }
+                    } else if (ExtractInfo.isTotalBuilding(line)){
+                        TotalBuilding totalBuilding = ExtractInfo.totalBuilding(line);
+                        if (totalBuilding != null) {
+                            grandLivres[indexInGrandLivres] = totalBuilding;
+                            indexInGrandLivres++;
+                        }
                     }
                 }
             }

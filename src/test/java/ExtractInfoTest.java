@@ -224,11 +224,12 @@ public class ExtractInfoTest {
 
     @ParameterizedTest
     @CsvSource({
-            "Total immeuble (Solde : 0.00 €) 100 000.00 € 100 000.00 €, 100000.00, 100000.00",
+            "Total immeuble (Solde : 0.00 €) 100 000.00 € 100 000.00 €, Total immeuble (Solde : 0.00€), 100000.00, 100000.00",
     })
-    public void extractTotalBuilding(String line, String debit, String credit) {
+    public void extractTotalBuilding(String line, String label, String debit, String credit) {
         TotalBuilding result = ExtractInfo.totalBuilding(line);
         Assertions.assertNotNull(result);
+        Assertions.assertEquals(label, result.label());
         Assertions.assertEquals(debit, result.debit());
         Assertions.assertEquals(credit, result.credit());
     }
