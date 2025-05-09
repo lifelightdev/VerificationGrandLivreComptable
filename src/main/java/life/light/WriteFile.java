@@ -300,40 +300,22 @@ public class WriteFile {
     }
 
     private static void getLine(Line grandLivre, Row row, Workbook workbook, int rowNum) {
-        Cell cell;
         int cellNum = 0;
-        String numAccount = grandLivre.account().account();
-        boolean isNotEmptyAccount = !numAccount.isEmpty();
         double debit = 0;
         double credit = 0;
-        cell = row.createCell(cellNum);
-        cell.setCellValue(numAccount);
-        if (isNotEmptyAccount) {
-            if (isDouble(numAccount)) {
-                double account = Double.parseDouble(numAccount);
-                cell.setCellValue(account);
-            }
-        }
-        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
 
-        cellNum++;
-        cell = row.createCell(cellNum);
-        if (isNotEmptyAccount) {
-            cell.setCellValue(grandLivre.account().label());
-        }
-        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
+        cellNum = addAccountCell(grandLivre, row, workbook, cellNum);
 
-        cellNum++;
-        cell = row.createCell(cellNum);
-        cell.setCellValue(grandLivre.document());
+        Cell documentCell = row.createCell(cellNum);
+        documentCell.setCellValue(grandLivre.document());
         if (isDouble(grandLivre.document())) {
             double document = Double.parseDouble(grandLivre.document());
-            cell.setCellValue(document);
+            documentCell.setCellValue(document);
         }
-        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
+        addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), documentCell);
 
         cellNum++;
-        cell = row.createCell(cellNum);
+        Cell cell = row.createCell(cellNum);
         cell.setCellValue(grandLivre.date());
         addlineBlue(rowNum, getCellStyleAlignmentLeft(workbook), cell);
 
@@ -480,6 +462,23 @@ public class WriteFile {
         }
         cell.setCellValue(message.trim());
         addlineBlue(rowNum, getCellStyleAmount(workbook), cell);
+    }
+
+    private static int addAccountCell(Line grandLivre, Row row, Workbook workbook, int cellNum) {
+        String numAccount = grandLivre.account().account();
+        boolean isNotEmptyAccount = !numAccount.isEmpty();
+        Cell accountNumberCell = row.createCell(cellNum++);
+        accountNumberCell.setCellValue(numAccount);
+        if (isNotEmptyAccount) {
+            accountNumberCell.setCellValue(numAccount);
+            addlineBlue(row.getRowNum(), getCellStyleAlignmentLeft(workbook), accountNumberCell);
+            Cell accountLabelCell = row.createCell(cellNum++);
+            accountLabelCell.setCellValue(grandLivre.account().label());
+            addlineBlue(row.getRowNum(), getCellStyleAlignmentLeft(workbook), accountLabelCell);
+        } else {
+            LOGGER.error("Il manque le numéro de compte sur cette ligne : {}", grandLivre);
+        }
+        return cellNum;
     }
 
     private static CellStyle getCellStyleVerifRed(Workbook workbook) {
