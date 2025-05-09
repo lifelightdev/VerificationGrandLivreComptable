@@ -477,4 +477,43 @@ public class ExtractInfo {
     public static boolean isTotalBuilding(String line) {
         return line.startsWith("Total immeuble");
     }
+
+    public static TotalBuilding totalBuilding(String line) {
+        // Correction des espaces avant le signe €
+        line = fixedSpacesBeforeEuroSign(line).replace(")", " ) ");
+
+        // Calcule de nombre de montants sur la ligne grâce au signe €
+        int numberOfAmounts = getNumberOfAmountsOn(line);
+
+        // Découpage de la ligne en un tableau de mot
+        String[] words = splittingLineIntoWordTable(line);
+        int indexOfWords = 0;
+        StringBuilder label = new StringBuilder();
+        StringBuilder debit = new StringBuilder();
+        StringBuilder credit = new StringBuilder();
+        if (numberOfAmounts == 3) {
+            while (!words[indexOfWords].endsWith(EURO)) {
+                label.append(" ").append(words[indexOfWords]);
+                indexOfWords++;
+            }
+            label.append(" ").append(words[indexOfWords]);
+            indexOfWords++;
+            label.append(" ").append(words[indexOfWords]);
+            indexOfWords++;
+            label.append(" ").append(words[indexOfWords]);
+            debit.append(" ").append(words[indexOfWords]);
+            while (!words[indexOfWords].endsWith(EURO)) {
+                debit.append(" ").append(words[indexOfWords]);
+                indexOfWords++;
+            }
+            debit.append(" ").append(words[indexOfWords]);
+            indexOfWords++;
+            while (!words[indexOfWords].endsWith(EURO)) {
+                credit.append(" ").append(words[indexOfWords]);
+                indexOfWords++;
+            }
+            credit.append(" ").append(words[indexOfWords]);
+        }
+        return new TotalBuilding(debit.toString().trim().replace(" ","").replace(EURO,""), credit.toString().trim().replace(" ","").replace(EURO,""));
+    }
 }

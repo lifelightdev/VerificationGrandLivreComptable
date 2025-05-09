@@ -1,7 +1,4 @@
-import life.light.Account;
-import life.light.ExtractInfo;
-import life.light.Line;
-import life.light.TotalAccount;
+import life.light.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -66,7 +63,7 @@ public class ExtractInfoTest {
             "45000-0001 DUPONT 31/12/2020,                                   45000-0001, DUPONT 31/12/2020",
             "46200 VIR TRUC 30/03/2021 NON IDENTIFIE,                             46200, VIR TRUC 30/03/2021 NON IDENTIFIE",
             "4A0100-0077 | ABSA CHRISTAL,                                    40100-0077, ABSA CHRISTAL"
-})
+    })
     public void extractAccount(String line, String account, String label) {
         Account result = ExtractInfo.account(line);
         Assertions.assertEquals(account, result.account());
@@ -225,4 +222,14 @@ public class ExtractInfoTest {
         }
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "Total immeuble (Solde : 0.00 €) 100 000.00 € 100 000.00 €, 100000.00, 100000.00",
+    })
+    public void extractTotalBuilding(String line, String debit, String credit) {
+        TotalBuilding result = ExtractInfo.totalBuilding(line);
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(debit, result.debit());
+        Assertions.assertEquals(credit, result.credit());
+    }
 }
