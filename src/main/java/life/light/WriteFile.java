@@ -14,6 +14,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class WriteFile {
 
@@ -31,21 +32,27 @@ public class WriteFile {
 
     // TODO faire la gestion des fichiers (existe, n'existe pas, pas de dossier ...)
 
-    public static void writeFileAccounts(Map<String, Account> accounts) {
-        String exitFile = "." + File.separator + "temp" + File.separator + "ListeDesCompte.csv";
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(exitFile))) {
-            for (Map.Entry<String, Account> accountEntry : accounts.entrySet()) {
-                String line = accountEntry.getValue().account() + "; " + accountEntry.getValue().label() + "\n";
-                writer.write(line);
+    public static void writeFileCSVAccounts(Map<String, Account> accounts, String fileName) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+            TreeMap<String, Account> map = new TreeMap<>(accounts);
+            StringBuilder lineFirst = new StringBuilder("Compte;Intitulé du compte;");
+            lineFirst.append(System.lineSeparator());
+            writer.write(lineFirst.toString());
+            for (Map.Entry<String, Account> accountEntry : map.entrySet()) {
+                StringBuilder line = new StringBuilder();
+                line.append(accountEntry.getValue().account()).append(" ; ");
+                line.append(accountEntry.getValue().label()).append(" ; ");
+                line.append(System.lineSeparator());
+                writer.write(line.toString());
             }
-            LOGGER.info("L'écriture du fichier {} est terminée.", exitFile);
+            LOGGER.info("L'écriture du fichier {} est terminée.", fileName);
         } catch (IOException e) {
-            LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", exitFile, e.getMessage());
+            LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", fileName, e.getMessage());
         }
     }
 
-    public static void writeFileExcelAccounts(Map<String, Account> accounts) {
-        String exitFile = "." + File.separator + "temp" + File.separator + "Plan comptable.xlsx";
+    public static void writeFileExcelAccounts(Map<String, Account> map, String fileName) {
+        TreeMap<String, Account> accounts = new TreeMap<>(map);
         try {
             // Créer un nouveau classeur Excel
             Workbook workbook = new XSSFWorkbook();
@@ -53,129 +60,86 @@ public class WriteFile {
             Sheet sheet = workbook.createSheet("Plan comptable");
             int rowNum = 0;
             // Créer la ligne d'en-tête
-            Row headerRow = sheet.createRow(0);
-            Cell cell = headerRow.createCell(0);
+            Row headerRow = sheet.createRow(rowNum);
+            int numColAccount = 0;
+            Cell cell = headerRow.createCell(numColAccount);
             cell.setCellValue("Compte");
-            cell = headerRow.createCell(1);
+            int numColLabelle = 1;
+            cell = headerRow.createCell(numColLabelle);
             cell.setCellValue("Libelle");
 
             rowNum++;
             for (Map.Entry<String, Account> entry : accounts.entrySet()) {
                 Row row = sheet.createRow(rowNum);
-                int colNum = 0;
-                row.createCell(colNum++).setCellValue(entry.getKey());
-                row.createCell(colNum).setCellValue(entry.getValue().label());
+                row.createCell(numColAccount).setCellValue(entry.getKey());
+                row.createCell(numColLabelle).setCellValue(entry.getValue().label());
                 rowNum++;
             }
             sheet.createFreezePane(0, 1);
             sheet.autoSizeColumn(0);
             sheet.autoSizeColumn(1);
             // Écrire le contenu du classeur dans un fichier
-            try (FileOutputStream outputStream = new FileOutputStream(exitFile)) {
+            try (FileOutputStream outputStream = new FileOutputStream(fileName)) {
                 workbook.write(outputStream);
-                LOGGER.info("L'écriture du fichier {} est terminée.", exitFile);
+                LOGGER.info("L'écriture du fichier {} est terminée.", fileName);
             } catch (IOException e) {
-                LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", exitFile, e.getMessage());
+                LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", fileName, e.getMessage());
             }
             // Fermer le classeur
             workbook.close();
         } catch (IOException e) {
-            LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", exitFile, e.getMessage());
+            LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", fileName, e.getMessage());
         }
     }
 
     public static void writeFileGrandLivre(Object[] grandLivres) {
         String exitFile = ".\\temp\\GrandLivre.csv";
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(exitFile))) {
-            String line = "Pièce; Date; Compte; Journal; Contrepartie; N° chèque; Libellé; Débit; Crédit;\n";
-            writer.write(line);
+            StringBuilder line = new StringBuilder("Pièce; Date; Compte; Journal; Contrepartie; N° chèque; Libellé; Débit; Crédit;");
+            line.append(System.lineSeparator());
+            writer.write(line.toString());
             for (Object grandLivre : grandLivres) {
-                line = "";
                 if (grandLivre instanceof Line) {
-                    if (!((Line) grandLivre).document().isEmpty()) {
-                        line += ((Line) grandLivre).document() + "; ";
-                    } else {
-                        line += " ; ";
-                    }
-                    if (!((Line) grandLivre).date().isEmpty()) {
-                        line += ((Line) grandLivre).date() + "; ";
-                    } else {
-                        line += " ; ";
-                    }
-                    if (!((Line) grandLivre).account().account().isEmpty()) {
-                        line += ((Line) grandLivre).account().account() + "; ";
-                    } else {
-                        line += " ; ";
-                    }
-                    if (!((Line) grandLivre).journal().isEmpty()) {
-                        line += ((Line) grandLivre).journal() + "; ";
-                    } else {
-                        line += " ; ";
-                    }
+                    line.append(((Line) grandLivre).document()).append(" ; ");
+                    line.append(((Line) grandLivre).date()).append(" ; ");
+                    line.append(((Line) grandLivre).account().account()).append(" ; ");
+                    line.append(((Line) grandLivre).journal()).append(" ; ");
                     if (((Line) grandLivre).accountCounterpart() != null) {
-                        line += ((Line) grandLivre).accountCounterpart() + "; ";
+                        line.append(((Line) grandLivre).accountCounterpart().account()).append(" ; ");
                     } else {
-                        line += " ; ";
+                        line.append(" ; ");
                     }
-                    if (!((Line) grandLivre).checkNumber().isEmpty()) {
-                        line += ((Line) grandLivre).checkNumber() + "; ";
-                    } else {
-                        line += " ; ";
-                    }
-                    if (!((Line) grandLivre).label().isEmpty()) {
-                        line += ((Line) grandLivre).label() + "; ";
-                    } else {
-                        line += " ; ";
-                    }
-                    if (!((Line) grandLivre).debit().isEmpty()) {
-                        line += ((Line) grandLivre).debit() + "; ";
-                    } else {
-                        line += " ; ";
-                    }
-                    if (!((Line) grandLivre).credit().isEmpty()) {
-                        line += ((Line) grandLivre).credit() + "; ";
-                    } else {
-                        line += " ; ";
-                    }
-                    line += "\n";
+                    line.append(((Line) grandLivre).checkNumber()).append(" ; ");
+                    line.append(((Line) grandLivre).label()).append(" ; ");
+                    line.append(((Line) grandLivre).debit()).append(" ; ");
+                    line.append(((Line) grandLivre).credit()).append(" ; ");
+                    line.append(System.lineSeparator());
                 }
                 if (grandLivre instanceof TotalAccount) {
-                    if (!((TotalAccount) grandLivre).account().account().isEmpty()) {
-                        line += ((TotalAccount) grandLivre).account().account() + "; ";
-                    } else {
-                        line += " ; ";
-                    }
-                    if (!((TotalAccount) grandLivre).label().isEmpty()) {
-                        line += ((TotalAccount) grandLivre).label() + "; ";
-                    } else {
-                        line += " ; ";
-                    }
-                    if (!((TotalAccount) grandLivre).debit().isEmpty()) {
-                        line += ((TotalAccount) grandLivre).debit() + "; ";
-                    } else {
-                        line += " ; ";
-                    }
-                    if (!((TotalAccount) grandLivre).credit().isEmpty()) {
-                        line += ((TotalAccount) grandLivre).credit() + "; ";
-                    } else {
-                        line += " ; ";
-                    }
-                    line += "\n";
+                    line.append(" ; ");
+                    line.append(" ; ");
+                    line.append(((TotalAccount) grandLivre).account().account()).append(" ; ");
+                    line.append(" ; ");
+                    line.append(" ; ");
+                    line.append(" ; ");
+                    line.append(((TotalAccount) grandLivre).label()).append(" ; ");
+                    line.append(((TotalAccount) grandLivre).debit()).append(" ; ");
+                    line.append(((TotalAccount) grandLivre).credit()).append(" ; ");
+                    line.append(System.lineSeparator());
                 }
                 if (grandLivre instanceof TotalBuilding) {
-                    if (!((TotalBuilding) grandLivre).debit().isEmpty()) {
-                        line += ((TotalBuilding) grandLivre).debit() + "; ";
-                    } else {
-                        line += " ; ";
-                    }
-                    if (!((TotalBuilding) grandLivre).credit().isEmpty()) {
-                        line += ((TotalBuilding) grandLivre).credit() + "; ";
-                    } else {
-                        line += " ; ";
-                    }
-                    line += "\n";
+                    line.append(" ; ");
+                    line.append(" ; ");
+                    line.append(" ; ");
+                    line.append(" ; ");
+                    line.append(" ; ");
+                    line.append(" ; ");
+                    line.append(((TotalBuilding) grandLivre).label()).append(" ; ");
+                    line.append(((TotalBuilding) grandLivre).debit()).append(" ; ");
+                    line.append(((TotalBuilding) grandLivre).credit()).append(" ; ");
+                    line.append(System.lineSeparator());
                 }
-                writer.write(line);
+                writer.write(line.toString());
             }
             LOGGER.info("L'écriture du fichier {} est terminée.", exitFile);
         } catch (IOException e) {
@@ -335,10 +299,10 @@ public class WriteFile {
                     verif = "OK";
                     cellVerif.setCellStyle(getCellStyleTotalAmount(workbook));
                 } else {
-                    verif = "KO";
+                    verif = KO;
                 }
             } else {
-                verif = "KO";
+                verif = KO;
             }
         } else {
             verif = KO;

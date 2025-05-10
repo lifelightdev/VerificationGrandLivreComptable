@@ -30,7 +30,7 @@ public class Main {
             syndicName = ExtractInfo.syndicName(line);
             line = reader.readLine();
             printDate = ExtractInfo.printDate(line);
-            line = reader.readLine();
+            reader.readLine();
             line = reader.readLine();
             stopDate = ExtractInfo.stopDate(line);
             postalCode = ExtractInfo.postalCode(line);
@@ -61,8 +61,8 @@ public class Main {
         }
         LOGGER.info("Il y a {} comptes dans le grandlivre", accounts.size());
 
-        writeFileAccounts(accounts);
-        writeFileExcelAccounts(accounts);
+        writeFileCSVAccounts(accounts, "." + File.separator + "temp" + File.separator + "Plan comptable.csv");
+        writeFileExcelAccounts(accounts, "." + File.separator + "temp" + File.separator + "Plan comptable.xlsx");
 
         // Géneration du grand livre
         Object[] grandLivres = new Object[numberOfLineInFile];
@@ -85,10 +85,8 @@ public class Main {
                         }
                     } else if (ExtractInfo.isTotalBuilding(line)){
                         TotalBuilding totalBuilding = ExtractInfo.totalBuilding(line);
-                        if (totalBuilding != null) {
                             grandLivres[indexInGrandLivres] = totalBuilding;
                             indexInGrandLivres++;
-                        }
                     }
                 }
             }
