@@ -1,42 +1,75 @@
-package life.light;
+package life.light.extract.info;
 
+import life.light.type.*;
+import life.light.type.TypeAccount;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Map;
 
-public class ExtractInfo {
+import static life.light.extract.info.OutilInfo.*;
+
+public class Ledger {
 
     private static final Logger LOGGER = LogManager.getLogger();
     public static final int NAME_JOURNAL_SIZE = 2;
-    public static final String EURO = "€";
-    public static final String REGEX_IS_DATE = "^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/(19|20)\\d{2}$";
     public static final String REGEX_NUMBER = "^-?[0-9]+$";
-    public static final String REGEX_PHONE_NUMBER = "^0[1-9]([-. ]?\\d{2}){4}$";
 
-    public static String syndicName(String ligne) {
+    private Ledger() { }
+
+    public static InfoGrandLivre getInfoGrandLivre(String pathLedger) {
+        String syndicName = "";
+        String printDate = "";
+        String stopDate = "";
+        String postalCode = "";
+        // Récupération des informations pour la génération du nom de fichier
+        try (BufferedReader reader = new BufferedReader(new FileReader(pathLedger))) {
+            String line = reader.readLine();
+            syndicName = Ledger.syndicName(line);
+            line = reader.readLine();
+            printDate = Ledger.printDate(line);
+            reader.readLine();
+            line = reader.readLine();
+            stopDate = Ledger.stopDate(line);
+            postalCode = Ledger.postalCode(line);
+        } catch (IOException e) {
+            LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
+        }
+        return new InfoGrandLivre(syndicName.trim(), printDate, stopDate, postalCode);
+    }
+
+    public static int getNumberOfLineInFile(String pathLedger) {
+        int numberOfLineInFile = 0;
+        try (BufferedReader reader = new BufferedReader(new FileReader(pathLedger))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.isEmpty()) {
+                    numberOfLineInFile++;
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
+        }
+        LOGGER.info("Il y a {} lignes dans le grand livre", numberOfLineInFile);
+        return numberOfLineInFile;
+    }
+
+    protected static String syndicName(String ligne) {
         return ligne.replace("|", "");
     }
 
-    public static String printDate(String line) {
+    static String printDate(String line) {
         return findDateIn(line);
     }
 
-    private static String findDateIn(String line) {
-        String[] words = splittingLineIntoWordTable(line);
-        for (String word : words) {
-            if (word.matches(REGEX_IS_DATE)) {
-                return word;
-            }
-        }
-        return "";
-    }
-
-    public static String stopDate(String line) {
+    static String stopDate(String line) {
         return findDateIn(line);
     }
 
-    public static Account account(String line) {
+    static TypeAccount account(String line) {
         line = line.replace(" _ ", " ");
         line = line.replace("_ ", " ");
         line = line.replace(" | ", " ");
@@ -59,10 +92,10 @@ public class ExtractInfo {
             int index = label.toString().indexOf("*");
             label = new StringBuilder(label.substring(0, index));
         }
-        return new Account(account, label.toString().trim());
+        return new TypeAccount(account, label.toString().trim());
     }
 
-    public static boolean isAcccount(String line, String postalCode, String id) {
+    static boolean isAcccount(String line, String postalCode, String id) {
         line = line.replace("  ", " ");
         if (line.contains(EURO)) {
             return false;
@@ -74,26 +107,26 @@ public class ExtractInfo {
             return false;
         }
         String[] words = splittingLineIntoWordTable(line);
-        String firstword = words[0];
-        if (firstword.equals(postalCode)) {
+        String firstWord = words[0];
+        if (firstWord.equals(postalCode)) {
             return false;
         }
-        if (firstword.equals(id)) {
+        if (firstWord.equals(id)) {
             return false;
         }
-        if (firstword.contains("-")) {
-            firstword = firstword.replace("-", "");
+        if (firstWord.contains("-")) {
+            firstWord = firstWord.replace("-", "");
         }
-        if (firstword.contains("4A01")) {
-            firstword = firstword.replace("4A01", "401");
+        if (firstWord.contains("4A01")) {
+            firstWord = firstWord.replace("4A01", "401");
         }
-        if (firstword.matches(REGEX_NUMBER) || "461VC".equals(firstword)) {
+        if (firstWord.matches(REGEX_NUMBER) || "461VC".equals(firstWord)) {
             return findDateIn(words[1]).isEmpty();
         }
         return false;
     }
 
-    public static Line line(String line, Map<String, Account> accounts) {
+    public static Line line(String line, Map<String, TypeAccount> accounts) {
         // Supprime les caractères parasites
         line = removesStrayCharactersInLine(line);
 
@@ -119,7 +152,7 @@ public class ExtractInfo {
         String date = words[indexOfWords];
         indexOfWords++;
 
-        Account account;
+        TypeAccount account;
         String journal = "";
         // Extraction du numéro de compte
         if (words[indexOfWords].length() > 10) {
@@ -163,12 +196,10 @@ public class ExtractInfo {
         }
 
         // Extraction du compte de contrepartie
-        Account accountCounterpart = null;
-        if (!line.contains("Report de")) {
-            if (words[indexOfWords].replace("-", "").matches(REGEX_NUMBER)) {
-                accountCounterpart = getAccount(accounts, words, indexOfWords);
-                indexOfWords++;
-            }
+        TypeAccount accountCounterpart = null;
+        if (!line.contains("Report de") && words[indexOfWords].replace("-", "").matches(REGEX_NUMBER)) {
+            accountCounterpart = getAccount(accounts, words, indexOfWords);
+            indexOfWords++;
         }
 
         if (words[indexOfWords].trim().isEmpty()) {
@@ -240,7 +271,7 @@ public class ExtractInfo {
             while (words[indexOfWordsStartEnd].replace(".", "").matches(REGEX_NUMBER)) {
                 String word = words[indexOfWordsStartEnd];
                 if (!"2024".equals(word)) {
-                    if (!(word.length() == 9)) {
+                    if ((word.length() != 9)) {
                         amount.insert(0, word + " ");
                         indexOfWordsStartEnd--;
                     } else {
@@ -276,115 +307,6 @@ public class ExtractInfo {
                 label.toString().trim(), debit.toString().trim(), credit.toString().trim());
     }
 
-    private static int getIndexOfWords(String[] words, int indexOfWords) {
-        if (words[indexOfWords].trim().isEmpty()) {
-            indexOfWords++;
-        }
-        return indexOfWords;
-    }
-
-    private static int getNumberOfAmountsOn(String line) {
-        return line.split(EURO, -1).length - 1;
-    }
-
-    private static Account getAccount(Map<String, Account> accounts, String[] words, int indexOfWords) {
-        Account account = null;
-        String key = words[indexOfWords];
-        if (accounts.containsKey(key)) {
-            account = accounts.get(key);
-        } else if (words[indexOfWords].contains("-")) {
-            key = words[indexOfWords].substring(0, words[indexOfWords].indexOf("-"));
-            if (key.startsWith("450")) {
-                key = "45000-" + words[indexOfWords].substring(words[indexOfWords].indexOf("-") + 1);
-                account = accounts.get(key);
-            } else {
-                account = accounts.get(key);
-            }
-        } else if (key.startsWith("450")) {
-            if (accounts.containsKey(key)) {
-                account = accounts.get(key);
-            } else {
-                account = new Account(key, "Compte de tous les copropriétaires");
-            }
-        } else if (key.startsWith("40800")) {
-            account = accounts.get("40800");
-        } else if (key.startsWith("42100")) {
-            account = accounts.get("42100");
-        } else if (key.startsWith("43100")) {
-            account = accounts.get("43100");
-        } else if (key.startsWith("43200")) {
-            account = accounts.get("43200");
-        } else if (key.length() == 9) {
-            key = key.substring(0, 5) + "-" + key.substring(5);
-            account = accounts.get(key);
-        }
-        return account;
-    }
-
-    private static String fixedSpacesBeforeEuroSign(String line) {
-        line = line.replace(" €", "€");
-        return line;
-    }
-
-    private static String[] splittingLineIntoWordTable(String line) {
-        String[] words = line.split(" ");
-        String[] resultTemp = new String[words.length + 1];
-        int idResult = 0;
-        for (String word : words) {
-            if ("".equals(word)) {
-                if (idResult > 0 && resultTemp[idResult - 1].contains(" ")) {
-                    resultTemp[idResult - 1] = resultTemp[idResult - 1] + " ";
-                } else {
-                    resultTemp[idResult] = " ";
-                    idResult++;
-                }
-            } else {
-                resultTemp[idResult] = word;
-                idResult++;
-            }
-        }
-        if (line.endsWith(" ")) {
-            resultTemp[idResult] = " ";
-            idResult++;
-        }
-        String[] result = new String[idResult];
-        System.arraycopy(resultTemp, 0, result, 0, idResult);
-        return result;
-    }
-
-    private static String getDocument(String[] words, int indexOfWords) {
-        // Extraction du numéro de pièce
-        String document = "";
-        if (findDateIn(words[indexOfWords]).isEmpty()) {
-            if (!words[indexOfWords].matches(REGEX_PHONE_NUMBER)) {
-                document = words[indexOfWords];
-                if (document.length() == 6) {
-                    document = document.substring(1, 6);
-                }
-            }
-        }
-        return document;
-    }
-
-    private static String removesStrayCharactersInLine(String line) {
-        line = line.replace(" | ", " ");
-        line = line.replace("| ", " ");
-        line = line.replace("|", "");
-        line = line.replace(" / ", " ");
-        line = line.replace("Reportde", "Report de");
-        line = line.replace(" ‘", "");
-        line = line.replace(" — ", " ");
-        line = line.replace(" . ", " ");
-        line = line.replace(" =— ", " ");
-        line = line.replace(" _ ", " ");
-        line = line.replace(" - ", " ");
-        line = line.replace(" = ", " ");
-        if (line.endsWith("l")) {
-            line = line.replace("l", "");
-        }
-        return line;
-    }
-
     public static boolean isLigne(String line) {
         line = removesStrayCharactersInLine(line);
         // Découpage de la ligne en un tableau de mot
@@ -402,7 +324,7 @@ public class ExtractInfo {
         return !findDateIn(words[indexOfWords]).isEmpty();
     }
 
-    public static TotalAccount totalAccount(String line, Map<String, Account> accounts) {
+    public static TotalAccount totalAccount(String line, Map<String, TypeAccount> accounts) {
         line = line.replace("| ", " ");
         // Correction des espaces avant le signe €
         line = fixedSpacesBeforeEuroSign(line);
@@ -448,7 +370,7 @@ public class ExtractInfo {
 
         // Extraction du numéro de compte
         String[] labels = splittingLineIntoWordTable(label.toString().replace("Total compte ", "").trim());
-        Account account = null;
+        TypeAccount account = null;
         for (int indexOfLabel = 0; indexOfLabel < labels.length; indexOfLabel++) {
             account = getAccount(accounts, labels, indexOfLabel);
             if (account != null) {
@@ -490,7 +412,7 @@ public class ExtractInfo {
         return line.startsWith("Total compte ");
     }
 
-    public static String postalCode(String line) {
+    static String postalCode(String line) {
         return line.split(" ")[0];
     }
 

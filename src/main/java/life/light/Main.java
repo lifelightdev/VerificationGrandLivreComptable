@@ -1,92 +1,97 @@
 package life.light;
 
+import life.light.extract.info.Ledger;
+import life.light.type.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-import static life.light.WriteFile.*;
+import static life.light.extract.info.Account.getAccounts;
+import static life.light.extract.info.Bank.getBankLines;
+import static life.light.write.WriteFile.*;
+import static life.light.extract.info.Ledger.getInfoGrandLivre;
+import static life.light.extract.info.Ledger.getNumberOfLineInFile;
 
 public class Main {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    // TODO : à mettre dans les paramètres de lancement du programme
+    public static final String ACCOUNT_51221 = "51221";
+    public static final String ACCOUNT_51220 = "51220";
+    public static final String PATH_DIRECTORY_INVOICE = "";
+    public static final String PATH_DIRECTORY_BANK = "";
+    public static final String PATH_DIRECTORY_LEDGER = "";
 
     public static void main(String[] args) {
         LocalDateTime debut = LocalDateTime.now();
         LOGGER.info("Début à {}:{}:{}", debut.getHour(), debut.getMinute(), debut.getSecond());
-        // Lire le fichier texte
-        String fileName = ".\\temp\\fichier_fusionner.txt";
-        String syndicName = "";
-        String printDate = "";
-        String stopDate = "";
-        String postalCode = "";
-        // Récuperation des informations pour la génération du nom de fichier
-        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
-            String line = reader.readLine();
-            syndicName = ExtractInfo.syndicName(line);
-            line = reader.readLine();
-            printDate = ExtractInfo.printDate(line);
-            reader.readLine();
-            line = reader.readLine();
-            stopDate = ExtractInfo.stopDate(line);
-            postalCode = ExtractInfo.postalCode(line);
-        } catch (IOException e) {
-            LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
-        }
-        LOGGER.info("Le nom du syndic est : {}", syndicName);
-        LOGGER.info("La date d'édition est le {}", printDate);
-        LOGGER.info("La date d'arrêt des comptes est le {}", stopDate);
-        LOGGER.info("Le code postal du syndic est {}", postalCode);
 
-        // Génération de la liste des comptes
-        Map<String, Account> accounts = new HashMap<>();
-        int numberOfLineInFile = 0;
-        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (ExtractInfo.isAcccount(line, postalCode, "018")) {
-                    Account account = ExtractInfo.account(line);
-                    accounts.put(account.account(), account);
-                }
-                if (!line.isEmpty()) {
-                    numberOfLineInFile++;
-                }
-            }
-        } catch (IOException e) {
-            LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
+        String codeCondominium = "";
+        if (args.length == 1) {
+            codeCondominium = args[0];
         }
-        LOGGER.info("Il y a {} comptes dans le grandlivre", accounts.size());
+        InfoGrandLivre infoGrandLivre = getInfoGrandLivre(PATH_DIRECTORY_LEDGER);
+        LOGGER.info("Le nom du syndic est : {}", infoGrandLivre.syndicName());
+        LOGGER.info("La date d'édition est le {}", infoGrandLivre.printDate());
+        LOGGER.info("La date d'arrêt des comptes est le {}", infoGrandLivre.stopDate());
+        LOGGER.info("Le code postal du syndic est {}", infoGrandLivre.postalCode());
+
+        Map<String, TypeAccount> accounts = getAccounts(PATH_DIRECTORY_LEDGER, infoGrandLivre.postalCode(), codeCondominium);
 
         writeFileCSVAccounts(accounts, "." + File.separator + "temp" + File.separator + "Plan comptable.csv");
         writeFileExcelAccounts(accounts, "." + File.separator + "temp" + File.separator + "Plan comptable.xlsx");
 
+        int numberOfLineInFile = getNumberOfLineInFile(PATH_DIRECTORY_LEDGER);
+
+        // Récupération des relevés bancaire
+        List<String> pathsDirectoryBank = new ArrayList<>();
+        pathsDirectoryBank.add(PATH_DIRECTORY_BANK + File.separator + ACCOUNT_51221);
+        pathsDirectoryBank.add(PATH_DIRECTORY_BANK + File.separator + ACCOUNT_51220);
+        List<BankLine> bankLines = getBankLines(accounts, pathsDirectoryBank);
+
         // Géneration du grand livre
         Object[] grandLivres = new Object[numberOfLineInFile];
+        TreeSet<String> journals = new TreeSet<>();
+        List<Line> lineBankInGrandLivre = new ArrayList<>();
         int indexInGrandLivres = 0;
-        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(PATH_DIRECTORY_LEDGER))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (!line.isEmpty()) {
-                    if (ExtractInfo.isLigne(line)) {
-                        Line lineOfGrandLivre = ExtractInfo.line(line, accounts);
+                    if (Ledger.isLigne(line)) {
+                        Line lineOfGrandLivre = Ledger.line(line, accounts);
                         if (lineOfGrandLivre != null) {
                             grandLivres[indexInGrandLivres] = lineOfGrandLivre;
+                            if (!lineOfGrandLivre.journal().isEmpty()) {
+                                journals.add(lineOfGrandLivre.journal());
+                            }
+                            if (lineOfGrandLivre.account().account().equals(ACCOUNT_51221)) {
+                                lineBankInGrandLivre.add(lineOfGrandLivre);
+                            }
+                            if (lineOfGrandLivre.account().account().equals(ACCOUNT_51220)) {
+                                if (!lineOfGrandLivre.label().contains("Report de ")) {
+                                    lineBankInGrandLivre.add(lineOfGrandLivre);
+                                }
+                            }
                             indexInGrandLivres++;
                         }
-                    } else if (ExtractInfo.isTotalAccount(line)) {
-                        TotalAccount totalAccount = ExtractInfo.totalAccount(line, accounts);
+                    } else if (Ledger.isTotalAccount(line)) {
+                        TotalAccount totalAccount = Ledger.totalAccount(line, accounts);
                         if (totalAccount != null) {
                             grandLivres[indexInGrandLivres] = totalAccount;
                             indexInGrandLivres++;
                         }
-                    } else if (ExtractInfo.isTotalBuilding(line)){
-                        TotalBuilding totalBuilding = ExtractInfo.totalBuilding(line);
-                            grandLivres[indexInGrandLivres] = totalBuilding;
-                            indexInGrandLivres++;
+                    } else if (Ledger.isTotalBuilding(line)) {
+                        TotalBuilding totalBuilding = Ledger.totalBuilding(line);
+                        grandLivres[indexInGrandLivres] = totalBuilding;
+                        indexInGrandLivres++;
                     }
                 }
             }
@@ -94,15 +99,16 @@ public class Main {
             LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
         }
 
-        writeFileGrandLivre(grandLivres);
-        String nameFile = printDate.substring(6) + "-" + printDate.substring(3, 5) + "-" + printDate.substring(0, 2)
-                + " Grand livre " + syndicName.substring(0, syndicName.length() - 1).trim()
-                + " au " + stopDate.substring(6) + "-" + stopDate.substring(3, 5) + "-" + stopDate.substring(0, 2)
+        writeFileCSVGrandLivre(grandLivres);
+        String nameFile = infoGrandLivre.printDate().substring(6) + "-" + infoGrandLivre.printDate().substring(3, 5) + "-" + infoGrandLivre.printDate().substring(0, 2)
+                + " Grand livre " + infoGrandLivre.syndicName().substring(0, infoGrandLivre.syndicName().length() - 1).trim()
+                + " au " + infoGrandLivre.stopDate().substring(6) + "-" + infoGrandLivre.stopDate().substring(3, 5) + "-" + infoGrandLivre.stopDate().substring(0, 2)
                 + ".xlsx";
-        writeFileExcelGrandLivre(grandLivres, nameFile);
+        writeFileExcelGrandLivre(grandLivres, nameFile, journals);
 
-        // TODO Génération des journaux
-        // TODO Écriture des journaux dans des fichiers Excel (un par journal)
+        nameFile = "." + File.separator + "temp" + File.separator + "Etat de rapprochement.xlsx";
+        writeFileExcelEtatRaprochement(lineBankInGrandLivre, nameFile, bankLines);
+
         LocalDateTime fin = LocalDateTime.now();
         LOGGER.info("La durée du traitement est de {} secondes", ChronoUnit.SECONDS.between(debut, fin));
     }
