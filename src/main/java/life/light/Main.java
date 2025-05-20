@@ -45,8 +45,8 @@ public class Main {
 
         Map<String, TypeAccount> accounts = getAccounts(PATH_DIRECTORY_LEDGER, infoGrandLivre.postalCode(), codeCondominium);
 
-        writeFileCSVAccounts(accounts, "." + File.separator + "temp" + File.separator + "Plan comptable.csv");
-        writeFileExcelAccounts(accounts, "." + File.separator + "temp" + File.separator + "Plan comptable.xlsx");
+        writeFileCSVAccounts(accounts, "." + File.separator + "temp" + File.separator + "Plan comptable de " + infoGrandLivre.syndicName() + ".csv");
+        writeFileExcelAccounts(accounts, "." + File.separator + "temp" + File.separator + "Plan comptable de " + infoGrandLivre.syndicName() + ".xlsx");
 
         int numberOfLineInFile = getNumberOfLineInFile(PATH_DIRECTORY_LEDGER);
 

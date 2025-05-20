@@ -41,6 +41,17 @@ public class WriteFile {
         try {
             // Créer un nouveau classeur Excel
             Workbook workbook = new XSSFWorkbook();
+
+            // Style
+            CellStyle styleWhite = workbook.createCellStyle();
+            styleWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
+            styleWhite.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            styleWhite.setAlignment(HorizontalAlignment.LEFT);
+            CellStyle styleBlue = workbook.createCellStyle();
+            styleBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
+            styleBlue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            styleBlue.setAlignment(HorizontalAlignment.LEFT);
+
             // Créer une nouvelle feuille dans le classeur
             Sheet sheet = workbook.createSheet("Plan comptable");
             int rowNum = 0;
@@ -56,8 +67,16 @@ public class WriteFile {
             rowNum++;
             for (Map.Entry<String, TypeAccount> entry : accounts.entrySet()) {
                 Row row = sheet.createRow(rowNum);
-                row.createCell(numColAccount).setCellValue(entry.getKey());
-                row.createCell(numColLabelle).setCellValue(entry.getValue().label());
+                Cell accountNumberCell = getAccountNumberCell(entry.getKey(), row, numColAccount);
+                Cell labelCell = row.createCell(numColLabelle);
+                labelCell.setCellValue(entry.getValue().label());
+                if (rowNum % 2 == 0) {
+                    accountNumberCell.setCellStyle(styleWhite);
+                    labelCell.setCellStyle(styleWhite);
+                } else {
+                    accountNumberCell.setCellStyle(styleBlue);
+                    labelCell.setCellStyle(styleBlue);
+                }
                 rowNum++;
             }
             sheet.createFreezePane(0, 1);
@@ -141,8 +160,10 @@ public class WriteFile {
             CellStyle styleTotalAmount = getCellStyleTotalAmount(workbook.createCellStyle(), dataAmount);
             CellStyle styleWhite = workbook.createCellStyle();
             styleWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
+            styleWhite.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             CellStyle styleBlue = workbook.createCellStyle();
             styleBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
+            styleBlue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             CellStyle styleAmountWhite = getCellStyleAmount(workbook.createCellStyle(), dataAmount);
             styleAmountWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
             CellStyle styleAmountBlue = getCellStyleAmount(workbook.createCellStyle(), dataAmount);

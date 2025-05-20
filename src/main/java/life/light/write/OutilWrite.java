@@ -507,14 +507,8 @@ public class OutilWrite {
     private static int addAccountCell(Line grandLivre, Row row, CellStyle cellStyle, int cellNum) {
         String numAccount = grandLivre.account().account();
         boolean isNotEmptyAccount = !numAccount.isEmpty();
-        Cell accountNumberCell = row.createCell(cellNum++);
-        accountNumberCell.setCellValue(numAccount);
         if (isNotEmptyAccount) {
-            if (isDouble(numAccount)) {
-                accountNumberCell.setCellValue(Double.parseDouble(numAccount));
-            } else {
-                accountNumberCell.setCellValue(numAccount);
-            }
+            Cell accountNumberCell = getAccountNumberCell(numAccount, row, cellNum++);
             addlineBlue(getCellStyleAlignmentLeft(cellStyle), accountNumberCell);
 
             Cell accountLabelCell = row.createCell(cellNum++);
@@ -526,6 +520,16 @@ public class OutilWrite {
         return cellNum;
     }
 
+    static Cell getAccountNumberCell(String accountNumber, Row row, int numColAccount) {
+        Cell accountNumberCell  = row.createCell(numColAccount);
+        // Pour ne pas avoir d'erreur de formatage dans excel
+        if (isDouble(accountNumber)) {
+            accountNumberCell.setCellValue(Double.parseDouble(accountNumber));
+        } else {
+            accountNumberCell.setCellValue(accountNumber);
+        }
+        return accountNumberCell;
+    }
     private static CellStyle getCellStyleVerifRed(CellStyle style) {
         style.setFillForegroundColor(BACKGROUND_COLOR_RED);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
