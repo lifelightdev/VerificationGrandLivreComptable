@@ -23,8 +23,8 @@ public class Main {
 
     private static final Logger LOGGER = LogManager.getLogger();
     // TODO : à mettre dans les paramètres de lancement du programme
-    public static final String BANK_1_ACCOUNT = "";
-    public static final String BANK_2_ACCOUNT = "";
+    public static final String BANK_1_ACCOUNT = "51220";
+    public static final String BANK_2_ACCOUNT = "51221";
     public static final String PATH_DIRECTORY_INVOICE = "";
     public static final String PATH_DIRECTORY_BANK = "";
     public static final String PATH_DIRECTORY_LEDGER = "";

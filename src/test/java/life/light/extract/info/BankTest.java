@@ -17,9 +17,9 @@ class BankTest {
     @Test
     void getBankLines() {
         Map<String, TypeAccount> accounts = new HashMap<>();
-        accounts.put("5120", new TypeAccount("5120", "Banque 1"));
+        accounts.put("51221", new TypeAccount("51221", "Banque 1"));
         List<String> pathsDirectoryBank = new ArrayList<>();
-        pathsDirectoryBank.add(".\\temp\\bank\\5120\\");
+        pathsDirectoryBank.add(".\\temp\\bank\\51221\\");
         List<BankLine> bankLines = Bank.getBankLines(accounts, pathsDirectoryBank);
         assertEquals(2, bankLines.size());
         LocalDate operationDate =  LocalDate.parse("2024-07-15");
@@ -32,15 +32,15 @@ class BankTest {
         assertEquals(debit, bankLines.getLast().debit());
         double credit = 100.00;
         assertEquals(credit, bankLines.getLast().credit());
-        assertEquals("5120", bankLines.getLast().account().account());
+        assertEquals("51221", bankLines.getLast().account().account());
     }
 
     @Test
     void getBankMultiLines() {
         Map<String, TypeAccount> accounts = new HashMap<>();
-        accounts.put("5120", new TypeAccount("5120", "Banque 1"));
+        accounts.put("51221", new TypeAccount("51221", "Banque 1"));
         List<String> pathsDirectoryBank = new ArrayList<>();
-        pathsDirectoryBank.add(".\\temp\\bank\\5120\\");
+        pathsDirectoryBank.add(".\\temp\\bank\\51221\\");
         List<BankLine> bankLines = Bank.getBankLines(accounts, pathsDirectoryBank);
         assertEquals(2, bankLines.size());
         LocalDate operationDate =  LocalDate.parse("2024-08-17");
@@ -53,6 +53,29 @@ class BankTest {
         assertEquals(debit, bankLines.getFirst().debit());
         double credit = 100.00;
         assertEquals(credit, bankLines.getFirst().credit());
-        assertEquals("5120", bankLines.getFirst().account().account());
+        assertEquals("51221", bankLines.getFirst().account().account());
+    }
+
+    @Test
+    void getMultiBank() {
+        Map<String, TypeAccount> accounts = new HashMap<>();
+        accounts.put("51220", new TypeAccount("51220", "Banque 1"));
+        accounts.put("51221", new TypeAccount("51221", "Banque 2"));
+        List<String> pathsDirectoryBank = new ArrayList<>();
+        pathsDirectoryBank.add(".\\temp\\bank\\51220\\");
+        pathsDirectoryBank.add(".\\temp\\bank\\51221\\");
+        List<BankLine> bankLines = Bank.getBankLines(accounts, pathsDirectoryBank);
+        assertEquals(6, bankLines.size());
+        LocalDate operationDate =  LocalDate.parse("2024-11-01");
+        assertEquals(operationDate, bankLines.getFirst().operationDate());
+        LocalDate valueDate =  LocalDate.parse("2024-11-01");
+        assertEquals(valueDate, bankLines.getFirst().valueDate());
+        String label = "VIR INST M. TINTIN LIBELLE:Tintin ref : 1.018.0031 REF.CLIENT-NOTPROVIDED";
+        assertEquals(label, bankLines.getFirst().label());
+        double debit = 0;
+        assertEquals(debit, bankLines.getFirst().debit());
+        double credit = 1500.88;
+        assertEquals(credit, bankLines.getFirst().credit());
+        assertEquals("51220", bankLines.getFirst().account().account());
     }
 }

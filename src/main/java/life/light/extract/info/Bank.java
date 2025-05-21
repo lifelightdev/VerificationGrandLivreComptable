@@ -59,7 +59,6 @@ public class Bank {
                         double debit = 0D;
                         double credit = 0D;
                         while ((line = reader.readLine()) != null) {
-                            LOGGER.info("Ligne {}", line);
                             String nouveauSoldeAu = "Nouveau solde au";
                             if (!findDateIn(line).isEmpty() && (!line.contains(nouveauSoldeAu))) {
                                 if (operationDate != null && label != null && valueDate != null) {
@@ -78,7 +77,7 @@ public class Bank {
                                         index = getIndexNotWord(index, ligne);
                                         valueDate = getValueDate(theAccount, ligne, index);
                                     }
-                                    if (BANK_2_ACCOUNT.equals(theAccount) || "5120".equals(theAccount)) {
+                                    if (BANK_2_ACCOUNT.equals(theAccount)) {
                                         valueDate = getValueDate(theAccount, ligne, index);
                                         index = getIndexNotWord(index, ligne);
                                         while (!ligne[index].isEmpty()) {
@@ -117,7 +116,7 @@ public class Bank {
         if (BANK_1_ACCOUNT.equals(theAccount)) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BANK_1_DATA_FORMAT, Locale.FRANCE);
             operationDate = LocalDate.parse(ligne[index] + ".24", formatter);
-        } else if (BANK_2_ACCOUNT.equals(theAccount) || "5120".equals(theAccount)) {
+        } else if (BANK_2_ACCOUNT.equals(theAccount)) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BANK_2_DATA_FORMAT, Locale.FRANCE);
             operationDate = LocalDate.parse(ligne[index], formatter);
         }
@@ -129,7 +128,7 @@ public class Bank {
         if (BANK_1_ACCOUNT.equals(theAccount)) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BANK_1_DATA_FORMAT, Locale.FRANCE);
             operationDate = LocalDate.parse(ligne[index], formatter);
-        } else if (BANK_2_ACCOUNT.equals(theAccount) || "5120".equals(theAccount)) {
+        } else if (BANK_2_ACCOUNT.equals(theAccount)) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BANK_2_DATA_FORMAT, Locale.FRANCE);
             operationDate = LocalDate.parse(ligne[index], formatter);
         }
