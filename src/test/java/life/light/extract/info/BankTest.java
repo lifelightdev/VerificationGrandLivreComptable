@@ -20,7 +20,7 @@ class BankTest {
         accounts.put("51221", new TypeAccount("51221", "Banque 1"));
         List<String> pathsDirectoryBank = new ArrayList<>();
         pathsDirectoryBank.add(".\\temp\\bank\\51221\\");
-        List<BankLine> bankLines = Bank.getBankLines(accounts, pathsDirectoryBank);
+        List<BankLine> bankLines = Bank.getBankLines(accounts, pathsDirectoryBank, 2024);
         assertEquals(2, bankLines.size());
         LocalDate operationDate =  LocalDate.parse("2024-07-15");
         assertEquals(operationDate, bankLines.getLast().operationDate());
@@ -41,7 +41,7 @@ class BankTest {
         accounts.put("51221", new TypeAccount("51221", "Banque 1"));
         List<String> pathsDirectoryBank = new ArrayList<>();
         pathsDirectoryBank.add(".\\temp\\bank\\51221\\");
-        List<BankLine> bankLines = Bank.getBankLines(accounts, pathsDirectoryBank);
+        List<BankLine> bankLines = Bank.getBankLines(accounts, pathsDirectoryBank, 2024);
         assertEquals(2, bankLines.size());
         LocalDate operationDate =  LocalDate.parse("2024-08-17");
         assertEquals(operationDate, bankLines.getFirst().operationDate());
@@ -64,7 +64,7 @@ class BankTest {
         List<String> pathsDirectoryBank = new ArrayList<>();
         pathsDirectoryBank.add(".\\temp\\bank\\51220\\");
         pathsDirectoryBank.add(".\\temp\\bank\\51221\\");
-        List<BankLine> bankLines = Bank.getBankLines(accounts, pathsDirectoryBank);
+        List<BankLine> bankLines = Bank.getBankLines(accounts, pathsDirectoryBank, 2024);
         assertEquals(6, bankLines.size());
         LocalDate operationDate =  LocalDate.parse("2024-11-01");
         assertEquals(operationDate, bankLines.getFirst().operationDate());

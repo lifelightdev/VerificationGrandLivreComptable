@@ -70,16 +70,7 @@ public class Ledger {
     }
 
     static TypeAccount account(String line) {
-        line = line.replace(" _ ", " ");
-        line = line.replace("_ ", " ");
-        line = line.replace(" | ", " ");
-        line = line.replace(" — ", " ");
-        line = line.replace(" … ", " ");
-        line = line.replace("°", " ");
-        line = line.replace("#", " ");
-        line = line.replace("‘", " ");
-        line = line.replace("=—", " ");
-        line = line.replace("4A01", "401");
+        line = getLine(line);
         String[] words = splittingLineIntoWordTable(line);
         String account = words[0];
         StringBuilder label = new StringBuilder();
@@ -95,7 +86,22 @@ public class Ledger {
         return new TypeAccount(account, label.toString().trim());
     }
 
+    private static String getLine(String line) {
+        line = line.replace(" _ ", " ");
+        line = line.replace("_ ", " ");
+        line = line.replace(" | ", " ");
+        line = line.replace(" — ", " ");
+        line = line.replace(" … ", " ");
+        line = line.replace("°", " ");
+        line = line.replace("#", " ");
+        line = line.replace("‘", " ");
+        line = line.replace("=—", " ");
+        line = line.replace("4A01", "401");
+        return line;
+    }
+
     static boolean isAcccount(String line, String postalCode, String id) {
+        line = getLine(line);
         line = line.replace("  ", " ");
         if (line.contains(EURO)) {
             return false;
@@ -116,9 +122,6 @@ public class Ledger {
         }
         if (firstWord.contains("-")) {
             firstWord = firstWord.replace("-", "");
-        }
-        if (firstWord.contains("4A01")) {
-            firstWord = firstWord.replace("4A01", "401");
         }
         if (firstWord.matches(REGEX_NUMBER) || "461VC".equals(firstWord)) {
             return findDateIn(words[1]).isEmpty();

@@ -27,15 +27,15 @@ public class Bank {
 
     private Bank() { }
 
-    public static List<BankLine> getBankLines(Map<String, TypeAccount> accounts, List<String> pathsDirectoryBank) {
+    public static List<BankLine> getBankLines(Map<String, TypeAccount> accounts, List<String> pathsDirectoryBank, int year) {
         List<BankLine> bankLines = new ArrayList<>();
         for (String pathDirectoryBank : pathsDirectoryBank) {
-            bankLines.addAll(getBank(accounts, pathDirectoryBank));
+            bankLines.addAll(getBank(accounts, pathDirectoryBank, year));
         }
         return bankLines;
     }
 
-    private static List<BankLine> getBank(Map<String, TypeAccount> accounts, String pathDirectoryBank) {
+    private static List<BankLine> getBank(Map<String, TypeAccount> accounts, String pathDirectoryBank, int year) {
         List<BankLine> bankLines = new ArrayList<>();
         File pathDirectory;
         File[] files;
@@ -62,7 +62,7 @@ public class Bank {
                             String nouveauSoldeAu = "Nouveau solde au";
                             if (!findDateIn(line).isEmpty() && (!line.contains(nouveauSoldeAu))) {
                                 if (operationDate != null && label != null && valueDate != null) {
-                                    BankLine bankLine = new BankLine(2024, operationDate.getMonthValue(), operationDate, valueDate, account, label.toString().trim(), debit, credit);
+                                    BankLine bankLine = new BankLine(year, operationDate.getMonthValue(), operationDate, valueDate, account, label.toString().trim(), debit, credit);
                                     bankLines.add(bankLine);
                                 } else {
                                     String[] ligne = line.split(" ");

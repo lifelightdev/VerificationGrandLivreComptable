@@ -90,7 +90,7 @@ class LedgerTest {
         Assertions.assertEquals(label, result.label());
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Given {0} return {1}")
     @CsvSource({
             "40100-0001 ORANGE,                                                 true",
             "C'est le nom du Syndic,                                            false",

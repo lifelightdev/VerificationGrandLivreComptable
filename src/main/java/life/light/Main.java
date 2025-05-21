@@ -34,8 +34,10 @@ public class Main {
         LOGGER.info("Début à {}:{}:{}", debut.getHour(), debut.getMinute(), debut.getSecond());
 
         String codeCondominium = "018";
-        if (args.length == 1) {
+        int year = 2024;
+        if (args.length == 2) {
             codeCondominium = args[0];
+            year = Integer.parseInt(args[1]);
         }
         InfoGrandLivre infoGrandLivre = getInfoGrandLivre(PATH_DIRECTORY_LEDGER);
         LOGGER.info("Le nom du syndic est : {}", infoGrandLivre.syndicName());
@@ -54,7 +56,7 @@ public class Main {
         List<String> pathsDirectoryBank = new ArrayList<>();
         pathsDirectoryBank.add(PATH_DIRECTORY_BANK + File.separator + BANK_2_ACCOUNT);
         pathsDirectoryBank.add(PATH_DIRECTORY_BANK + File.separator + BANK_1_ACCOUNT);
-        List<BankLine> bankLines = getBankLines(accounts, pathsDirectoryBank);
+        List<BankLine> bankLines = getBankLines(accounts, pathsDirectoryBank, year);
 
         // Géneration du grand livre
         Object[] grandLivres = new Object[numberOfLineInFile];
