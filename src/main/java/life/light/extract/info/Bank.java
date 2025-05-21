@@ -22,6 +22,8 @@ import static life.light.extract.info.OutilInfo.findDateIn;
 public class Bank {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    public static final String BANK_1_DATA_FORMAT = "dd.MM.yy";
+    public static final String BANK_2_DATA_FORMAT = "dd/MM/yyyy";
 
     private Bank() { }
 
@@ -41,14 +43,7 @@ public class Bank {
         String theAccount = path[path.length - 1];
         pathDirectory = new File(pathDirectoryBank);
         files = pathDirectory.listFiles();
-        DateTimeFormatter formatter = null;
-        if (ACCOUNT_51220.equals(theAccount)) {
-            formatter = DateTimeFormatter.ofPattern("dd.MM.yy", Locale.FRANCE);
-        }
-        if (ACCOUNT_51221.equals(theAccount) || "512".equals(theAccount)) {
-            formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.FRANCE);
-        }
-        if (null != formatter && null != files) {
+        if (null != files) {
             for (File fichier : files) {
                 if (fichier.isFile()) {
                     //LOGGER.info("Fichier {}", fichier.getName());
@@ -57,44 +52,54 @@ public class Bank {
                         for (int i = 0; i < 6; i++) {
                             reader.readLine();
                         }
+                        TypeAccount account = accounts.get(theAccount);
+                        LocalDate operationDate = null;
+                        StringBuilder label = new StringBuilder();
+                        LocalDate valueDate = null;
+                        double debit = 0D;
+                        double credit = 0D;
                         while ((line = reader.readLine()) != null) {
-                            if (!findDateIn(line).isEmpty() && (!line.contains("Nouveau solde au"))) {
-                                String[] ligne = line.split(" ");
-                                int index = 0;
-                                TypeAccount account = accounts.get(theAccount);
-                                LocalDate operationDate = getOperationDate(theAccount, formatter, ligne, index);
-                                index = getIndexNotWord(index, ligne);
-                                StringBuilder label = new StringBuilder();
-                                LocalDate valueDate = null;
-                                if (ACCOUNT_51220.equals(theAccount)) {
-                                    label = new StringBuilder(ligne[index++]);
-                                    while (!ligne[index].isEmpty()) {
-                                        label.append(" ").append(ligne[index]);
-                                        index++;
+                            LOGGER.info("Ligne {}", line);
+                            String nouveauSoldeAu = "Nouveau solde au";
+                            if (!findDateIn(line).isEmpty() && (!line.contains(nouveauSoldeAu))) {
+                                if (operationDate != null && label != null && valueDate != null) {
+                                    BankLine bankLine = new BankLine(2024, operationDate.getMonthValue(), operationDate, valueDate, account, label.toString().trim(), debit, credit);
+                                    bankLines.add(bankLine);
+                                } else {
+                                    String[] ligne = line.split(" ");
+                                    int index = 0;
+                                    operationDate = getOperationDate(theAccount, ligne, index);
+                                    index = getIndexNotWord(index, ligne);
+                                    if (BANK_1_ACCOUNT.equals(theAccount)) {
+                                        while (!ligne[index].isEmpty()) {
+                                            label.append(" ").append(ligne[index]);
+                                            index++;
+                                        }
+                                        index = getIndexNotWord(index, ligne);
+                                        valueDate = getValueDate(theAccount, ligne, index);
                                     }
-                                } else if (ACCOUNT_51221.equals(theAccount)|| "512".equals(theAccount)) {
-                                    valueDate = LocalDate.parse(ligne[index], formatter);
-                                }
-                                index = getIndexNotWord(index, ligne);
-                                if (ACCOUNT_51220.equals(theAccount)) {
-                                    valueDate = LocalDate.parse(ligne[index], formatter);
-                                } else if (ACCOUNT_51221.equals(theAccount) || "512".equals(theAccount)) {
-                                    label = new StringBuilder(ligne[index++]);
-                                    while (!ligne[index].isEmpty()) {
-                                        label.append(" ").append(ligne[index]);
-                                        index++;
+                                    if (BANK_2_ACCOUNT.equals(theAccount) || "5120".equals(theAccount)) {
+                                        valueDate = getValueDate(theAccount, ligne, index);
+                                        index = getIndexNotWord(index, ligne);
+                                        while (!ligne[index].isEmpty()) {
+                                            label.append(" ").append(ligne[index]);
+                                            index++;
+                                        }
+                                    }
+                                    if (line.endsWith(" ")) {
+                                        debit = Double.parseDouble(ligne[ligne.length - 1].replace(".", "").replace(",", "."));
+                                    } else if (!ligne[ligne.length - 1].isEmpty()) {
+                                        credit = Double.parseDouble(ligne[ligne.length - 1].replace(".", "").replace(",", "."));
                                     }
                                 }
-
-                                double debit = 0D;
-                                double credit = 0D;
-                                if (line.endsWith(" ")) {
-                                    debit = Double.parseDouble(ligne[ligne.length - 1].replace(".", "").replace(",", "."));
-                                } else if (!ligne[ligne.length - 1].isEmpty()) {
-                                    credit = Double.parseDouble(ligne[ligne.length - 1].replace(".", "").replace(",", "."));
+                            } else if (!line.contains(nouveauSoldeAu) && (!line.contains("Total des opérations"))) {
+                                if (label.toString().endsWith(" ")){
+                                    label.append(line);
+                                } else {
+                                    label.append(" ").append(line);
                                 }
+                            } else  if (line.contains(nouveauSoldeAu)){
                                 BankLine bankLine = new BankLine(2024, operationDate.getMonthValue(), operationDate, valueDate, account, label.toString().trim(), debit, credit);
-                                //LOGGER.info("Date {} {} {} {} débit {} crédit {}", operationDate, valueDate, account, label.trim(), debit, credit);
                                 bankLines.add(bankLine);
                             }
                         }
@@ -107,11 +112,25 @@ public class Bank {
         return bankLines;
     }
 
-    private static LocalDate getOperationDate(String theAccount, DateTimeFormatter formatter, String[] ligne, int index) {
+    private static LocalDate getOperationDate(String theAccount, String[] ligne, int index) {
         LocalDate operationDate = null;
-        if (ACCOUNT_51220.equals(theAccount)) {
+        if (BANK_1_ACCOUNT.equals(theAccount)) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BANK_1_DATA_FORMAT, Locale.FRANCE);
             operationDate = LocalDate.parse(ligne[index] + ".24", formatter);
-        } else if (ACCOUNT_51221.equals(theAccount) || "512".equals(theAccount)) {
+        } else if (BANK_2_ACCOUNT.equals(theAccount) || "5120".equals(theAccount)) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BANK_2_DATA_FORMAT, Locale.FRANCE);
+            operationDate = LocalDate.parse(ligne[index], formatter);
+        }
+        return operationDate;
+    }
+
+    private static LocalDate getValueDate(String theAccount, String[] ligne, int index) {
+        LocalDate operationDate = null;
+        if (BANK_1_ACCOUNT.equals(theAccount)) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BANK_1_DATA_FORMAT, Locale.FRANCE);
+            operationDate = LocalDate.parse(ligne[index], formatter);
+        } else if (BANK_2_ACCOUNT.equals(theAccount) || "5120".equals(theAccount)) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BANK_2_DATA_FORMAT, Locale.FRANCE);
             operationDate = LocalDate.parse(ligne[index], formatter);
         }
         return operationDate;

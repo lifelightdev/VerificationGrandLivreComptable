@@ -212,6 +212,7 @@ public class OutilWrite {
     public static void getLineEtatRapprochement(Line grandLivre, Row row, CellStyle style, CellStyle styleAmount, BankLine bankLine, String message) {
         int cellNum = 0;
         if (grandLivre != null) {
+            //LOGGER.info("Dans l'onglet " + row.getSheet().getSheetName() + " ajout de la ligne du grand livre " + grandLivre.account().account() + " label " + grandLivre.label() + " debit " + grandLivre.debit() + " credit " + grandLivre.credit());
             cellNum = addAccountCell(grandLivre, row, style, cellNum);
             cellNum = addDocumentCell(grandLivre, row, style, cellNum);
             cellNum = addDateCell(grandLivre, row, style, cellNum);
@@ -224,10 +225,11 @@ public class OutilWrite {
             addCreditCell(grandLivre, row, styleAmount, cellNum);
             cellNum++;
         } else {
-            cellNum = 10;
+            cellNum = 11;
         }
         cellNum++;
         if (bankLine != null) {
+            //LOGGER.info(("Dans l'onglet " + row.getSheet().getSheetName() + " ajout de la ligne du relever de compte " + bankLine.operationDate() + " label " + bankLine.label() + " debit " + bankLine.debit() + " credit " + bankLine.credit()));
             Cell dateReleveCell = row.createCell(cellNum);
             dateReleveCell.setCellValue(bankLine.year() + "-" + bankLine.mounth());
             addlineBlue(getCellStyleAlignmentLeft(style), dateReleveCell);
@@ -521,7 +523,7 @@ public class OutilWrite {
     }
 
     static Cell getAccountNumberCell(String accountNumber, Row row, int numColAccount) {
-        Cell accountNumberCell  = row.createCell(numColAccount);
+        Cell accountNumberCell = row.createCell(numColAccount);
         // Pour ne pas avoir d'erreur de formatage dans excel
         if (isDouble(accountNumber)) {
             accountNumberCell.setCellValue(Double.parseDouble(accountNumber));
@@ -530,6 +532,7 @@ public class OutilWrite {
         }
         return accountNumberCell;
     }
+
     private static CellStyle getCellStyleVerifRed(CellStyle style) {
         style.setFillForegroundColor(BACKGROUND_COLOR_RED);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);

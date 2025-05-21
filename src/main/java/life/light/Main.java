@@ -23,8 +23,8 @@ public class Main {
 
     private static final Logger LOGGER = LogManager.getLogger();
     // TODO : à mettre dans les paramètres de lancement du programme
-    public static final String ACCOUNT_51221 = "51221";
-    public static final String ACCOUNT_51220 = "51220";
+    public static final String BANK_1_ACCOUNT = "";
+    public static final String BANK_2_ACCOUNT = "";
     public static final String PATH_DIRECTORY_INVOICE = "";
     public static final String PATH_DIRECTORY_BANK = "";
     public static final String PATH_DIRECTORY_LEDGER = "";
@@ -33,7 +33,7 @@ public class Main {
         LocalDateTime debut = LocalDateTime.now();
         LOGGER.info("Début à {}:{}:{}", debut.getHour(), debut.getMinute(), debut.getSecond());
 
-        String codeCondominium = "";
+        String codeCondominium = "018";
         if (args.length == 1) {
             codeCondominium = args[0];
         }
@@ -52,8 +52,8 @@ public class Main {
 
         // Récupération des relevés bancaire
         List<String> pathsDirectoryBank = new ArrayList<>();
-        pathsDirectoryBank.add(PATH_DIRECTORY_BANK + File.separator + ACCOUNT_51221);
-        pathsDirectoryBank.add(PATH_DIRECTORY_BANK + File.separator + ACCOUNT_51220);
+        pathsDirectoryBank.add(PATH_DIRECTORY_BANK + File.separator + BANK_2_ACCOUNT);
+        pathsDirectoryBank.add(PATH_DIRECTORY_BANK + File.separator + BANK_1_ACCOUNT);
         List<BankLine> bankLines = getBankLines(accounts, pathsDirectoryBank);
 
         // Géneration du grand livre
@@ -72,10 +72,10 @@ public class Main {
                             if (!lineOfGrandLivre.journal().isEmpty()) {
                                 journals.add(lineOfGrandLivre.journal());
                             }
-                            if (lineOfGrandLivre.account().account().equals(ACCOUNT_51221)) {
+                            if (lineOfGrandLivre.account().account().equals(BANK_2_ACCOUNT)) {
                                 lineBankInGrandLivre.add(lineOfGrandLivre);
                             }
-                            if (lineOfGrandLivre.account().account().equals(ACCOUNT_51220)) {
+                            if (lineOfGrandLivre.account().account().equals(BANK_1_ACCOUNT)) {
                                 if (!lineOfGrandLivre.label().contains("Report de ")) {
                                     lineBankInGrandLivre.add(lineOfGrandLivre);
                                 }

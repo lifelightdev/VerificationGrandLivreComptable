@@ -24,7 +24,7 @@ class WriteFileTest {
 
     @BeforeEach
     void setUp() {
-        accounts.put("51200", new TypeAccount("51200", "Banque"));
+        accounts.put("512", new TypeAccount("512", "Banque"));
         accounts.put("10500", new TypeAccount("10500", "Fond travaux"));
 
         journals.add("BQ");
@@ -42,7 +42,7 @@ class WriteFileTest {
             line = reader.readLine();
             Assertions.assertEquals("10500 ; Fond travaux ; ", line);
             line = reader.readLine();
-            Assertions.assertEquals("51200 ; Banque ; ", line);
+            Assertions.assertEquals("512 ; Banque ; ", line);
         } catch (IOException e) {
             e.printStackTrace();
             System.err.println("Erreur lors de la lecture du fichier CSV : " + e.getMessage());
@@ -66,7 +66,7 @@ class WriteFileTest {
             Assertions.assertEquals(10500, row.getCell(0).getNumericCellValue());
             Assertions.assertEquals("Fond travaux", row.getCell(1).getStringCellValue());
             row = sheet.getRow(2);
-            Assertions.assertEquals(51200, row.getCell(0).getNumericCellValue());
+            Assertions.assertEquals(512, row.getCell(0).getNumericCellValue());
             Assertions.assertEquals("Banque", row.getCell(1).getStringCellValue());
         } catch (IOException e) {
             e.printStackTrace();
@@ -77,10 +77,10 @@ class WriteFileTest {
     @Test
     void writeFileCSVGrandLivre() {
 
-        Line line1 = new Line("DOC001", "2023-01-15", accounts.get("51200"), journals.getFirst(), accounts.get("10500"), "CHK123", "Paiement travaux", "1000.00", "");
-        Line line2 = new Line("DOC002", "2023-01-20", accounts.get("10500"), journals.getFirst(), accounts.get("51200"), "CHK124", "Remboursement", "", "500.00");
+        Line line1 = new Line("DOC001", "2023-01-15", accounts.get("512"), journals.getFirst(), accounts.get("10500"), "CHK123", "Paiement travaux", "1000.00", "");
+        Line line2 = new Line("DOC002", "2023-01-20", accounts.get("10500"), journals.getFirst(), accounts.get("512"), "CHK124", "Remboursement", "", "500.00");
 
-        TotalAccount totalAccount1 = new TotalAccount("Total compte Banque", accounts.get("51200"), "1000.00", "0.00");
+        TotalAccount totalAccount1 = new TotalAccount("Total compte Banque", accounts.get("512"), "1000.00", "0.00");
         TotalAccount totalAccount2 = new TotalAccount("Total compte Fond travaux", accounts.get("10500"), "0.00", "500.00");
 
         TotalBuilding totalBuilding = new TotalBuilding("Total général", "1000.00", "500.00");
@@ -95,19 +95,14 @@ class WriteFileTest {
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             String line = reader.readLine();
             Assertions.assertEquals("Pièce; Date; Compte; Journal; Contrepartie; N° chèque; Libellé; Débit; Crédit;", line);
-
             line = reader.readLine();
-            Assertions.assertEquals("DOC001 ; 2023-01-15 ; 51200 ; BQ ; 10500 ; CHK123 ; Paiement travaux ; 1000.00 ;  ; ", line);
-
+            Assertions.assertEquals("DOC001 ; 2023-01-15 ; 512 ; BQ ; 10500 ; CHK123 ; Paiement travaux ; 1000.00 ;  ; ", line);
             line = reader.readLine();
-            Assertions.assertEquals("DOC002 ; 2023-01-20 ; 10500 ; BQ ; 51200 ; CHK124 ; Remboursement ;  ; 500.00 ; ", line);
-
+            Assertions.assertEquals("DOC002 ; 2023-01-20 ; 10500 ; BQ ; 512 ; CHK124 ; Remboursement ;  ; 500.00 ; ", line);
             line = reader.readLine();
-            Assertions.assertEquals(" ;  ; 51200 ;  ;  ;  ; Total compte Banque ; 1000.00 ; 0.00 ; ", line);
-
+            Assertions.assertEquals(" ;  ; 512 ;  ;  ;  ; Total compte Banque ; 1000.00 ; 0.00 ; ", line);
             line = reader.readLine();
             Assertions.assertEquals(" ;  ; 10500 ;  ;  ;  ; Total compte Fond travaux ; 0.00 ; 500.00 ; ", line);
-
             line = reader.readLine();
             Assertions.assertEquals(" ;  ;  ;  ;  ;  ; Total général ; 1000.00 ; 500.00 ; ", line);
 
@@ -120,11 +115,11 @@ class WriteFileTest {
     @Test
     void writeFileExcelGrandLivre() {
 
-        Line line1 = new Line("DOC001", "2023-01-15", accounts.get("51200"), journals.getFirst(), accounts.get("10500"), "CHK123", "Paiement travaux", "1000.00", "");
-        Line line2 = new Line("DOC002", "2023-01-20", accounts.get("10500"), journals.getFirst(), accounts.get("51200"), "CHK124", "Remboursement", "", "500.00");
-        Line line3 = new Line("DOC003", "2023-01-25", accounts.get("51200"), journals.getLast(), null, "CHK125", "Autre opération", "500.00", "");
+        Line line1 = new Line("000001", "2024-01-15", accounts.get("512"), journals.getFirst(), accounts.get("10500"), "CHK123", "Paiement travaux", "1000.00", "");
+        Line line2 = new Line("000002", "2024-01-20", accounts.get("10500"), journals.getFirst(), accounts.get("512"), "CHK124", "Remboursement", "", "500.00");
+        Line line3 = new Line("000003", "2024-01-25", accounts.get("512"), journals.getLast(), null, "CHK125", "Autre opération", "500.00", "");
 
-        TotalAccount totalAccount1 = new TotalAccount("Total compte 1 500.00 €", accounts.get("51200"), "1500.00", "0.00");
+        TotalAccount totalAccount1 = new TotalAccount("Total compte 1 500.00 €", accounts.get("512"), "1500.00", "0.00");
         TotalAccount totalAccount2 = new TotalAccount("Total compte 500.00 €", accounts.get("10500"), "0.00", "500.00");
 
         TotalBuilding totalBuilding = new TotalBuilding("Total général", "1500.00", "500.00");
@@ -175,67 +170,57 @@ class WriteFileTest {
 
         // Create Line objects for grand livre
         List<Line> grandLivres = new ArrayList<>();
-        Line line1 = new Line("DOC001", "2023-01-15", accounts.get("51200"), journals.getFirst(), null, "CHK123", "Paiement travaux", "1000.00", "");
-        Line line2 = new Line("DOC002", "2023-01-20", accounts.get("51200"), journals.getFirst(), null, "CHK124", "Remboursement", "", "500.00");
-        Line line3 = new Line("DOC003", "2023-01-25", accounts.get("51200"), journals.getLast(), null, "CHK125", "Autre opération", "500.00", "");
+        Line line1 = new Line("000001", "2024-01-15", accounts.get("512"), journals.getFirst(), accounts.get("10500"), "CHK123", "Paiement travaux", "1000.00", "");
         grandLivres.add(line1);
+        Line line2 = new Line("000002", "2024-01-20", accounts.get("512"), journals.getFirst(), accounts.get("10500"), "CHK124", "Remboursement", "", "500.00");
         grandLivres.add(line2);
+        Line line3 = new Line("000003", "2024-01-25", accounts.get("512"), journals.getLast(), accounts.get("10500"), "CHK125", "Autre opération", "500.00", "");
         grandLivres.add(line3);
-
         // Create BankLine objects
         List<BankLine> bankLines = new ArrayList<>();
-        LocalDate date1 = LocalDate.of(2023, 1, 15);
-        LocalDate date2 = LocalDate.of(2023, 1, 20);
-        LocalDate date3 = LocalDate.of(2023, 1, 25);
-
-        BankLine bankLine1 = new BankLine(2023, 1, date1, date1, accounts.get("51200"), "Paiement travaux", 0.0, 1000.0);
-        BankLine bankLine2 = new BankLine(2023, 1, date2, date2, accounts.get("51200"), "Remboursement", 500.0, 0.0);
-        BankLine bankLine3 = new BankLine(2023, 1, date3, date3, accounts.get("51200"), "Opération non rapprochée", 200.0, 0.0);
+        LocalDate date1 = LocalDate.of(2024, 1, 15);
+        BankLine bankLine1 = new BankLine(2024, 1, date1, date1, accounts.get("512"), "Paiement travaux", 0.0, 1000.0);
         bankLines.add(bankLine1);
+        LocalDate date2 = LocalDate.of(2024, 1, 20);
+        BankLine bankLine2 = new BankLine(2024, 1, date2, date2, accounts.get("512"), "Remboursement", 500.0, 0.0);
         bankLines.add(bankLine2);
+        LocalDate date3 = LocalDate.of(2024, 1, 25);
+        BankLine bankLine3 = new BankLine(2024, 1, date3, date3, accounts.get("512"), "Opération non rapprochée", 200.0, 0.0);
         bankLines.add(bankLine3);
 
         // Execute the method to test
-        String filename = "." + File.separator + "temp" + File.separator + "TestEtatRapprochement.xlsx";
+        String filename = "." + File.separator + "temp" + File.separator + "EtatRapprochement_TEST.xlsx";
         WriteFile.writeFileExcelEtatRaprochement(grandLivres, filename, bankLines);
 
         // Verify the file content
         try (FileInputStream fileInputStream = new FileInputStream(filename);
              Workbook workbook = new XSSFWorkbook(fileInputStream)) {
-
             // Check number of sheets (4 sheets: Pointage Relevé OK, Pointage Relevé KO, Pointage GL OK, Pointage GL KO)
             Assertions.assertEquals(4, workbook.getNumberOfSheets());
-
             // Check sheet names
             Assertions.assertEquals("Pointage Relevé OK", workbook.getSheetAt(0).getSheetName());
             Assertions.assertEquals("Pointage Relevé KO", workbook.getSheetAt(1).getSheetName());
             Assertions.assertEquals("Pointage GL OK", workbook.getSheetAt(2).getSheetName());
             Assertions.assertEquals("Pointage GL KO", workbook.getSheetAt(3).getSheetName());
-
             // Check Pointage Relevé OK sheet content
             Sheet pointageReleveOKSheet = workbook.getSheetAt(0);
             // Check number of rows (header + 2 data rows for matched entries)
             Assertions.assertEquals(3, pointageReleveOKSheet.getLastRowNum());
-
             // Check Pointage Relevé KO sheet content
             Sheet pointageReleveKOSheet = workbook.getSheetAt(1);
             // Check number of rows (header + 1 data row for unmatched entry)
             Assertions.assertEquals(2, pointageReleveKOSheet.getLastRowNum() + 1);
-
             // Check Pointage GL OK sheet content
             Sheet pointageGLOKSheet = workbook.getSheetAt(2);
             // Check number of rows (header + 2 data rows for matched entries)
             Assertions.assertEquals(3, pointageGLOKSheet.getLastRowNum());
-
             // Check Pointage GL KO sheet content
             Sheet pointageGLKOSheet = workbook.getSheetAt(3);
             // Check number of rows (header + 1 data row for unmatched entry)
             Assertions.assertEquals(2, pointageGLKOSheet.getLastRowNum() + 1);
-
         } catch (IOException e) {
             e.printStackTrace();
             Assertions.fail("Error reading the Excel file: " + e.getMessage());
         }
     }
-
 }

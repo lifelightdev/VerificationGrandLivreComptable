@@ -14,6 +14,8 @@ import static life.light.write.OutilWrite.*;
 public class WriteFile {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    public static final String POINTAGE_RELEVE_OK = "Pointage Relevé OK";
+    public static final String POINTAGE_GL_OK = "Pointage GL OK";
 
     private WriteFile() {
     }
@@ -102,7 +104,11 @@ public class WriteFile {
                 if (grandLivre instanceof Line) {
                     line.append(((Line) grandLivre).document()).append(" ; ");
                     line.append(((Line) grandLivre).date()).append(" ; ");
-                    line.append(((Line) grandLivre).account().account()).append(" ; ");
+                    if (((Line) grandLivre).account() != null) {
+                        line.append(((Line) grandLivre).account().account()).append(" ; ");
+                    } else {
+                        line.append(" ; ");
+                    }
                     line.append(((Line) grandLivre).journal()).append(" ; ");
                     if (((Line) grandLivre).accountCounterpart() != null) {
                         line.append(((Line) grandLivre).accountCounterpart().account()).append(" ; ");
@@ -118,7 +124,11 @@ public class WriteFile {
                 if (grandLivre instanceof TotalAccount) {
                     line.append(" ; ");
                     line.append(" ; ");
-                    line.append(((TotalAccount) grandLivre).account().account()).append(" ; ");
+                    if (((TotalAccount) grandLivre).account() != null) {
+                        line.append(((TotalAccount) grandLivre).account().account()).append(" ; ");
+                    } else {
+                        line.append(" ; ");
+                    }
                     line.append(" ; ");
                     line.append(" ; ");
                     line.append(" ; ");
@@ -243,30 +253,30 @@ public class WriteFile {
         try {
             // Créer un nouveau classeur Excel
             Workbook workbook = new XSSFWorkbook();
-            // Écrire le contenu du classeur dans un fichier
-            try (FileOutputStream outputStream = new FileOutputStream(exitFile)) {
-                // Style
-                DataFormat dataFormat = workbook.createDataFormat();
-                Short dataAmount = dataFormat.getFormat("# ### ##0.00 €;[red]# ### ##0.00 €");
-                CellStyle styleWhite = workbook.createCellStyle();
-                styleWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
-                CellStyle styleBlue = workbook.createCellStyle();
-                styleBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
-                CellStyle styleAmountWhite = getCellStyleAmount(workbook.createCellStyle(), dataAmount);
-                styleAmountWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
-                CellStyle styleAmountBlue = getCellStyleAmount(workbook.createCellStyle(), dataAmount);
-                styleAmountBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
-                CellStyle styleHeader = workbook.createCellStyle();
+            // Style
+            DataFormat dataFormat = workbook.createDataFormat();
+            Short dataAmount = dataFormat.getFormat("# ### ##0.00 €;[red]# ### ##0.00 €");
+            CellStyle styleWhite = workbook.createCellStyle();
+            styleWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
+            CellStyle styleBlue = workbook.createCellStyle();
+            styleBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
+            CellStyle styleAmountWhite = getCellStyleAmount(workbook.createCellStyle(), dataAmount);
+            styleAmountWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
+            CellStyle styleAmountBlue = getCellStyleAmount(workbook.createCellStyle(), dataAmount);
+            styleAmountBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
+            CellStyle styleHeader = workbook.createCellStyle();
 
-                pointageReleve(new ArrayList<>(grandLivres), new ArrayList<>(bankLines), workbook,
-                        styleHeader, styleBlue, styleAmountBlue, styleWhite, styleAmountWhite);
-                pointageGL(new ArrayList<>(grandLivres), new ArrayList<>(bankLines), workbook,
-                        styleHeader, styleBlue, styleAmountBlue, styleWhite, styleAmountWhite);
+            pointageReleve(new ArrayList<>(grandLivres), new ArrayList<>(bankLines), workbook,
+                    styleHeader, styleBlue, styleAmountBlue, styleWhite, styleAmountWhite);
+            pointageGL(new ArrayList<>(grandLivres), new ArrayList<>(bankLines), workbook,
+                    styleHeader, styleBlue, styleAmountBlue, styleWhite, styleAmountWhite);
 
-                workbook.write(outputStream);
-            } catch (FileNotFoundException e) {
-                LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", exitFile, e.getMessage());
+            if (workbook.getSheet(POINTAGE_RELEVE_OK).getLastRowNum() != workbook.getSheet(POINTAGE_GL_OK).getLastRowNum()) {
+                LOGGER.error(("Il n'y a pas le même nombre d'opération pointées OK dans le grand livre et sur les relevés de compte"));
             }
+
+            // Écrire le contenu du classeur dans un fichier
+            writeWorkbook(exitFile, workbook);
             // Fermer le classeur
             workbook.close();
         } catch (IOException e) {
@@ -277,7 +287,7 @@ public class WriteFile {
     private static void pointageReleve(List<Line> grandLivres, List<BankLine> bankLines, Workbook workbook,
                                        CellStyle styleHeader, CellStyle styleBlue, CellStyle styleAmountBlue,
                                        CellStyle styleWhite, CellStyle styleAmountWhite) {
-        Sheet sheetPointage = workbook.createSheet("Pointage Relevé OK");
+        Sheet sheetPointage = workbook.createSheet(POINTAGE_RELEVE_OK);
         List<Line> grandLivresKO = new ArrayList<>();
         List<BankLine> bankLinesKO = new ArrayList<>();
         getCellsEnteteEtatRapprochement(sheetPointage, styleHeader);
@@ -360,28 +370,30 @@ public class WriteFile {
     private static void pointageGL(List<Line> grandLivres, List<BankLine> bankLines, Workbook workbook,
                                    CellStyle styleHeader, CellStyle styleBlue, CellStyle styleAmountBlue,
                                    CellStyle styleWhite, CellStyle styleAmountWhite) {
-        Sheet sheetPointage = workbook.createSheet("Pointage GL OK");
+        Sheet sheetPointage = workbook.createSheet(POINTAGE_GL_OK);
         List<Line> grandLivresKO = new ArrayList<>();
         List<BankLine> bankLinesKO = new ArrayList<>();
         getCellsEnteteEtatRapprochement(sheetPointage, styleHeader);
         int rowNumPointage = 1;
         for (BankLine bankLine : bankLines) {
             Row row = sheetPointage.createRow(rowNumPointage);
-            String message = KO;
             Line lineGLFound = null;
+            String message = KO;
             for (Line grandLivre : grandLivres) {
                 // TODO il faut verifier la date aussi
-                if (!grandLivre.credit().isEmpty() && Double.parseDouble(grandLivre.credit()) == bankLine.debit()) {
-                    message = OK;
-                    lineGLFound = grandLivre;
-                    break;
+                if (grandLivre.account().account().equals(bankLine.account().account())) {
+                    if (!grandLivre.credit().isEmpty() && Double.parseDouble(grandLivre.credit()) == bankLine.debit()) {
+                        message = OK;
+                        lineGLFound = grandLivre;
+                        break;
+                    }
+                    if (!grandLivre.debit().isEmpty() && Double.parseDouble(grandLivre.debit()) == bankLine.credit()) {
+                        message = OK;
+                        lineGLFound = grandLivre;
+                        break;
+                    }
+                    grandLivresKO.add(grandLivre);
                 }
-                if (!grandLivre.debit().isEmpty() && Double.parseDouble(grandLivre.debit()) == bankLine.credit()) {
-                    message = OK;
-                    lineGLFound = grandLivre;
-                    break;
-                }
-                grandLivresKO.add(grandLivre);
             }
             if (message.equals(KO)) {
                 bankLinesKO.add(bankLine);
