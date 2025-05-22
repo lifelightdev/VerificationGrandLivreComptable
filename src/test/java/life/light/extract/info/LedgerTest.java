@@ -19,7 +19,7 @@ class LedgerTest {
     TypeAccount accountBank1 = new TypeAccount("51220", "Banque 1");
     TypeAccount accountBank2 = new TypeAccount("51221", "Banque 2");
     String nameFileTestLedger = "";
-    Ledger ledger = new Ledger();
+    Ledger ledger = new Ledger("001");
 
     @BeforeEach
     void setUp() {
@@ -106,7 +106,8 @@ class LedgerTest {
             "1 238.40 €,                                                        false"
     })
     void isAccount(String line, boolean is) {
-        boolean result = ledger.isAcccount(line, "75000", "001");
+        ledger.getInfoGrandLivre(nameFileTestLedger);
+        boolean result = ledger.isAcccount(line);
         if (is) {
             Assertions.assertTrue(result);
         } else {

@@ -20,7 +20,6 @@ import java.util.Map;
 public class Main {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    // TODO : à mettre dans les paramètres de lancement du programme
     static List<String> accountsbank = List.of();
     static String pathDirectoryInvoice = "";
     static String pathDirectoryBank = "";
@@ -39,7 +38,7 @@ public class Main {
             accountsbank = List.of(args[4]);
         }
 
-        Ledger ledger = new Ledger();
+        Ledger ledger = new Ledger(codeCondominium);
         InfoGrandLivre infoGrandLivre = ledger.getInfoGrandLivre(pathDirectoryLeger);
 
         Account account = new Account();
@@ -53,7 +52,7 @@ public class Main {
         List<BankLine> bankLines = bank.getBankLines(accounts, pathDirectoryBank, accountsbank,
                 infoGrandLivre.stopDate().getYear());
 
-        String nameFile = "." + File.separator + "temp" + File.separator + "Etat de rapprochement.xlsx";
+        String nameFile = "." + File.separator + "resultat" + File.separator + "Etat de rapprochement.xlsx";
         WriteFile writeFile = new WriteFile();
         writeFile.writeFileExcelEtatRaprochement(lineBankInGrandLivre, nameFile, bankLines);
 

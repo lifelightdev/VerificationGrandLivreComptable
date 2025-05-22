@@ -23,6 +23,12 @@ public class Ledger {
     private static final int NAME_JOURNAL_SIZE = 2;
     private static final String REGEX_NUMBER = "^-?[0-9]+$";
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static String codeCondominium;
+    private static String postalCode;
+
+    public Ledger(String codeCondominium) {
+        this.codeCondominium = codeCondominium;
+    }
 
     public InfoGrandLivre getInfoGrandLivre(String pathLedger) {
         try (BufferedReader reader = new BufferedReader(new FileReader(pathLedger))) {
@@ -34,6 +40,7 @@ public class Ledger {
             line = reader.readLine();
             LocalDate stopDate = date(line);
             String postalCode = postalCode(line);
+            this.postalCode = postalCode;
             return new InfoGrandLivre(syndicName.trim(), printDate, stopDate, postalCode);
         } catch (IOException e) {
             LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
@@ -100,7 +107,7 @@ public class Ledger {
         return line;
     }
 
-    boolean isAcccount(String line, String postalCode, String id) {
+    boolean isAcccount(String line) {
         line = getLine(line);
         line = line.replace("  ", " ");
         if (line.contains(EURO)) {
@@ -114,10 +121,10 @@ public class Ledger {
         }
         String[] words = splittingLineIntoWordTable(line);
         String firstWord = words[0];
-        if (firstWord.equals(postalCode)) {
+        if (firstWord.equals(this.postalCode)) {
             return false;
         }
-        if (firstWord.equals(id)) {
+        if (firstWord.equals(codeCondominium)) {
             return false;
         }
         if (firstWord.contains("-")) {

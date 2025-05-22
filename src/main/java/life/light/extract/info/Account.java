@@ -19,21 +19,21 @@ public class Account {
 
     public Map<String, TypeAccount> getAccounts(String fileName, InfoGrandLivre infoGrandLivre, String codeCondominium) {
         Map<String, TypeAccount> accounts = new HashMap<>();
-        Ledger ledger = new Ledger();
+        Ledger ledger = new Ledger(codeCondominium);
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (ledger.isAcccount(line, infoGrandLivre.postalCode(), codeCondominium)) {
-                    TypeAccount account = ledger.account(line);
-                    accounts.put(account.account(), account);
-                }
-            }
+            accounts = reader.lines()
+                    .filter(ledger::isAcccount)
+                    .map(ledger::account)
+                    .collect(HashMap::new, 
+                            (map, account) -> map.put(account.account(), account), 
+                            HashMap::putAll);
         } catch (IOException e) {
             LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
         }
         LOGGER.info("Il y a {} comptes dans le grandlivre", accounts.size());
 
-        String nameFile = "." + File.separator + "resultat" + File.separator + "Plan comptable de " + infoGrandLivre.syndicName();
+        String nameFile = "." + File.separator + "resultat"
+                + File.separator + "Plan comptable de " + infoGrandLivre.syndicName();
         WriteFile writeFile = new WriteFile();
         writeFile.writeFileCSVAccounts(accounts, nameFile + ".csv");
         writeFile.writeFileExcelAccounts(accounts, nameFile + ".xlsx");
