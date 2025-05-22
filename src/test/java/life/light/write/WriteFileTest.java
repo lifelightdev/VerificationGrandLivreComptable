@@ -126,9 +126,9 @@ class WriteFileTest {
 
         // Execute the method to test
         String filename = "TestGrandLivre.xlsx";
-        String filePath = "." + File.separator + "temp" + File.separator + filename;
+        String filePath = "." + File.separator + "TEST_temp" + File.separator + filename;
         String pathDirectoryInvoice = "";
-        writeFile.writeFileExcelGrandLivre(grandLivres, filename, journals, pathDirectoryInvoice);
+        writeFile.writeFileExcelGrandLivre(grandLivres, filePath, journals, pathDirectoryInvoice);
 
         // Verify the file content
         try (FileInputStream fileInputStream = new FileInputStream(filePath);

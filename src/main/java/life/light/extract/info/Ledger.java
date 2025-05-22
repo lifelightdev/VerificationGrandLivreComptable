@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
-import static life.light.extract.info.OutilInfo.*;
+import static life.light.extract.info.OutilInfo.EURO;
 
 public class Ledger {
 
@@ -25,6 +26,7 @@ public class Ledger {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static String codeCondominium;
     private static String postalCode;
+    private OutilInfo outilInfo = new OutilInfo();
 
     public Ledger(String codeCondominium) {
         this.codeCondominium = codeCondominium;
@@ -33,7 +35,7 @@ public class Ledger {
     public InfoGrandLivre getInfoGrandLivre(String pathLedger) {
         try (BufferedReader reader = new BufferedReader(new FileReader(pathLedger))) {
             String line = reader.readLine();
-            String syndicName = syndicName(line);
+            String syndicName = line.replace("|", "").trim();
             line = reader.readLine();
             LocalDate printDate = date(line);
             reader.readLine();
@@ -41,7 +43,7 @@ public class Ledger {
             LocalDate stopDate = date(line);
             String postalCode = postalCode(line);
             this.postalCode = postalCode;
-            return new InfoGrandLivre(syndicName.trim(), printDate, stopDate, postalCode);
+            return new InfoGrandLivre(syndicName, printDate, stopDate, postalCode);
         } catch (IOException e) {
             LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
         }
@@ -64,21 +66,17 @@ public class Ledger {
         return numberOfLineInFile;
     }
 
-    protected String syndicName(String ligne) {
-        return ligne.replace("|", "");
-    }
-
     private LocalDate date(String line) {
-        String date = findDateIn(line);
+        String date = outilInfo.findDateIn(line);
         if (date.isEmpty()) {
             return null;
         }
-        return LocalDate.parse(findDateIn(line), formatter);
+        return LocalDate.parse(outilInfo.findDateIn(line), formatter);
     }
 
     TypeAccount account(String line) {
         line = getLine(line);
-        String[] words = splittingLineIntoWordTable(line);
+        String[] words = outilInfo.splittingLineIntoWordTable(line);
         String account = words[0];
         StringBuilder label = new StringBuilder();
         for (String word : words) {
@@ -113,13 +111,13 @@ public class Ledger {
         if (line.contains(EURO)) {
             return false;
         }
-        if ((line.contains("Page")) && (!findDateIn(line).isEmpty())) {
+        if ((line.contains("Page")) && (!outilInfo.findDateIn(line).isEmpty())) {
             return false;
         }
         if (line.trim().isEmpty()) {
             return false;
         }
-        String[] words = splittingLineIntoWordTable(line);
+        String[] words = outilInfo.splittingLineIntoWordTable(line);
         String firstWord = words[0];
         if (firstWord.equals(this.postalCode)) {
             return false;
@@ -131,32 +129,32 @@ public class Ledger {
             firstWord = firstWord.replace("-", "");
         }
         if (firstWord.matches(REGEX_NUMBER) || "461VC".equals(firstWord)) {
-            return findDateIn(words[1]).isEmpty();
+            return outilInfo.findDateIn(words[1]).isEmpty();
         }
         return false;
     }
 
     public Line line(String line, Map<String, TypeAccount> accounts) {
         // Supprime les caractères parasites
-        line = removesStrayCharactersInLine(line);
+        line = outilInfo.removesStrayCharactersInLine(line);
 
         // Correction des espaces avant le signe €
-        line = fixedSpacesBeforeEuroSign(line);
+        line = outilInfo.fixedSpacesBeforeEuroSign(line);
 
         // Calcule de nombre de montants sur la ligne grâce au signe €
-        int numberOfAmounts = getNumberOfAmountsOn(line);
+        int numberOfAmounts = outilInfo.getNumberOfAmountsOn(line);
 
         // Découpage de la ligne en un tableau de mot
-        String[] words = splittingLineIntoWordTable(line);
+        String[] words = outilInfo.splittingLineIntoWordTable(line);
 
         int indexOfWords = 0;
 
-        String document = getDocument(words, indexOfWords);
+        String document = outilInfo.getDocument(words, indexOfWords);
         if (!document.isEmpty()) {
             indexOfWords++;
         }
 
-        indexOfWords = getIndexOfWords(words, indexOfWords);
+        indexOfWords = outilInfo.getIndexOfWords(words, indexOfWords);
 
         // Extraction de la date de l'opération
         String date = words[indexOfWords];
@@ -169,10 +167,10 @@ public class Ledger {
             String numberAccount = words[indexOfWords].substring(0, 10);
             journal = words[indexOfWords].substring(10);
             String[] numberAccounts = {numberAccount};
-            account = getAccount(accounts, numberAccounts, 0);
+            account = outilInfo.getAccount(accounts, numberAccounts, 0);
             if (account == null) {
                 String[] numAccount = {words[indexOfWords] + words[indexOfWords + 1]};
-                account = getAccount(accounts, numAccount, 0);
+                account = outilInfo.getAccount(accounts, numAccount, 0);
             }
             if (account == null) {
                 LOGGER.error("Erreur lors de la recherche du compte {} sur la ligne {}", words[indexOfWords], line);
@@ -180,10 +178,10 @@ public class Ledger {
             }
             indexOfWords++;
         } else {
-            account = getAccount(accounts, words, indexOfWords);
+            account = outilInfo.getAccount(accounts, words, indexOfWords);
             if (account == null) {
                 String[] numAccount = {words[indexOfWords] + words[indexOfWords + 1]};
-                account = getAccount(accounts, numAccount, 0);
+                account = outilInfo.getAccount(accounts, numAccount, 0);
                 indexOfWords++;
             }
             if (account == null) {
@@ -208,7 +206,7 @@ public class Ledger {
         // Extraction du compte de contrepartie
         TypeAccount accountCounterpart = null;
         if (!line.contains("Report de") && words[indexOfWords].replace("-", "").matches(REGEX_NUMBER)) {
-            accountCounterpart = getAccount(accounts, words, indexOfWords);
+            accountCounterpart = outilInfo.getAccount(accounts, words, indexOfWords);
             indexOfWords++;
         }
 
@@ -318,12 +316,12 @@ public class Ledger {
     }
 
     public boolean isLigne(String line) {
-        line = removesStrayCharactersInLine(line);
+        line = outilInfo.removesStrayCharactersInLine(line);
         // Découpage de la ligne en un tableau de mot
-        String[] words = splittingLineIntoWordTable(line);
+        String[] words = outilInfo.splittingLineIntoWordTable(line);
         int indexOfWords = 0;
         // Vérification que la ligne commence par une pièce
-        String document = getDocument(words, indexOfWords);
+        String document = outilInfo.getDocument(words, indexOfWords);
         if (!document.isEmpty()) {
             indexOfWords++;
         }
@@ -331,19 +329,19 @@ public class Ledger {
             indexOfWords++;
         }
         /* Vérification que la ligne commence par une date ou qu'il y a une date après la pièce */
-        return !findDateIn(words[indexOfWords]).isEmpty();
+        return !outilInfo.findDateIn(words[indexOfWords]).isEmpty();
     }
 
     public TotalAccount totalAccount(String line, Map<String, TypeAccount> accounts) {
         line = line.replace("| ", " ");
         // Correction des espaces avant le signe €
-        line = fixedSpacesBeforeEuroSign(line);
+        line = outilInfo.fixedSpacesBeforeEuroSign(line);
 
         // Calcule de nombre de montants sur la ligne grâce au signe €
-        int numberOfAmounts = getNumberOfAmountsOn(line);
+        int numberOfAmounts = outilInfo.getNumberOfAmountsOn(line);
 
         // Découpage de la ligne en un tableau de mot
-        String[] words = splittingLineIntoWordTable(line);
+        String[] words = outilInfo.splittingLineIntoWordTable(line);
         int indexOfWords = 0;
         StringBuilder label = new StringBuilder();
         while (!words[indexOfWords].endsWith(")")) {
@@ -379,10 +377,10 @@ public class Ledger {
         }
 
         // Extraction du numéro de compte
-        String[] labels = splittingLineIntoWordTable(label.toString().replace("Total compte ", "").trim());
+        String[] labels = outilInfo.splittingLineIntoWordTable(label.toString().replace("Total compte ", "").trim());
         TypeAccount account = null;
         for (int indexOfLabel = 0; indexOfLabel < labels.length; indexOfLabel++) {
-            account = getAccount(accounts, labels, indexOfLabel);
+            account = outilInfo.getAccount(accounts, labels, indexOfLabel);
             if (account != null) {
                 label = new StringBuilder(label.toString().replace(account.account(), "").replace("  ", " "));
                 break;
@@ -401,7 +399,7 @@ public class Ledger {
             if (!numAccount.isEmpty()) {
                 String[] numAccountWord = new String[1];
                 numAccountWord[0] = numAccount.toString();
-                account = getAccount(accounts, numAccountWord, 0);
+                account = outilInfo.getAccount(accounts, numAccountWord, 0);
                 if (account != null) {
                     label = new StringBuilder(label.toString().replace(accountInLabel.toString(), "").replace("  ", " "));
                 }
@@ -432,13 +430,13 @@ public class Ledger {
 
     public TotalBuilding totalBuilding(String line) {
         // Correction des espaces avant le signe €
-        line = fixedSpacesBeforeEuroSign(line).replace(")", " ) ");
+        line = outilInfo.fixedSpacesBeforeEuroSign(line).replace(")", " ) ");
 
         // Calcule de nombre de montants sur la ligne grâce au signe €
-        int numberOfAmounts = getNumberOfAmountsOn(line);
+        int numberOfAmounts = outilInfo.getNumberOfAmountsOn(line);
 
         // Découpage de la ligne en un tableau de mot
-        String[] words = splittingLineIntoWordTable(line);
+        String[] words = outilInfo.splittingLineIntoWordTable(line);
         int indexOfWords = 0;
         StringBuilder label = new StringBuilder();
         StringBuilder debit = new StringBuilder();
@@ -512,11 +510,10 @@ public class Ledger {
 
         WriteFile writeFile = new WriteFile();
         writeFile.writeFileCSVGrandLivre(grandLivres);
-        String nameFile = infoGrandLivre.printDate()
-                + " Grand livre " + infoGrandLivre.syndicName().substring(0, infoGrandLivre.syndicName().length() - 1).trim()
-                + " au " + infoGrandLivre.stopDate()
-                + ".xlsx";
-        writeFile.writeFileExcelGrandLivre(grandLivres, nameFile, journals, pathDirectoryInvoice);
+        String nameFile = infoGrandLivre.printDate() + " Grand livre " + infoGrandLivre.syndicName()
+                + " au " + infoGrandLivre.stopDate() + ".xlsx";
+        String path = "." + File.separator + "resultat" + File.separator + nameFile;
+        writeFile.writeFileExcelGrandLivre(grandLivres, path, journals, pathDirectoryInvoice);
         return lineBankInGrandLivre;
     }
 }

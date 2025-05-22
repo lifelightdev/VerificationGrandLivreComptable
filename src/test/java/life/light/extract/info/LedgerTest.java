@@ -33,16 +33,6 @@ class LedgerTest {
         }
     }
 
-    @ParameterizedTest
-    @CsvSource({
-            "C'est le nom du Syndic, C'est le nom du Syndic",
-            "C'est le nom du Syndic|, C'est le nom du Syndic"
-    })
-    void extractSyndicName(String line, String SyndicName) {
-        String name = ledger.syndicName(line);
-        Assertions.assertEquals(SyndicName, name);
-    }
-
     @Test
     void extractAllDateKO() {
         FileOfTest fileOfTest = new FileOfTest();

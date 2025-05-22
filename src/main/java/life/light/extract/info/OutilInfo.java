@@ -12,21 +12,18 @@ public class OutilInfo {
     public static final String EURO = "€";
     public static final String REGEX_PHONE_NUMBER = "^0[1-9]([-. ]?\\d{2}){4}$";
 
-    private OutilInfo() {
-    }
-
-    public static int getIndexOfWords(String[] words, int indexOfWords) {
+    public int getIndexOfWords(String[] words, int indexOfWords) {
         if (words[indexOfWords].trim().isEmpty()) {
             indexOfWords++;
         }
         return indexOfWords;
     }
 
-    public static int getNumberOfAmountsOn(String line) {
+    public int getNumberOfAmountsOn(String line) {
         return line.split(EURO, -1).length - 1;
     }
 
-    public static TypeAccount getAccount(Map<String, TypeAccount> accounts, String[] words, int indexOfWords) {
+    public TypeAccount getAccount(Map<String, TypeAccount> accounts, String[] words, int indexOfWords) {
         TypeAccount account = null;
         String key = words[indexOfWords];
         if (accounts.containsKey(key)) {
@@ -60,12 +57,12 @@ public class OutilInfo {
         return account;
     }
 
-    public static String fixedSpacesBeforeEuroSign(String line) {
+    public String fixedSpacesBeforeEuroSign(String line) {
         line = line.replace(" €", "€");
         return line;
     }
 
-    public static String[] splittingLineIntoWordTable(String line) {
+    public String[] splittingLineIntoWordTable(String line) {
         String[] words = line.split(" ");
         String[] resultTemp = new String[words.length + 1];
         int idResult = 0;
@@ -91,7 +88,7 @@ public class OutilInfo {
         return result;
     }
 
-    public static String getDocument(String[] words, int indexOfWords) {
+    public String getDocument(String[] words, int indexOfWords) {
         // Extraction du numéro de pièce
         String document = "";
         if (findDateIn(words[indexOfWords]).isEmpty() && !words[indexOfWords].matches(REGEX_PHONE_NUMBER)) {
@@ -103,7 +100,7 @@ public class OutilInfo {
         return document;
     }
 
-    public static String removesStrayCharactersInLine(String line) {
+    public String removesStrayCharactersInLine(String line) {
         line = line.replace(" | ", " ");
         line = line.replace("| ", " ");
         line = line.replace("|", "");
@@ -122,21 +119,21 @@ public class OutilInfo {
         return line;
     }
 
-    public static String findDateIn(String line) {
+    public String findDateIn(String line) {
         String[] words = splittingLineIntoWordTable(line);
         String date = "";
         for (String word : words) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.FRANCE);
             try {
                 LocalDate.parse(word, formatter);
-                date =  word;
+                date = word;
             } catch (Exception _) {
             }
             if (date.isEmpty()) {
                 formatter = DateTimeFormatter.ofPattern("dd.MM.yy", Locale.FRANCE);
                 try {
                     LocalDate.parse(word, formatter);
-                    date =  word;
+                    date = word;
                 } catch (Exception _) {
                 }
             }

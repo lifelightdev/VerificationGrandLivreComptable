@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import static life.light.extract.info.OutilInfo.findDateIn;
-
 public class Bank {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -26,6 +24,7 @@ public class Bank {
     public static final String ACCOUNT_BANK = "512";
     private static final String BANK_1_ACCOUNT = "";
     private static final String BANK_2_ACCOUNT = "";
+    private OutilInfo outilInfo = new OutilInfo();
 
     public List<BankLine> getBankLines(Map<String, TypeAccount> accounts, String pathDirectoryBank, List<String> accountsbank, int year) {
         List<BankLine> bankLines = new ArrayList<>();
@@ -43,7 +42,6 @@ public class Bank {
         if (null != files) {
             for (File fichier : files) {
                 if (fichier.isFile()) {
-                    //LOGGER.info("Fichier {}", fichier.getName());
                     try (BufferedReader reader = new BufferedReader(new FileReader(fichier))) {
                         String line;
                         for (int i = 0; i < 6; i++) {
@@ -57,7 +55,7 @@ public class Bank {
                         double credit = 0D;
                         while ((line = reader.readLine()) != null) {
                             String nouveauSoldeAu = "Nouveau solde au";
-                            if (!findDateIn(line).isEmpty() && (!line.contains(nouveauSoldeAu))) {
+                            if (!outilInfo.findDateIn(line).isEmpty() && (!line.contains(nouveauSoldeAu))) {
                                 if (operationDate != null && !label.toString().isEmpty() && valueDate != null) {
                                     BankLine bankLine = new BankLine(year, operationDate.getMonthValue(), operationDate, valueDate, account, label.toString().trim(), debit, credit);
                                     bankLines.add(bankLine);

@@ -7,7 +7,6 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
@@ -33,7 +32,6 @@ public class WriteFile {
                         System.lineSeparator();
                 writer.write(line);
             }
-            LOGGER.info("L'écriture du fichier {} est terminée.", fileName);
         } catch (IOException e) {
             LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", fileName, e.getMessage());
         }
@@ -152,14 +150,12 @@ public class WriteFile {
                 }
                 writer.write(line.toString());
             }
-            LOGGER.info("L'écriture du fichier {} est terminée.", exitFile);
         } catch (IOException e) {
             LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", exitFile, e.getMessage());
         }
     }
 
-    public void writeFileExcelGrandLivre(Object[] grandLivres, String nameFile, TreeSet<String> journals, String pathDirectoryInvoice) {
-        String exitFile = "." + File.separator + "temp" + File.separator + nameFile;
+    public void writeFileExcelGrandLivre(Object[] grandLivres, String pathNameFile, TreeSet<String> journals, String pathDirectoryInvoice) {
         try {
             // Créer un nouveau classeur Excel
             Workbook workbook = new XSSFWorkbook();
@@ -242,11 +238,11 @@ public class WriteFile {
             }
 
             // Écrire le contenu du classeur dans un fichier
-            outilWrite.writeWorkbook(exitFile, workbook);
+            outilWrite.writeWorkbook(pathNameFile, workbook);
             // Fermer le classeur
             workbook.close();
         } catch (IOException e) {
-            LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", exitFile, e.getMessage());
+            LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", pathNameFile, e.getMessage());
         }
     }
 
