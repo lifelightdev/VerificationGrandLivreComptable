@@ -47,6 +47,36 @@ public class FileOfTest {
         }
     }
 
+    public String createMinimalLedgerFilePrintDateKO() {
+        try {
+            List<String> lines = Arrays.asList(
+                    "C'est le nom du Syndic        ",
+                    "8 AVENUE DES CHAMPS ELYSE 11/31/25 Page : 1",
+                    "",
+                    "75000 PARIS Grand Livre arrêté au 12/31/2O24",
+                    "",
+                    "Pièce Date              Jal C-Partie  N° chèque Libellé                                      Débif      Crédit",
+                    "",
+                    "001 NOM COPROPRIÉTÉ au 31/12/2024 Gestionnaire : NOM PRENOM",
+                    "",
+                    "01.01.01.01.01",
+                    "",
+                    "40100-0001 — NOM du compte",
+                    "      01/01/2024            40100-0001          Report de 0.00 €                             3 000.00 € 3 000.00 €",
+                    "33333 01/01/2024            45010-0001          20 512 APPEL DE FONDS                        3 000.00 € ",
+                    "                                                Total compte 40100-0001 (Solde : 3 000.00 €) 6 000.00 € 3 000.00 €",
+                    " ",
+                    " ",
+                    "                                                Total immeuble (Solde : 0.00 €)              6 000.00 € 3 000.00 €",
+                    ""
+            );
+            Files.write(tempTestDir.resolve("grand_livre_TEST.txt"), lines);
+            return tempTestDir + File.separator + "grand_livre_TEST.txt";
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void copyBankFiles(String accountBank1, String accountBank2) {
         try {
             File tempBank = new File(tempTestDir + File.separator + "bank" + File.separator);

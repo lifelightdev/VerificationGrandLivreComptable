@@ -20,33 +20,25 @@ import static life.light.extract.info.OutilInfo.*;
 public class Ledger {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final int NAME_JOURNAL_SIZE = 2;
-    public static final String REGEX_NUMBER = "^-?[0-9]+$";
+    private static final int NAME_JOURNAL_SIZE = 2;
+    private static final String REGEX_NUMBER = "^-?[0-9]+$";
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public InfoGrandLivre getInfoGrandLivre(String pathLedger) {
-        String syndicName = "";
-        String printDate = "";
-        LocalDate stopDate = null;
-        String postalCode = "";
-        // Récupération des informations pour la génération du nom de fichier
         try (BufferedReader reader = new BufferedReader(new FileReader(pathLedger))) {
             String line = reader.readLine();
-            syndicName = syndicName(line);
+            String syndicName = syndicName(line);
             line = reader.readLine();
-            printDate = printDate(line);
+            LocalDate printDate = date(line);
             reader.readLine();
             line = reader.readLine();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            stopDate = LocalDate.parse(stopDate(line), formatter);
-            postalCode = postalCode(line);
+            LocalDate stopDate = date(line);
+            String postalCode = postalCode(line);
+            return new InfoGrandLivre(syndicName.trim(), printDate, stopDate, postalCode);
         } catch (IOException e) {
             LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
         }
-        LOGGER.info("Le nom du syndic est : {}", syndicName.trim());
-        LOGGER.info("La date d'édition est le {}", printDate);
-        LOGGER.info("La date d'arrêt des comptes est le {}", stopDate);
-        LOGGER.info("Le code postal du syndic est {}", postalCode);
-        return new InfoGrandLivre(syndicName.trim(), printDate, stopDate, postalCode);
+        return null;
     }
 
     public int getNumberOfLineInFile(String pathLedger) {
@@ -69,12 +61,12 @@ public class Ledger {
         return ligne.replace("|", "");
     }
 
-    String printDate(String line) {
-        return findDateIn(line);
-    }
-
-    String stopDate(String line) {
-        return findDateIn(line);
+    private LocalDate date(String line) {
+        String date = findDateIn(line);
+        if (date.isEmpty()) {
+            return null;
+        }
+        return LocalDate.parse(findDateIn(line), formatter);
     }
 
     TypeAccount account(String line) {
@@ -423,7 +415,7 @@ public class Ledger {
         return line.startsWith("Total compte ");
     }
 
-    String postalCode(String line) {
+    private String postalCode(String line) {
         return line.split(" ")[0];
     }
 
@@ -513,7 +505,7 @@ public class Ledger {
 
         WriteFile writeFile = new WriteFile();
         writeFile.writeFileCSVGrandLivre(grandLivres);
-        String nameFile = infoGrandLivre.printDate().substring(6) + "-" + infoGrandLivre.printDate().substring(3, 5) + "-" + infoGrandLivre.printDate().substring(0, 2)
+        String nameFile = infoGrandLivre.printDate()
                 + " Grand livre " + infoGrandLivre.syndicName().substring(0, infoGrandLivre.syndicName().length() - 1).trim()
                 + " au " + infoGrandLivre.stopDate()
                 + ".xlsx";

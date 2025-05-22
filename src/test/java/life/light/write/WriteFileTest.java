@@ -187,7 +187,7 @@ class WriteFileTest {
         bankLines.add(bankLine3);
 
         // Execute the method to test
-        String filename = "." + File.separator + "temp" + File.separator + "EtatRapprochement_TEST.xlsx";
+        String filename = "." + File.separator + "TEST_temp" + File.separator + "EtatRapprochement_TEST.xlsx";
         writeFile.writeFileExcelEtatRaprochement(grandLivres, filename, bankLines);
 
         // Verify the file content

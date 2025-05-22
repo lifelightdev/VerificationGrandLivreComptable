@@ -27,7 +27,9 @@ class AccountTest {
 
     @Test
     void getAccounts() {
-        InfoGrandLivre infoGrandLivre = new InfoGrandLivre("Name", "31/12/2024", LocalDate.of(2024, 12, 31), "75000");
+        InfoGrandLivre infoGrandLivre = new InfoGrandLivre("Name",
+                LocalDate.of(2024, 12, 31), LocalDate.of(2024, 12, 31),
+                "75000");
         Map<String, TypeAccount> accounts = account.getAccounts(nameFileTestLedger, infoGrandLivre, "001");
         Assertions.assertEquals(1, accounts.size());
         TypeAccount account = accounts.get("40100-0001");

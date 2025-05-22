@@ -43,40 +43,20 @@ class LedgerTest {
         Assertions.assertEquals(SyndicName, name);
     }
 
-    @ParameterizedTest
-    @CsvSource({
-            "8 AVENUE DES CHAMPS ELYSE 11/04/2025 Page : 1,  11/04/2025",
-            "8 AVENUE DES CHAMPS ELYSE 14/04/2025 Page : 10, 14/04/2025"
-    })
-    void extractPrintDate(String line, String printDate) {
-        String date = ledger.printDate(line);
-        Assertions.assertEquals(printDate, date);
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-            "01.01.01.01.01 Grand Livre arrêté au 31/12/2024,  31/12/2024",
-            "02.02.02.02.02 Grand Livre arrêté au 31/12/2023,  31/12/2023"
-    })
-    void extractStopDate(String line, String stopDate) {
-        String date = ledger.stopDate(line);
-        Assertions.assertEquals(stopDate, date);
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-            "75000 PARIS Grand Livre arrêté au 31/12/2024, 75000"
-    })
-    void extractPostalCode(String line, String postalCode) {
-        String code = ledger.postalCode(line);
-        Assertions.assertEquals(postalCode, code);
+    @Test
+    void extractAllDateKO() {
+        FileOfTest fileOfTest = new FileOfTest();
+        String fileName = fileOfTest.createMinimalLedgerFilePrintDateKO();
+        InfoGrandLivre infoGrandLivre = ledger.getInfoGrandLivre(fileName);
+        Assertions.assertNull(infoGrandLivre.printDate());
+        Assertions.assertNull(infoGrandLivre.stopDate());
     }
 
     @Test
     void getInfoGrandLivre() {
         InfoGrandLivre infoGrandLivre = ledger.getInfoGrandLivre(nameFileTestLedger);
         assertEquals("C'est le nom du Syndic", infoGrandLivre.syndicName());
-        assertEquals("11/04/2025", infoGrandLivre.printDate());
+        assertEquals("2025-04-11", infoGrandLivre.printDate().toString());
         assertEquals("2024-12-31", infoGrandLivre.stopDate().toString());
         assertEquals("75000", infoGrandLivre.postalCode());
     }
@@ -163,7 +143,6 @@ class LedgerTest {
     })
     void line(String line, String document, String date, String account, String journal,
               String counterpart, String checkNumber, String label, String debit, String credit) {
-        Map<String, TypeAccount> accounts = new HashMap<>();
         accounts.put("10500", new TypeAccount("10500", "Fond travaux"));
         accounts.put("40100-0001", new TypeAccount("40100-0001", "Orange"));
         accounts.put("40100-0002", new TypeAccount("40100-0002", "EDF"));
@@ -172,7 +151,6 @@ class LedgerTest {
         accounts.put("43100", new TypeAccount("43100", "Compte"));
         accounts.put("40800", new TypeAccount("40800", "Un compte"));
         accounts.put("45000-0001", new TypeAccount("45000-0001", "Monsieur DUPONT"));
-        accounts.put("51220", new TypeAccount("51220", "Banque"));
         Line result = ledger.line(line, accounts);
         Assertions.assertNotNull(result);
         Assertions.assertEquals(document, result.document());
