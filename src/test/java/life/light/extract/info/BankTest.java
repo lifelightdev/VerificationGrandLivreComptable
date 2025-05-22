@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,9 +36,9 @@ class BankTest {
 
     @Test
     void getBankLines() {
-        List<String> pathsDirectoryBank = new ArrayList<>();
-        pathsDirectoryBank.add(tempTestDir + File.separator + "bank" + File.separator + accountBank2.account() + File.separator);
-        List<BankLine> bankLines = bank.getBankLines(accounts, pathsDirectoryBank, 2024);
+        String pathsDirectoryBank = tempTestDir + File.separator + "bank" + File.separator;
+        List<String> accountsbank = List.of(accountBank2.account());
+        List<BankLine> bankLines = bank.getBankLines(accounts, pathsDirectoryBank, accountsbank, 2024);
         assertEquals(2, bankLines.size());
         LocalDate operationDate = LocalDate.parse("2024-07-15");
         assertEquals(operationDate, bankLines.getLast().operationDate());
@@ -56,9 +55,9 @@ class BankTest {
 
     @Test
     void getBankMultiLines() {
-        List<String> pathsDirectoryBank = new ArrayList<>();
-        pathsDirectoryBank.add(tempTestDir + File.separator + "bank" + File.separator + accountBank2.account() + File.separator);
-        List<BankLine> bankLines = bank.getBankLines(accounts, pathsDirectoryBank, 2024);
+        String pathsDirectoryBank = tempTestDir + File.separator + "bank" + File.separator;
+        List<String> accountsbank = List.of(accountBank2.account());
+        List<BankLine> bankLines = bank.getBankLines(accounts, pathsDirectoryBank, accountsbank, 2024);
         assertEquals(2, bankLines.size());
         LocalDate operationDate = LocalDate.parse("2024-08-17");
         assertEquals(operationDate, bankLines.getFirst().operationDate());
@@ -75,10 +74,9 @@ class BankTest {
 
     @Test
     void getMultiBank() {
-        List<String> pathsDirectoryBank = new ArrayList<>();
-        pathsDirectoryBank.add(tempTestDir + File.separator + "bank" + File.separator + accountBank1.account() + File.separator);
-        pathsDirectoryBank.add(tempTestDir + File.separator + "bank" + File.separator + accountBank2.account() + File.separator);
-        List<BankLine> bankLines = bank.getBankLines(accounts, pathsDirectoryBank, 2024);
+        String pathsDirectoryBank = tempTestDir + File.separator + "bank" + File.separator;
+        List<String> accountsbank = List.of(accountBank1.account(), accountBank2.account());
+        List<BankLine> bankLines = bank.getBankLines(accounts, pathsDirectoryBank, accountsbank, 2024);
         assertEquals(6, bankLines.size());
         LocalDate operationDate = LocalDate.parse("2024-11-01");
         assertEquals(operationDate, bankLines.getFirst().operationDate());

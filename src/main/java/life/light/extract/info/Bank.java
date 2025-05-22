@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import static life.light.Main.BANK_1_ACCOUNT;
-import static life.light.Main.BANK_2_ACCOUNT;
 import static life.light.extract.info.OutilInfo.findDateIn;
 
 public class Bank {
@@ -26,22 +24,21 @@ public class Bank {
     public static final String BANK_1_DATA_FORMAT = "dd.MM.yy";
     public static final String BANK_2_DATA_FORMAT = "dd/MM/yyyy";
     public static final String ACCOUNT_BANK = "512";
+    private static final String BANK_1_ACCOUNT = "";
+    private static final String BANK_2_ACCOUNT = "";
 
-    public List<BankLine> getBankLines(Map<String, TypeAccount> accounts, List<String> pathsDirectoryBank, int year) {
+    public List<BankLine> getBankLines(Map<String, TypeAccount> accounts, String pathDirectoryBank, List<String> accountsbank, int year) {
         List<BankLine> bankLines = new ArrayList<>();
-        for (String pathDirectoryBank : pathsDirectoryBank) {
-            bankLines.addAll(getBank(accounts, pathDirectoryBank, year));
+        for (String accountBank : accountsbank) {
+            bankLines.addAll(getBank(accounts, pathDirectoryBank, accountBank, year));
         }
         return bankLines;
     }
 
-    private List<BankLine> getBank(Map<String, TypeAccount> accounts, String pathDirectoryBank, int year) {
+    private List<BankLine> getBank(Map<String, TypeAccount> accounts, String pathDirectoryBank, String accountBank, int year) {
         List<BankLine> bankLines = new ArrayList<>();
-        File pathDirectory;
+        File pathDirectory = new File(pathDirectoryBank + File.separator + accountBank + File.separator);
         File[] files;
-        String[] path = pathDirectoryBank.split("\\\\");
-        String theAccount = path[path.length - 1];
-        pathDirectory = new File(pathDirectoryBank);
         files = pathDirectory.listFiles();
         if (null != files) {
             for (File fichier : files) {
@@ -52,7 +49,7 @@ public class Bank {
                         for (int i = 0; i < 6; i++) {
                             reader.readLine();
                         }
-                        TypeAccount account = accounts.get(theAccount);
+                        TypeAccount account = accounts.get(accountBank);
                         LocalDate operationDate = null;
                         StringBuilder label = new StringBuilder();
                         LocalDate valueDate = null;
@@ -67,18 +64,18 @@ public class Bank {
                                 } else {
                                     String[] ligne = line.split(" ");
                                     int index = 0;
-                                    operationDate = getOperationDate(theAccount, ligne, index);
+                                    operationDate = getOperationDate(accountBank, ligne, index);
                                     index = getIndexNotWord(index, ligne);
-                                    if (BANK_1_ACCOUNT.equals(theAccount)) {
+                                    if (BANK_1_ACCOUNT.equals(accountBank)) {
                                         while (!ligne[index].isEmpty()) {
                                             label.append(" ").append(ligne[index]);
                                             index++;
                                         }
                                         index = getIndexNotWord(index, ligne);
-                                        valueDate = getValueDate(theAccount, ligne, index);
+                                        valueDate = getValueDate(accountBank, ligne, index);
                                     }
-                                    if (BANK_2_ACCOUNT.equals(theAccount)) {
-                                        valueDate = getValueDate(theAccount, ligne, index);
+                                    if (BANK_2_ACCOUNT.equals(accountBank)) {
+                                        valueDate = getValueDate(accountBank, ligne, index);
                                         index = getIndexNotWord(index, ligne);
                                         while (!ligne[index].isEmpty()) {
                                             label.append(" ").append(ligne[index]);

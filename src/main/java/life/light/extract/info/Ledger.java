@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
-import static life.light.Main.BANK_1_ACCOUNT;
-import static life.light.Main.BANK_2_ACCOUNT;
 import static life.light.extract.info.OutilInfo.*;
 
 public class Ledger {
@@ -472,7 +470,9 @@ public class Ledger {
         return new TotalBuilding(label.toString().trim().replace(" )", ")"), debit.toString().trim().replace(" ", "").replace(EURO, ""), credit.toString().trim().replace(" ", "").replace(EURO, ""));
     }
 
-    public List<Line> getInfoBankGrandLivre(InfoGrandLivre infoGrandLivre, Map<String, TypeAccount> accounts, String pathDirectoryLeger, String pathDirectoryInvoice) {
+    public List<Line> getInfoBankGrandLivre(InfoGrandLivre infoGrandLivre, Map<String, TypeAccount> accounts,
+                                            String pathDirectoryLeger, String pathDirectoryInvoice,
+                                            List<String> accountsbank) {
         // Géneration du grand livre
         Object[] grandLivres = new Object[getNumberOfLineInFile(pathDirectoryLeger)];
         TreeSet<String> journals = new TreeSet<>();
@@ -494,8 +494,7 @@ public class Ledger {
                         journals.add(lineOfGrandLivre.journal());
                     }
                     String accountNumber = lineOfGrandLivre.account().account();
-                    if (accountNumber.equals(BANK_2_ACCOUNT) ||
-                            (accountNumber.equals(BANK_1_ACCOUNT) && !lineOfGrandLivre.label().contains("Report de "))) {
+                    if (accountsbank.contains(accountNumber) && !lineOfGrandLivre.label().contains("Report de ")) {
                         lineBankInGrandLivre.add(lineOfGrandLivre);
                     }
                 } else if (isTotalAccount(line)) {
