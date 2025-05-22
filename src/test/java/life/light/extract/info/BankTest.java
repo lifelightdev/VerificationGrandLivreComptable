@@ -21,6 +21,7 @@ class BankTest {
     Map<String, TypeAccount> accounts = new HashMap<>();
     TypeAccount accountBank1 = new TypeAccount("51220", "Banque 1");
     TypeAccount accountBank2 = new TypeAccount("51221", "Banque 2");
+    Bank bank = new Bank();
 
     @BeforeEach
     void setUp() {
@@ -37,12 +38,12 @@ class BankTest {
     @Test
     void getBankLines() {
         List<String> pathsDirectoryBank = new ArrayList<>();
-        pathsDirectoryBank.add(tempTestDir + File.separator + "bank"+ File.separator + accountBank2.account() + File.separator);
-        List<BankLine> bankLines = Bank.getBankLines(accounts, pathsDirectoryBank, 2024);
+        pathsDirectoryBank.add(tempTestDir + File.separator + "bank" + File.separator + accountBank2.account() + File.separator);
+        List<BankLine> bankLines = bank.getBankLines(accounts, pathsDirectoryBank, 2024);
         assertEquals(2, bankLines.size());
-        LocalDate operationDate =  LocalDate.parse("2024-07-15");
+        LocalDate operationDate = LocalDate.parse("2024-07-15");
         assertEquals(operationDate, bankLines.getLast().operationDate());
-        LocalDate valueDate =  LocalDate.parse("2024-07-16");
+        LocalDate valueDate = LocalDate.parse("2024-07-16");
         assertEquals(valueDate, bankLines.getLast().valueDate());
         String label = "REM CHQ N° 000000001";
         assertEquals(label, bankLines.getLast().label());
@@ -56,12 +57,12 @@ class BankTest {
     @Test
     void getBankMultiLines() {
         List<String> pathsDirectoryBank = new ArrayList<>();
-        pathsDirectoryBank.add(tempTestDir + File.separator + "bank"+ File.separator + accountBank2.account() + File.separator);
-        List<BankLine> bankLines = Bank.getBankLines(accounts, pathsDirectoryBank, 2024);
+        pathsDirectoryBank.add(tempTestDir + File.separator + "bank" + File.separator + accountBank2.account() + File.separator);
+        List<BankLine> bankLines = bank.getBankLines(accounts, pathsDirectoryBank, 2024);
         assertEquals(2, bankLines.size());
-        LocalDate operationDate =  LocalDate.parse("2024-08-17");
+        LocalDate operationDate = LocalDate.parse("2024-08-17");
         assertEquals(operationDate, bankLines.getFirst().operationDate());
-        LocalDate valueDate =  LocalDate.parse("2024-08-18");
+        LocalDate valueDate = LocalDate.parse("2024-08-18");
         assertEquals(valueDate, bankLines.getFirst().valueDate());
         String label = "REM CHQ N° 000000001 Avec un text sur plusieur ligne 3T2024";
         assertEquals(label, bankLines.getFirst().label());
@@ -75,13 +76,13 @@ class BankTest {
     @Test
     void getMultiBank() {
         List<String> pathsDirectoryBank = new ArrayList<>();
-        pathsDirectoryBank.add(tempTestDir + File.separator + "bank"+ File.separator + accountBank1.account() + File.separator);
-        pathsDirectoryBank.add(tempTestDir + File.separator + "bank"+ File.separator + accountBank2.account() + File.separator);
-        List<BankLine> bankLines = Bank.getBankLines(accounts, pathsDirectoryBank, 2024);
+        pathsDirectoryBank.add(tempTestDir + File.separator + "bank" + File.separator + accountBank1.account() + File.separator);
+        pathsDirectoryBank.add(tempTestDir + File.separator + "bank" + File.separator + accountBank2.account() + File.separator);
+        List<BankLine> bankLines = bank.getBankLines(accounts, pathsDirectoryBank, 2024);
         assertEquals(6, bankLines.size());
-        LocalDate operationDate =  LocalDate.parse("2024-11-01");
+        LocalDate operationDate = LocalDate.parse("2024-11-01");
         assertEquals(operationDate, bankLines.getFirst().operationDate());
-        LocalDate valueDate =  LocalDate.parse("2024-11-01");
+        LocalDate valueDate = LocalDate.parse("2024-11-01");
         assertEquals(valueDate, bankLines.getFirst().valueDate());
         String label = "VIR INST M. TINTIN LIBELLE:Tintin ref : 1.018.0031 REF.CLIENT-NOTPROVIDED";
         assertEquals(label, bankLines.getFirst().label());

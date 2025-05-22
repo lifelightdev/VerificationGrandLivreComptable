@@ -1,7 +1,7 @@
 package life.light.extract.info;
 
-import life.light.type.TypeAccount;
 import life.light.type.BankLine;
+import life.light.type.TypeAccount;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -16,7 +16,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import static life.light.Main.*;
+import static life.light.Main.BANK_1_ACCOUNT;
+import static life.light.Main.BANK_2_ACCOUNT;
 import static life.light.extract.info.OutilInfo.findDateIn;
 
 public class Bank {
@@ -26,9 +27,7 @@ public class Bank {
     public static final String BANK_2_DATA_FORMAT = "dd/MM/yyyy";
     public static final String ACCOUNT_BANK = "512";
 
-    private Bank() { }
-
-    public static List<BankLine> getBankLines(Map<String, TypeAccount> accounts, List<String> pathsDirectoryBank, int year) {
+    public List<BankLine> getBankLines(Map<String, TypeAccount> accounts, List<String> pathsDirectoryBank, int year) {
         List<BankLine> bankLines = new ArrayList<>();
         for (String pathDirectoryBank : pathsDirectoryBank) {
             bankLines.addAll(getBank(accounts, pathDirectoryBank, year));
@@ -36,7 +35,7 @@ public class Bank {
         return bankLines;
     }
 
-    private static List<BankLine> getBank(Map<String, TypeAccount> accounts, String pathDirectoryBank, int year) {
+    private List<BankLine> getBank(Map<String, TypeAccount> accounts, String pathDirectoryBank, int year) {
         List<BankLine> bankLines = new ArrayList<>();
         File pathDirectory;
         File[] files;
@@ -93,12 +92,12 @@ public class Bank {
                                     }
                                 }
                             } else if (!line.contains(nouveauSoldeAu) && (!line.contains("Total des opérations"))) {
-                                if (label.toString().endsWith(" ")){
+                                if (label.toString().endsWith(" ")) {
                                     label.append(line);
                                 } else {
                                     label.append(" ").append(line);
                                 }
-                            } else  if (line.contains(nouveauSoldeAu)){
+                            } else if (line.contains(nouveauSoldeAu)) {
                                 BankLine bankLine = new BankLine(year, operationDate.getMonthValue(), operationDate, valueDate, account, label.toString().trim(), debit, credit);
                                 bankLines.add(bankLine);
                             }
@@ -112,7 +111,7 @@ public class Bank {
         return bankLines;
     }
 
-    private static LocalDate getOperationDate(String theAccount, String[] ligne, int index) {
+    private LocalDate getOperationDate(String theAccount, String[] ligne, int index) {
         LocalDate operationDate = null;
         if (BANK_1_ACCOUNT.equals(theAccount)) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BANK_1_DATA_FORMAT, Locale.FRANCE);
@@ -124,7 +123,7 @@ public class Bank {
         return operationDate;
     }
 
-    private static LocalDate getValueDate(String theAccount, String[] ligne, int index) {
+    private LocalDate getValueDate(String theAccount, String[] ligne, int index) {
         LocalDate operationDate = null;
         if (BANK_1_ACCOUNT.equals(theAccount)) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BANK_1_DATA_FORMAT, Locale.FRANCE);
@@ -136,7 +135,7 @@ public class Bank {
         return operationDate;
     }
 
-    private static int getIndexNotWord(int index, String[] ligne) {
+    private int getIndexNotWord(int index, String[] ligne) {
         do {
             index++;
         } while (ligne[index].isEmpty());
@@ -146,7 +145,7 @@ public class Bank {
     public static List<TypeAccount> getBanks(Map<String, TypeAccount> accounts) {
         List<TypeAccount> accountsBank = new ArrayList<>();
         for (TypeAccount account : accounts.values()) {
-            if (account.account().startsWith(ACCOUNT_BANK)){
+            if (account.account().startsWith(ACCOUNT_BANK)) {
                 accountsBank.add(account);
             }
         }

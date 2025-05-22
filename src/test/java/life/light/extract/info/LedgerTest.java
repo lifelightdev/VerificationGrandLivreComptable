@@ -19,6 +19,7 @@ class LedgerTest {
     TypeAccount accountBank1 = new TypeAccount("51220", "Banque 1");
     TypeAccount accountBank2 = new TypeAccount("51221", "Banque 2");
     String nameFileTestLedger = "";
+    Ledger ledger = new Ledger();
 
     @BeforeEach
     void setUp() {
@@ -38,7 +39,7 @@ class LedgerTest {
             "C'est le nom du Syndic|, C'est le nom du Syndic"
     })
     void extractSyndicName(String line, String SyndicName) {
-        String name = Ledger.syndicName(line);
+        String name = ledger.syndicName(line);
         Assertions.assertEquals(SyndicName, name);
     }
 
@@ -48,7 +49,7 @@ class LedgerTest {
             "8 AVENUE DES CHAMPS ELYSE 14/04/2025 Page : 10, 14/04/2025"
     })
     void extractPrintDate(String line, String printDate) {
-        String date = Ledger.printDate(line);
+        String date = ledger.printDate(line);
         Assertions.assertEquals(printDate, date);
     }
 
@@ -58,7 +59,7 @@ class LedgerTest {
             "02.02.02.02.02 Grand Livre arrêté au 31/12/2023,  31/12/2023"
     })
     void extractStopDate(String line, String stopDate) {
-        String date = Ledger.stopDate(line);
+        String date = ledger.stopDate(line);
         Assertions.assertEquals(stopDate, date);
     }
 
@@ -67,13 +68,13 @@ class LedgerTest {
             "75000 PARIS Grand Livre arrêté au 31/12/2024, 75000"
     })
     void extractPostalCode(String line, String postalCode) {
-        String code = Ledger.postalCode(line);
+        String code = ledger.postalCode(line);
         Assertions.assertEquals(postalCode, code);
     }
 
     @Test
     void getInfoGrandLivre() {
-        InfoGrandLivre infoGrandLivre = Ledger.getInfoGrandLivre(nameFileTestLedger);
+        InfoGrandLivre infoGrandLivre = ledger.getInfoGrandLivre(nameFileTestLedger);
         assertEquals("C'est le nom du Syndic", infoGrandLivre.syndicName());
         assertEquals("11/04/2025", infoGrandLivre.printDate());
         assertEquals("2024-12-31", infoGrandLivre.stopDate().toString());
@@ -82,7 +83,7 @@ class LedgerTest {
 
     @Test
     void getNumberOfLineInFile() {
-        int result = Ledger.getNumberOfLineInFile(nameFileTestLedger);
+        int result = ledger.getNumberOfLineInFile(nameFileTestLedger);
         assertEquals(11, result);
     }
 
@@ -104,7 +105,7 @@ class LedgerTest {
             "4A0100-0077 | CHRISTAL,                                         40100-0077, CHRISTAL"
     })
     void account(String line, String account, String label) {
-        TypeAccount result = Ledger.account(line);
+        TypeAccount result = ledger.account(line);
         Assertions.assertEquals(account, result.account());
         Assertions.assertEquals(label, result.label());
     }
@@ -125,7 +126,7 @@ class LedgerTest {
             "1 238.40 €,                                                        false"
     })
     void isAccount(String line, boolean is) {
-        boolean result = Ledger.isAcccount(line, "75000", "001");
+        boolean result = ledger.isAcccount(line, "75000", "001");
         if (is) {
             Assertions.assertTrue(result);
         } else {
@@ -172,7 +173,7 @@ class LedgerTest {
         accounts.put("40800", new TypeAccount("40800", "Un compte"));
         accounts.put("45000-0001", new TypeAccount("45000-0001", "Monsieur DUPONT"));
         accounts.put("51220", new TypeAccount("51220", "Banque"));
-        Line result = Ledger.line(line, accounts);
+        Line result = ledger.line(line, accounts);
         Assertions.assertNotNull(result);
         Assertions.assertEquals(document, result.document());
         Assertions.assertEquals(date, result.date());
@@ -203,7 +204,7 @@ class LedgerTest {
             "'42201  01/06/2024 45000-0001 P2 10500  APUREMENT CHARGES 2 312.66 € ',          true"
     })
     void isLine(String line, boolean is) {
-        boolean result = Ledger.isLigne(line);
+        boolean result = ledger.isLigne(line);
         if (is) {
             Assertions.assertTrue(result);
         } else {
@@ -226,7 +227,7 @@ class LedgerTest {
         accounts.put("40100-0001", new TypeAccount("40100-0001", "Orange"));
         accounts.put("40100-0002", new TypeAccount("40100-0002", "EDF"));
         accounts.put("40100-0017", new TypeAccount("40100-0017", "GDF"));
-        TotalAccount result = Ledger.totalAccount(line, accounts);
+        TotalAccount result = ledger.totalAccount(line, accounts);
         Assertions.assertNotNull(result);
         Assertions.assertEquals(label, result.label());
         Assertions.assertEquals(account, result.account().account());
@@ -246,7 +247,7 @@ class LedgerTest {
             "Total compte 40100-0001 (Solde : 0.00 €) 100 000.00 € 100 000.00 €, true"
     })
     void extractIsTotalAccount(String line, boolean is) {
-        boolean result = Ledger.isTotalAccount(line);
+        boolean result = ledger.isTotalAccount(line);
         if (is) {
             Assertions.assertTrue(result);
         } else {
@@ -260,7 +261,7 @@ class LedgerTest {
             " (Solde : 0.00 €) 10.00 € 100 000.00 €                   ,false",
     })
     void isTotalBuilding(String line, boolean is) {
-        boolean result = Ledger.isTotalBuilding(line);
+        boolean result = ledger.isTotalBuilding(line);
         if (is) {
             Assertions.assertTrue(result);
         } else {
@@ -273,7 +274,7 @@ class LedgerTest {
             "Total immeuble (Solde : 0.00 €) 100 000.00 € 100 000.00 €, Total immeuble (Solde : 0.00€), 100000.00, 100000.00",
     })
     void totalBuilding(String line, String label, String debit, String credit) {
-        TotalBuilding result = Ledger.totalBuilding(line);
+        TotalBuilding result = ledger.totalBuilding(line);
         Assertions.assertNotNull(result);
         Assertions.assertEquals(label, result.label());
         Assertions.assertEquals(debit, result.debit());

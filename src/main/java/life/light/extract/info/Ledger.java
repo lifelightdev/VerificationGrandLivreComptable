@@ -1,7 +1,6 @@
 package life.light.extract.info;
 
 import life.light.type.*;
-import life.light.type.TypeAccount;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -10,9 +9,15 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
+import static life.light.Main.*;
 import static life.light.extract.info.OutilInfo.*;
+import static life.light.write.WriteFile.writeFileCSVGrandLivre;
+import static life.light.write.WriteFile.writeFileExcelGrandLivre;
 
 public class Ledger {
 
@@ -20,9 +25,7 @@ public class Ledger {
     public static final int NAME_JOURNAL_SIZE = 2;
     public static final String REGEX_NUMBER = "^-?[0-9]+$";
 
-    private Ledger() { }
-
-    public static InfoGrandLivre getInfoGrandLivre(String pathLedger) {
+    public InfoGrandLivre getInfoGrandLivre(String pathLedger) {
         String syndicName = "";
         String printDate = "";
         LocalDate stopDate = null;
@@ -30,21 +33,25 @@ public class Ledger {
         // Récupération des informations pour la génération du nom de fichier
         try (BufferedReader reader = new BufferedReader(new FileReader(pathLedger))) {
             String line = reader.readLine();
-            syndicName = Ledger.syndicName(line);
+            syndicName = syndicName(line);
             line = reader.readLine();
-            printDate = Ledger.printDate(line);
+            printDate = printDate(line);
             reader.readLine();
             line = reader.readLine();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            stopDate = LocalDate.parse(Ledger.stopDate(line),formatter);
-            postalCode = Ledger.postalCode(line);
+            stopDate = LocalDate.parse(stopDate(line), formatter);
+            postalCode = postalCode(line);
         } catch (IOException e) {
             LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
         }
+        LOGGER.info("Le nom du syndic est : {}", syndicName.trim());
+        LOGGER.info("La date d'édition est le {}", printDate);
+        LOGGER.info("La date d'arrêt des comptes est le {}", stopDate);
+        LOGGER.info("Le code postal du syndic est {}", postalCode);
         return new InfoGrandLivre(syndicName.trim(), printDate, stopDate, postalCode);
     }
 
-    public static int getNumberOfLineInFile(String pathLedger) {
+    public int getNumberOfLineInFile(String pathLedger) {
         int numberOfLineInFile = 0;
         try (BufferedReader reader = new BufferedReader(new FileReader(pathLedger))) {
             String line;
@@ -60,19 +67,19 @@ public class Ledger {
         return numberOfLineInFile;
     }
 
-    protected static String syndicName(String ligne) {
+    protected String syndicName(String ligne) {
         return ligne.replace("|", "");
     }
 
-    static String printDate(String line) {
+    String printDate(String line) {
         return findDateIn(line);
     }
 
-    static String stopDate(String line) {
+    String stopDate(String line) {
         return findDateIn(line);
     }
 
-    static TypeAccount account(String line) {
+    TypeAccount account(String line) {
         line = getLine(line);
         String[] words = splittingLineIntoWordTable(line);
         String account = words[0];
@@ -89,7 +96,7 @@ public class Ledger {
         return new TypeAccount(account, label.toString().trim());
     }
 
-    private static String getLine(String line) {
+    private String getLine(String line) {
         line = line.replace(" _ ", " ");
         line = line.replace("_ ", " ");
         line = line.replace(" | ", " ");
@@ -103,7 +110,7 @@ public class Ledger {
         return line;
     }
 
-    static boolean isAcccount(String line, String postalCode, String id) {
+    boolean isAcccount(String line, String postalCode, String id) {
         line = getLine(line);
         line = line.replace("  ", " ");
         if (line.contains(EURO)) {
@@ -132,7 +139,7 @@ public class Ledger {
         return false;
     }
 
-    public static Line line(String line, Map<String, TypeAccount> accounts) {
+    public Line line(String line, Map<String, TypeAccount> accounts) {
         // Supprime les caractères parasites
         line = removesStrayCharactersInLine(line);
 
@@ -313,7 +320,7 @@ public class Ledger {
                 label.toString().trim(), debit.toString().trim(), credit.toString().trim());
     }
 
-    public static boolean isLigne(String line) {
+    public boolean isLigne(String line) {
         line = removesStrayCharactersInLine(line);
         // Découpage de la ligne en un tableau de mot
         String[] words = splittingLineIntoWordTable(line);
@@ -330,7 +337,7 @@ public class Ledger {
         return !findDateIn(words[indexOfWords]).isEmpty();
     }
 
-    public static TotalAccount totalAccount(String line, Map<String, TypeAccount> accounts) {
+    public TotalAccount totalAccount(String line, Map<String, TypeAccount> accounts) {
         line = line.replace("| ", " ");
         // Correction des espaces avant le signe €
         line = fixedSpacesBeforeEuroSign(line);
@@ -414,19 +421,19 @@ public class Ledger {
         return new TotalAccount(label.toString().trim(), account, debit.toString(), credit.toString().replace("—", "").trim());
     }
 
-    public static boolean isTotalAccount(String line) {
+    public boolean isTotalAccount(String line) {
         return line.startsWith("Total compte ");
     }
 
-    static String postalCode(String line) {
+    String postalCode(String line) {
         return line.split(" ")[0];
     }
 
-    public static boolean isTotalBuilding(String line) {
+    public boolean isTotalBuilding(String line) {
         return line.startsWith("Total immeuble");
     }
 
-    public static TotalBuilding totalBuilding(String line) {
+    public TotalBuilding totalBuilding(String line) {
         // Correction des espaces avant le signe €
         line = fixedSpacesBeforeEuroSign(line).replace(")", " ) ");
 
@@ -463,5 +470,54 @@ public class Ledger {
             credit.append(" ").append(words[indexOfWords]);
         }
         return new TotalBuilding(label.toString().trim().replace(" )", ")"), debit.toString().trim().replace(" ", "").replace(EURO, ""), credit.toString().trim().replace(" ", "").replace(EURO, ""));
+    }
+
+    public List<Line> getInfoBankGrandLivre(InfoGrandLivre infoGrandLivre, Map<String, TypeAccount> accounts) {
+        // Géneration du grand livre
+        Object[] grandLivres = new Object[getNumberOfLineInFile(PATH_DIRECTORY_LEDGER)];
+        TreeSet<String> journals = new TreeSet<>();
+        List<Line> lineBankInGrandLivre = new ArrayList<>();
+        int indexInGrandLivres = 0;
+        try (BufferedReader reader = new BufferedReader(new FileReader(PATH_DIRECTORY_LEDGER))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.isEmpty()) {
+                    continue;
+                }
+                if (isLigne(line)) {
+                    Line lineOfGrandLivre = line(line, accounts);
+                    if (lineOfGrandLivre == null) {
+                        continue;
+                    }
+                    grandLivres[indexInGrandLivres++] = lineOfGrandLivre;
+                    if (!lineOfGrandLivre.journal().isEmpty()) {
+                        journals.add(lineOfGrandLivre.journal());
+                    }
+                    String accountNumber = lineOfGrandLivre.account().account();
+                    if (accountNumber.equals(BANK_2_ACCOUNT) ||
+                            (accountNumber.equals(BANK_1_ACCOUNT) && !lineOfGrandLivre.label().contains("Report de "))) {
+                        lineBankInGrandLivre.add(lineOfGrandLivre);
+                    }
+                } else if (isTotalAccount(line)) {
+                    TotalAccount totalAccount = totalAccount(line, accounts);
+                    if (totalAccount != null) {
+                        grandLivres[indexInGrandLivres++] = totalAccount;
+                    }
+                } else if (isTotalBuilding(line)) {
+                    TotalBuilding totalBuilding = totalBuilding(line);
+                    grandLivres[indexInGrandLivres++] = totalBuilding;
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
+        }
+
+        writeFileCSVGrandLivre(grandLivres);
+        String nameFile = infoGrandLivre.printDate().substring(6) + "-" + infoGrandLivre.printDate().substring(3, 5) + "-" + infoGrandLivre.printDate().substring(0, 2)
+                + " Grand livre " + infoGrandLivre.syndicName().substring(0, infoGrandLivre.syndicName().length() - 1).trim()
+                + " au " + infoGrandLivre.stopDate()
+                + ".xlsx";
+        writeFileExcelGrandLivre(grandLivres, nameFile, journals);
+        return lineBankInGrandLivre;
     }
 }
