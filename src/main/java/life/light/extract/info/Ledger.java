@@ -8,6 +8,8 @@ import org.apache.logging.log4j.Logger;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 import static life.light.extract.info.OutilInfo.*;
@@ -23,7 +25,7 @@ public class Ledger {
     public static InfoGrandLivre getInfoGrandLivre(String pathLedger) {
         String syndicName = "";
         String printDate = "";
-        String stopDate = "";
+        LocalDate stopDate = null;
         String postalCode = "";
         // Récupération des informations pour la génération du nom de fichier
         try (BufferedReader reader = new BufferedReader(new FileReader(pathLedger))) {
@@ -33,7 +35,8 @@ public class Ledger {
             printDate = Ledger.printDate(line);
             reader.readLine();
             line = reader.readLine();
-            stopDate = Ledger.stopDate(line);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            stopDate = LocalDate.parse(Ledger.stopDate(line),formatter);
             postalCode = Ledger.postalCode(line);
         } catch (IOException e) {
             LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
@@ -46,7 +49,7 @@ public class Ledger {
         try (BufferedReader reader = new BufferedReader(new FileReader(pathLedger))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                if (!line.isEmpty()) {
+                if (!line.trim().isEmpty()) {
                     numberOfLineInFile++;
                 }
             }

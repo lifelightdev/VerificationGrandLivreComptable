@@ -1,6 +1,8 @@
 package life.light.extract.info;
 
+import life.light.FileOfTest;
 import life.light.type.TypeAccount;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
 
@@ -8,10 +10,21 @@ import java.util.Map;
 
 class AccountTest {
 
+    String nameFileTestLedger = "";
+
+    @BeforeEach
+    void setUp() {
+        FileOfTest fileOfTest = new FileOfTest();
+        try {
+            nameFileTestLedger = fileOfTest.createMinimalLedgerFile();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Test
     void getAccounts() {
-        String fileName = ".\\temp\\grand_livre_test.txt";
-        Map<String, TypeAccount> accounts = Account.getAccounts(fileName, "75000", "001" );
+        Map<String, TypeAccount> accounts = Account.getAccounts(nameFileTestLedger, "75000", "001" );
         Assertions.assertEquals(1, accounts.size());
         TypeAccount account = accounts.get("40100-0001");
         Assertions.assertEquals("40100-0001", account.account());

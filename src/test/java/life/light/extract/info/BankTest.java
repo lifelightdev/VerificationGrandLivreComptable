@@ -1,25 +1,43 @@
 package life.light.extract.info;
 
+import life.light.FileOfTest;
 import life.light.type.BankLine;
 import life.light.type.TypeAccount;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static life.light.FileOfTest.tempTestDir;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class BankTest {
 
+    Map<String, TypeAccount> accounts = new HashMap<>();
+    TypeAccount accountBank1 = new TypeAccount("51220", "Banque 1");
+    TypeAccount accountBank2 = new TypeAccount("51221", "Banque 2");
+
+    @BeforeEach
+    void setUp() {
+        accounts.put(accountBank1.account(), accountBank1);
+        accounts.put(accountBank2.account(), accountBank2);
+        FileOfTest fileOfTest = new FileOfTest();
+        try {
+            fileOfTest.copyBankFiles(accountBank1.account(), accountBank2.account());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Test
     void getBankLines() {
-        Map<String, TypeAccount> accounts = new HashMap<>();
-        accounts.put("51221", new TypeAccount("51221", "Banque 1"));
         List<String> pathsDirectoryBank = new ArrayList<>();
-        pathsDirectoryBank.add(".\\temp\\bank\\51221\\");
+        pathsDirectoryBank.add(tempTestDir + File.separator + "bank"+ File.separator + accountBank2.account() + File.separator);
         List<BankLine> bankLines = Bank.getBankLines(accounts, pathsDirectoryBank, 2024);
         assertEquals(2, bankLines.size());
         LocalDate operationDate =  LocalDate.parse("2024-07-15");
@@ -32,15 +50,13 @@ class BankTest {
         assertEquals(debit, bankLines.getLast().debit());
         double credit = 100.00;
         assertEquals(credit, bankLines.getLast().credit());
-        assertEquals("51221", bankLines.getLast().account().account());
+        assertEquals(accountBank2.account(), bankLines.getLast().account().account());
     }
 
     @Test
     void getBankMultiLines() {
-        Map<String, TypeAccount> accounts = new HashMap<>();
-        accounts.put("51221", new TypeAccount("51221", "Banque 1"));
         List<String> pathsDirectoryBank = new ArrayList<>();
-        pathsDirectoryBank.add(".\\temp\\bank\\51221\\");
+        pathsDirectoryBank.add(tempTestDir + File.separator + "bank"+ File.separator + accountBank2.account() + File.separator);
         List<BankLine> bankLines = Bank.getBankLines(accounts, pathsDirectoryBank, 2024);
         assertEquals(2, bankLines.size());
         LocalDate operationDate =  LocalDate.parse("2024-08-17");
@@ -53,17 +69,14 @@ class BankTest {
         assertEquals(debit, bankLines.getFirst().debit());
         double credit = 100.00;
         assertEquals(credit, bankLines.getFirst().credit());
-        assertEquals("51221", bankLines.getFirst().account().account());
+        assertEquals(accountBank2.account(), bankLines.getFirst().account().account());
     }
 
     @Test
     void getMultiBank() {
-        Map<String, TypeAccount> accounts = new HashMap<>();
-        accounts.put("51220", new TypeAccount("51220", "Banque 1"));
-        accounts.put("51221", new TypeAccount("51221", "Banque 2"));
         List<String> pathsDirectoryBank = new ArrayList<>();
-        pathsDirectoryBank.add(".\\temp\\bank\\51220\\");
-        pathsDirectoryBank.add(".\\temp\\bank\\51221\\");
+        pathsDirectoryBank.add(tempTestDir + File.separator + "bank"+ File.separator + accountBank1.account() + File.separator);
+        pathsDirectoryBank.add(tempTestDir + File.separator + "bank"+ File.separator + accountBank2.account() + File.separator);
         List<BankLine> bankLines = Bank.getBankLines(accounts, pathsDirectoryBank, 2024);
         assertEquals(6, bankLines.size());
         LocalDate operationDate =  LocalDate.parse("2024-11-01");
@@ -76,6 +89,14 @@ class BankTest {
         assertEquals(debit, bankLines.getFirst().debit());
         double credit = 1500.88;
         assertEquals(credit, bankLines.getFirst().credit());
-        assertEquals("51220", bankLines.getFirst().account().account());
+        assertEquals(accountBank1.account(), bankLines.getFirst().account().account());
+    }
+
+    @Test
+    void getAccountsBank() {
+        List<TypeAccount> accountsBank = Bank.getBanks(accounts);
+        assertEquals(2, accountsBank.size());
+        assertEquals(accountBank2, accountsBank.get(0));
+        assertEquals(accountBank1, accountsBank.get(1));
     }
 }

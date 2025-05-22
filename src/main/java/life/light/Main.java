@@ -23,21 +23,19 @@ public class Main {
 
     private static final Logger LOGGER = LogManager.getLogger();
     // TODO : à mettre dans les paramètres de lancement du programme
-    public static final String BANK_1_ACCOUNT = "51220";
-    public static final String BANK_2_ACCOUNT = "51221";
-    public static final String PATH_DIRECTORY_INVOICE = "";
-    public static final String PATH_DIRECTORY_BANK = "";
-    public static final String PATH_DIRECTORY_LEDGER = "";
+    public static String BANK_1_ACCOUNT = "51220";
+    public static String BANK_2_ACCOUNT = "51221";
+    public static String PATH_DIRECTORY_INVOICE = "";
+    public static String PATH_DIRECTORY_BANK = "";
+    public static String PATH_DIRECTORY_LEDGER = "";
+    public static String codeCondominium = "";
 
     public static void main(String[] args) {
         LocalDateTime debut = LocalDateTime.now();
         LOGGER.info("Début à {}:{}:{}", debut.getHour(), debut.getMinute(), debut.getSecond());
 
-        String codeCondominium = "018";
-        int year = 2024;
-        if (args.length == 2) {
+        if (args.length == 1) {
             codeCondominium = args[0];
-            year = Integer.parseInt(args[1]);
         }
         InfoGrandLivre infoGrandLivre = getInfoGrandLivre(PATH_DIRECTORY_LEDGER);
         LOGGER.info("Le nom du syndic est : {}", infoGrandLivre.syndicName());
@@ -56,7 +54,7 @@ public class Main {
         List<String> pathsDirectoryBank = new ArrayList<>();
         pathsDirectoryBank.add(PATH_DIRECTORY_BANK + File.separator + BANK_2_ACCOUNT);
         pathsDirectoryBank.add(PATH_DIRECTORY_BANK + File.separator + BANK_1_ACCOUNT);
-        List<BankLine> bankLines = getBankLines(accounts, pathsDirectoryBank, year);
+        List<BankLine> bankLines = getBankLines(accounts, pathsDirectoryBank, infoGrandLivre.stopDate().getYear());
 
         // Géneration du grand livre
         Object[] grandLivres = new Object[numberOfLineInFile];
@@ -66,35 +64,31 @@ public class Main {
         try (BufferedReader reader = new BufferedReader(new FileReader(PATH_DIRECTORY_LEDGER))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                if (!line.isEmpty()) {
-                    if (Ledger.isLigne(line)) {
-                        Line lineOfGrandLivre = Ledger.line(line, accounts);
-                        if (lineOfGrandLivre != null) {
-                            grandLivres[indexInGrandLivres] = lineOfGrandLivre;
-                            if (!lineOfGrandLivre.journal().isEmpty()) {
-                                journals.add(lineOfGrandLivre.journal());
-                            }
-                            if (lineOfGrandLivre.account().account().equals(BANK_2_ACCOUNT)) {
-                                lineBankInGrandLivre.add(lineOfGrandLivre);
-                            }
-                            if (lineOfGrandLivre.account().account().equals(BANK_1_ACCOUNT)) {
-                                if (!lineOfGrandLivre.label().contains("Report de ")) {
-                                    lineBankInGrandLivre.add(lineOfGrandLivre);
-                                }
-                            }
-                            indexInGrandLivres++;
-                        }
-                    } else if (Ledger.isTotalAccount(line)) {
-                        TotalAccount totalAccount = Ledger.totalAccount(line, accounts);
-                        if (totalAccount != null) {
-                            grandLivres[indexInGrandLivres] = totalAccount;
-                            indexInGrandLivres++;
-                        }
-                    } else if (Ledger.isTotalBuilding(line)) {
-                        TotalBuilding totalBuilding = Ledger.totalBuilding(line);
-                        grandLivres[indexInGrandLivres] = totalBuilding;
-                        indexInGrandLivres++;
+                if (line.isEmpty()) {
+                    continue;
+                }
+                if (Ledger.isLigne(line)) {
+                    Line lineOfGrandLivre = Ledger.line(line, accounts);
+                    if (lineOfGrandLivre == null) {
+                        continue;
                     }
+                    grandLivres[indexInGrandLivres++] = lineOfGrandLivre;
+                    if (!lineOfGrandLivre.journal().isEmpty()) {
+                        journals.add(lineOfGrandLivre.journal());
+                    }
+                    String accountNumber = lineOfGrandLivre.account().account();
+                    if (accountNumber.equals(BANK_2_ACCOUNT) || 
+                        (accountNumber.equals(BANK_1_ACCOUNT) && !lineOfGrandLivre.label().contains("Report de "))) {
+                        lineBankInGrandLivre.add(lineOfGrandLivre);
+                    }
+                } else if (Ledger.isTotalAccount(line)) {
+                    TotalAccount totalAccount = Ledger.totalAccount(line, accounts);
+                    if (totalAccount != null) {
+                        grandLivres[indexInGrandLivres++] = totalAccount;
+                    }
+                } else if (Ledger.isTotalBuilding(line)) {
+                    TotalBuilding totalBuilding = Ledger.totalBuilding(line);
+                    grandLivres[indexInGrandLivres++] = totalBuilding;
                 }
             }
         } catch (IOException e) {
@@ -104,7 +98,7 @@ public class Main {
         writeFileCSVGrandLivre(grandLivres);
         String nameFile = infoGrandLivre.printDate().substring(6) + "-" + infoGrandLivre.printDate().substring(3, 5) + "-" + infoGrandLivre.printDate().substring(0, 2)
                 + " Grand livre " + infoGrandLivre.syndicName().substring(0, infoGrandLivre.syndicName().length() - 1).trim()
-                + " au " + infoGrandLivre.stopDate().substring(6) + "-" + infoGrandLivre.stopDate().substring(3, 5) + "-" + infoGrandLivre.stopDate().substring(0, 2)
+                + " au " + infoGrandLivre.stopDate()
                 + ".xlsx";
         writeFileExcelGrandLivre(grandLivres, nameFile, journals);
 

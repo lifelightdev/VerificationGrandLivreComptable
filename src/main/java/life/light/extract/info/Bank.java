@@ -24,6 +24,7 @@ public class Bank {
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String BANK_1_DATA_FORMAT = "dd.MM.yy";
     public static final String BANK_2_DATA_FORMAT = "dd/MM/yyyy";
+    public static final String ACCOUNT_BANK = "512";
 
     private Bank() { }
 
@@ -61,7 +62,7 @@ public class Bank {
                         while ((line = reader.readLine()) != null) {
                             String nouveauSoldeAu = "Nouveau solde au";
                             if (!findDateIn(line).isEmpty() && (!line.contains(nouveauSoldeAu))) {
-                                if (operationDate != null && label != null && valueDate != null) {
+                                if (operationDate != null && !label.toString().isEmpty() && valueDate != null) {
                                     BankLine bankLine = new BankLine(year, operationDate.getMonthValue(), operationDate, valueDate, account, label.toString().trim(), debit, credit);
                                     bankLines.add(bankLine);
                                 } else {
@@ -98,7 +99,7 @@ public class Bank {
                                     label.append(" ").append(line);
                                 }
                             } else  if (line.contains(nouveauSoldeAu)){
-                                BankLine bankLine = new BankLine(2024, operationDate.getMonthValue(), operationDate, valueDate, account, label.toString().trim(), debit, credit);
+                                BankLine bankLine = new BankLine(year, operationDate.getMonthValue(), operationDate, valueDate, account, label.toString().trim(), debit, credit);
                                 bankLines.add(bankLine);
                             }
                         }
@@ -140,5 +141,15 @@ public class Bank {
             index++;
         } while (ligne[index].isEmpty());
         return index;
+    }
+
+    public static List<TypeAccount> getBanks(Map<String, TypeAccount> accounts) {
+        List<TypeAccount> accountsBank = new ArrayList<>();
+        for (TypeAccount account : accounts.values()) {
+            if (account.account().startsWith(ACCOUNT_BANK)){
+                accountsBank.add(account);
+            }
+        }
+        return accountsBank;
     }
 }

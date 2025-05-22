@@ -1,7 +1,9 @@
 package life.light.extract.info;
 
+import life.light.FileOfTest;
 import life.light.type.*;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -12,6 +14,23 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class LedgerTest {
+
+    Map<String, TypeAccount> accounts = new HashMap<>();
+    TypeAccount accountBank1 = new TypeAccount("51220", "Banque 1");
+    TypeAccount accountBank2 = new TypeAccount("51221", "Banque 2");
+    String nameFileTestLedger = "";
+
+    @BeforeEach
+    void setUp() {
+        accounts.put(accountBank1.account(), accountBank1);
+        accounts.put(accountBank2.account(), accountBank2);
+        FileOfTest fileOfTest = new FileOfTest();
+        try {
+            nameFileTestLedger = fileOfTest.createMinimalLedgerFile();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @ParameterizedTest
     @CsvSource({
@@ -54,16 +73,16 @@ class LedgerTest {
 
     @Test
     void getInfoGrandLivre() {
-        InfoGrandLivre infoGrandLivre = Ledger.getInfoGrandLivre(".\\temp\\grand_livre_test.txt");
+        InfoGrandLivre infoGrandLivre = Ledger.getInfoGrandLivre(nameFileTestLedger);
         assertEquals("C'est le nom du Syndic", infoGrandLivre.syndicName());
         assertEquals("11/04/2025", infoGrandLivre.printDate());
-        assertEquals("31/12/2024", infoGrandLivre.stopDate());
+        assertEquals("2024-12-31", infoGrandLivre.stopDate().toString());
         assertEquals("75000", infoGrandLivre.postalCode());
     }
 
     @Test
     void getNumberOfLineInFile() {
-        int result = Ledger.getNumberOfLineInFile(".\\temp\\grand_livre_test.txt");
+        int result = Ledger.getNumberOfLineInFile(nameFileTestLedger);
         assertEquals(11, result);
     }
 
