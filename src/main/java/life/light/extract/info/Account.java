@@ -2,6 +2,7 @@ package life.light.extract.info;
 
 import life.light.type.InfoGrandLivre;
 import life.light.type.TypeAccount;
+import life.light.write.WriteFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -11,9 +12,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
-import static life.light.write.WriteFile.writeFileCSVAccounts;
-import static life.light.write.WriteFile.writeFileExcelAccounts;
 
 public class Account {
 
@@ -36,8 +34,9 @@ public class Account {
         LOGGER.info("Il y a {} comptes dans le grandlivre", accounts.size());
 
         String nameFile = "." + File.separator + "resultat" + File.separator + "Plan comptable de " + infoGrandLivre.syndicName();
-        writeFileCSVAccounts(accounts, nameFile + ".csv");
-        writeFileExcelAccounts(accounts, nameFile + ".xlsx");
+        WriteFile writeFile = new WriteFile();
+        writeFile.writeFileCSVAccounts(accounts, nameFile + ".csv");
+        writeFile.writeFileExcelAccounts(accounts, nameFile + ".xlsx");
 
         return accounts;
     }

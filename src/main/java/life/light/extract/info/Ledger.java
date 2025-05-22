@@ -1,6 +1,7 @@
 package life.light.extract.info;
 
 import life.light.type.*;
+import life.light.write.WriteFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,10 +15,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
-import static life.light.Main.*;
+import static life.light.Main.BANK_1_ACCOUNT;
+import static life.light.Main.BANK_2_ACCOUNT;
 import static life.light.extract.info.OutilInfo.*;
-import static life.light.write.WriteFile.writeFileCSVGrandLivre;
-import static life.light.write.WriteFile.writeFileExcelGrandLivre;
 
 public class Ledger {
 
@@ -472,13 +472,13 @@ public class Ledger {
         return new TotalBuilding(label.toString().trim().replace(" )", ")"), debit.toString().trim().replace(" ", "").replace(EURO, ""), credit.toString().trim().replace(" ", "").replace(EURO, ""));
     }
 
-    public List<Line> getInfoBankGrandLivre(InfoGrandLivre infoGrandLivre, Map<String, TypeAccount> accounts) {
+    public List<Line> getInfoBankGrandLivre(InfoGrandLivre infoGrandLivre, Map<String, TypeAccount> accounts, String pathDirectoryLeger, String pathDirectoryInvoice) {
         // Géneration du grand livre
-        Object[] grandLivres = new Object[getNumberOfLineInFile(PATH_DIRECTORY_LEDGER)];
+        Object[] grandLivres = new Object[getNumberOfLineInFile(pathDirectoryLeger)];
         TreeSet<String> journals = new TreeSet<>();
         List<Line> lineBankInGrandLivre = new ArrayList<>();
         int indexInGrandLivres = 0;
-        try (BufferedReader reader = new BufferedReader(new FileReader(PATH_DIRECTORY_LEDGER))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(pathDirectoryLeger))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.isEmpty()) {
@@ -512,12 +512,13 @@ public class Ledger {
             LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
         }
 
-        writeFileCSVGrandLivre(grandLivres);
+        WriteFile writeFile = new WriteFile();
+        writeFile.writeFileCSVGrandLivre(grandLivres);
         String nameFile = infoGrandLivre.printDate().substring(6) + "-" + infoGrandLivre.printDate().substring(3, 5) + "-" + infoGrandLivre.printDate().substring(0, 2)
                 + " Grand livre " + infoGrandLivre.syndicName().substring(0, infoGrandLivre.syndicName().length() - 1).trim()
                 + " au " + infoGrandLivre.stopDate()
                 + ".xlsx";
-        writeFileExcelGrandLivre(grandLivres, nameFile, journals);
+        writeFile.writeFileExcelGrandLivre(grandLivres, nameFile, journals, pathDirectoryInvoice);
         return lineBankInGrandLivre;
     }
 }

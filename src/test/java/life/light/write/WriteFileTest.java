@@ -11,16 +11,13 @@ import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
+import java.util.*;
 
 class WriteFileTest {
 
     Map<String, TypeAccount> accounts = new HashMap<>();
     TreeSet<String> journals = new TreeSet<>();
+    WriteFile writeFile = new WriteFile();
 
     @BeforeEach
     void setUp() {
@@ -35,7 +32,7 @@ class WriteFileTest {
     void writeFileCSVAccountsTest() {
 
         String filename = "." + File.separator + "temp" + File.separator + "ListeDesCompteTEST.csv";
-        WriteFile.writeFileCSVAccounts(accounts, filename);
+        writeFile.writeFileCSVAccounts(accounts, filename);
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             String line = reader.readLine();
             Assertions.assertEquals("Compte;Intitulé du compte;", line);
@@ -52,7 +49,7 @@ class WriteFileTest {
     @Test
     void writeFileExcelAccountsTest() {
         String filename = "." + File.separator + "temp" + File.separator + "ListeDesCompteTEST.xlsx";
-        WriteFile.writeFileExcelAccounts(accounts, filename);
+        writeFile.writeFileExcelAccounts(accounts, filename);
         try (FileInputStream fileInputStream = new FileInputStream(filename);
              Workbook workbook = new XSSFWorkbook(fileInputStream)) {
             Assertions.assertEquals(1, workbook.getNumberOfSheets());
@@ -89,7 +86,7 @@ class WriteFileTest {
 
         // Execute the method to test
         String filename = "." + File.separator + "temp" + File.separator + "GrandLivre.csv";
-        WriteFile.writeFileCSVGrandLivre(grandLivres);
+        writeFile.writeFileCSVGrandLivre(grandLivres);
 
         // Verify the file content
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
@@ -130,7 +127,8 @@ class WriteFileTest {
         // Execute the method to test
         String filename = "TestGrandLivre.xlsx";
         String filePath = "." + File.separator + "temp" + File.separator + filename;
-        WriteFile.writeFileExcelGrandLivre(grandLivres, filename, journals);
+        String pathDirectoryInvoice = "";
+        writeFile.writeFileExcelGrandLivre(grandLivres, filename, journals, pathDirectoryInvoice);
 
         // Verify the file content
         try (FileInputStream fileInputStream = new FileInputStream(filePath);
@@ -190,7 +188,7 @@ class WriteFileTest {
 
         // Execute the method to test
         String filename = "." + File.separator + "temp" + File.separator + "EtatRapprochement_TEST.xlsx";
-        WriteFile.writeFileExcelEtatRaprochement(grandLivres, filename, bankLines);
+        writeFile.writeFileExcelEtatRaprochement(grandLivres, filename, bankLines);
 
         // Verify the file content
         try (FileInputStream fileInputStream = new FileInputStream(filename);

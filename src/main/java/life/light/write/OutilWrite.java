@@ -1,6 +1,9 @@
 package life.light.write;
 
-import life.light.type.*;
+import life.light.type.BankLine;
+import life.light.type.Line;
+import life.light.type.TotalAccount;
+import life.light.type.TotalBuilding;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.common.usermodel.HyperlinkType;
@@ -9,12 +12,12 @@ import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
-
-import static life.light.Main.PATH_DIRECTORY_INVOICE;
+import java.util.List;
 
 public class OutilWrite {
 
@@ -38,10 +41,7 @@ public class OutilWrite {
     public static final String KO = "KO";
     public static final String OK = "OK";
 
-    private OutilWrite() {
-    }
-
-    public static void writeWorkbook(String fileName, Workbook workbook) {
+    public void writeWorkbook(String fileName, Workbook workbook) {
         try (FileOutputStream outputStream = new FileOutputStream(fileName)) {
             workbook.write(outputStream);
             LOGGER.info("L'écriture du fichier {} est terminée.", fileName);
@@ -50,8 +50,8 @@ public class OutilWrite {
         }
     }
 
-    public static void getTotalBuilding(TotalBuilding grandLivre, Row row, CellStyle styleTotal, CellStyle styleTotalAmount,
-                                         Workbook workbook, List<Integer> lineTotals) {
+    public void getTotalBuilding(TotalBuilding grandLivre, Row row, CellStyle styleTotal, CellStyle styleTotalAmount,
+                                 Workbook workbook, List<Integer> lineTotals) {
         Cell cell;
         for (int idCell = 0; idCell < 9; idCell++) {
             cell = row.createCell(idCell);
@@ -87,7 +87,7 @@ public class OutilWrite {
         workbook.setForceFormulaRecalculation(true);
     }
 
-    public static void getTotalAccount(TotalAccount grandLivre, Row row, CellStyle styleTotal, CellStyle styleTotalAmount, Workbook workbook, int lastRowNumTotal) {
+    public void getTotalAccount(TotalAccount grandLivre, Row row, CellStyle styleTotal, CellStyle styleTotalAmount, Workbook workbook, int lastRowNumTotal) {
         Cell cell;
         if (!grandLivre.account().account().isEmpty()) {
             cell = row.createCell(0);
@@ -185,7 +185,7 @@ public class OutilWrite {
         cellMessqage.setCellStyle(styleTotalAmount);
     }
 
-    public static void getLineGrandLivre(Line grandLivre, Row row, CellStyle style, CellStyle styleAmount, Workbook workbook, boolean verif) {
+    public void getLineGrandLivre(Line grandLivre, Row row, CellStyle style, CellStyle styleAmount, Workbook workbook, boolean verif, String pathDirectoryInvoice) {
         int cellNum = 0;
 
         cellNum = addAccountCell(grandLivre, row, style, cellNum);
@@ -205,11 +205,11 @@ public class OutilWrite {
         cellNum = addSoldeCell(grandLivre, row, styleAmount, cellNum, creditCell, debitCell);
 
         if (verif) {
-            addVerifCells(grandLivre, row, style, workbook, cellNum);
+            addVerifCells(grandLivre, row, style, workbook, cellNum, pathDirectoryInvoice);
         }
     }
 
-    public static void getLineEtatRapprochement(Line grandLivre, Row row, CellStyle style, CellStyle styleAmount, BankLine bankLine, String message) {
+    public void getLineEtatRapprochement(Line grandLivre, Row row, CellStyle style, CellStyle styleAmount, BankLine bankLine, String message) {
         int cellNum = 0;
         if (grandLivre != null) {
             //LOGGER.info("Dans l'onglet " + row.getSheet().getSheetName() + " ajout de la ligne du grand livre " + grandLivre.account().account() + " label " + grandLivre.label() + " debit " + grandLivre.debit() + " credit " + grandLivre.credit());
@@ -268,7 +268,7 @@ public class OutilWrite {
         addlineBlue(styleAmount, messageCell);
     }
 
-    private static int addVerifCells(Line grandLivre, Row row, CellStyle style, Workbook workbook, int cellNum) {
+    private int addVerifCells(Line grandLivre, Row row, CellStyle style, Workbook workbook, int cellNum, String pathDirectoryInvoice) {
         String message = "";
         CreationHelper createHelper = workbook.getCreationHelper();
         Hyperlink link = createHelper.createHyperlink(HyperlinkType.FILE);
@@ -278,7 +278,7 @@ public class OutilWrite {
         } else {
             if (grandLivre.account().account().startsWith(CLASSE_6)
                     || (grandLivre.account().account().startsWith("401")) && (grandLivre.accountCounterpart().account().startsWith(CLASSE_6))) {
-                message = getMessageFindDocument(grandLivre, verifCell, message, link);
+                message = getMessageFindDocument(grandLivre, verifCell, message, link, pathDirectoryInvoice);
             }
             if (grandLivre.accountCounterpart() == null) {
                 verifCell.setCellValue(KO);
@@ -307,8 +307,8 @@ public class OutilWrite {
         return cellNum;
     }
 
-    private static String getMessageFindDocument(Line grandLivre, Cell verifCell, String message, Hyperlink link) {
-        File pathDirectoryInvoice = new File(PATH_DIRECTORY_INVOICE);
+    private String getMessageFindDocument(Line grandLivre, Cell verifCell, String message, Hyperlink link, String thePathDirectoryInvoice) {
+        File pathDirectoryInvoice = new File(thePathDirectoryInvoice);
         File[] files = pathDirectoryInvoice.listFiles();
         if (null != files) {
             boolean find = false;
@@ -347,7 +347,7 @@ public class OutilWrite {
         return message;
     }
 
-    private static String getMessageVerifLineReport(Line grandLivre, Cell verifCell, CellStyle style, String message) {
+    private String getMessageVerifLineReport(Line grandLivre, Cell verifCell, CellStyle style, String message) {
         getCellStyleVerifRed(style);
         verifCell.setCellStyle(style);
         String amount = getAmountInLineReport(grandLivre);
@@ -376,11 +376,11 @@ public class OutilWrite {
         return message;
     }
 
-    private static String getAmountInLineReport(Line grandLivre) {
+    private String getAmountInLineReport(Line grandLivre) {
         return grandLivre.label().substring(REPORT_DE.length(), grandLivre.label().length() - 1).trim().replace(" ", "");
     }
 
-    private static int addSoldeCell(Line grandLivre, Row row, CellStyle style, int cellNum, Cell creditCell, Cell debitCell) {
+    private int addSoldeCell(Line grandLivre, Row row, CellStyle style, int cellNum, Cell creditCell, Cell debitCell) {
         Cell soldeCell = row.createCell(cellNum);
         String formule;
         if (grandLivre.label().startsWith(REPORT_DE) || row.getRowNum() == 1) {
@@ -397,7 +397,7 @@ public class OutilWrite {
         return cellNum;
     }
 
-    private static Cell addCreditCell(Line grandLivre, Row row, CellStyle style, int cellNum) {
+    private Cell addCreditCell(Line grandLivre, Row row, CellStyle style, int cellNum) {
         Cell creditCell = row.createCell(cellNum);
         creditCell.setCellValue(grandLivre.credit());
         if (isDouble(grandLivre.credit())) {
@@ -409,7 +409,7 @@ public class OutilWrite {
         return creditCell;
     }
 
-    private static Cell addDebitCell(Line grandLivre, Row row, CellStyle style, int cellNum) {
+    private Cell addDebitCell(Line grandLivre, Row row, CellStyle style, int cellNum) {
         Cell debitCell = row.createCell(cellNum);
         debitCell.setCellValue(grandLivre.debit());
         if (isDouble(grandLivre.debit())) {
@@ -421,7 +421,7 @@ public class OutilWrite {
         return debitCell;
     }
 
-    private static int addLabelCell(Line grandLivre, Row row, CellStyle style, int cellNum) {
+    private int addLabelCell(Line grandLivre, Row row, CellStyle style, int cellNum) {
         Cell labelCell = row.createCell(cellNum);
         if (!grandLivre.label().isEmpty()) {
             labelCell.setCellValue(grandLivre.label());
@@ -433,7 +433,7 @@ public class OutilWrite {
         return cellNum;
     }
 
-    private static int addCheckNumberCell(Line grandLivre, Row row, CellStyle style, int cellNum) {
+    private int addCheckNumberCell(Line grandLivre, Row row, CellStyle style, int cellNum) {
         Cell checkNumberCell = row.createCell(cellNum);
         if (isDouble(grandLivre.checkNumber())) {
             checkNumberCell.setCellValue(Double.parseDouble(grandLivre.checkNumber()));
@@ -445,7 +445,7 @@ public class OutilWrite {
         return cellNum;
     }
 
-    private static int addCounterPartCell(Line grandLivre, Row row, CellStyle style, int cellNum) {
+    private int addCounterPartCell(Line grandLivre, Row row, CellStyle style, int cellNum) {
         Cell counterPartCell = row.createCell(cellNum++);
         if (grandLivre.accountCounterpart() != null) {
             if (isDouble(grandLivre.accountCounterpart().account())) {
@@ -465,7 +465,7 @@ public class OutilWrite {
         return cellNum;
     }
 
-    private static int addJournalCell(Line grandLivre, Row row, CellStyle style, int cellNum) {
+    private int addJournalCell(Line grandLivre, Row row, CellStyle style, int cellNum) {
         Cell journalCell = row.createCell(cellNum);
         journalCell.setCellValue(grandLivre.journal());
         if (!grandLivre.journal().isEmpty()) {
@@ -482,7 +482,7 @@ public class OutilWrite {
         return cellNum;
     }
 
-    private static int addDateCell(Line grandLivre, Row row, CellStyle style, int cellNum) {
+    private int addDateCell(Line grandLivre, Row row, CellStyle style, int cellNum) {
         Cell dateCell = row.createCell(cellNum);
         dateCell.setCellValue(grandLivre.date());
         addlineBlue(getCellStyleAlignmentLeft(style), dateCell);
@@ -490,7 +490,7 @@ public class OutilWrite {
         return cellNum;
     }
 
-    private static int addDocumentCell(Line grandLivre, Row row, CellStyle cellStyle, int cellNum) {
+    private int addDocumentCell(Line grandLivre, Row row, CellStyle cellStyle, int cellNum) {
         Cell documentCell = row.createCell(cellNum);
         documentCell.setCellValue(grandLivre.document());
         if (isDouble(grandLivre.document())) {
@@ -506,7 +506,7 @@ public class OutilWrite {
         return cellNum;
     }
 
-    private static int addAccountCell(Line grandLivre, Row row, CellStyle cellStyle, int cellNum) {
+    private int addAccountCell(Line grandLivre, Row row, CellStyle cellStyle, int cellNum) {
         String numAccount = grandLivre.account().account();
         boolean isNotEmptyAccount = !numAccount.isEmpty();
         if (isNotEmptyAccount) {
@@ -522,7 +522,7 @@ public class OutilWrite {
         return cellNum;
     }
 
-    static Cell getAccountNumberCell(String accountNumber, Row row, int numColAccount) {
+    Cell getAccountNumberCell(String accountNumber, Row row, int numColAccount) {
         Cell accountNumberCell = row.createCell(numColAccount);
         // Pour ne pas avoir d'erreur de formatage dans excel
         if (isDouble(accountNumber)) {
@@ -533,13 +533,13 @@ public class OutilWrite {
         return accountNumberCell;
     }
 
-    private static CellStyle getCellStyleVerifRed(CellStyle style) {
+    private CellStyle getCellStyleVerifRed(CellStyle style) {
         style.setFillForegroundColor(BACKGROUND_COLOR_RED);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return style;
     }
 
-    private static void addlineBlue(CellStyle cellStyle, Cell cell) {
+    private void addlineBlue(CellStyle cellStyle, Cell cell) {
         if (cell.getRowIndex() % 2 == 0) {
             cellStyle.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
         } else {
@@ -549,7 +549,7 @@ public class OutilWrite {
         cell.setCellStyle(cellStyle);
     }
 
-    public static void getCellsEnteteGrandLivre(Sheet sheet, CellStyle styleHeader) {
+    public void getCellsEnteteGrandLivre(Sheet sheet, CellStyle styleHeader) {
         int index = 0;
         Row headerRow = sheet.createRow(index);
         for (String label : NOM_ENTETE_COLONNE_GRAND_LIVRE) {
@@ -559,7 +559,7 @@ public class OutilWrite {
         }
     }
 
-    public static void getCellsEnteteEtatRapprochement(Sheet sheet, CellStyle styleHeader) {
+    public void getCellsEnteteEtatRapprochement(Sheet sheet, CellStyle styleHeader) {
         int index = 0;
         Row headerRow = sheet.createRow(index);
         for (String label : NOM_ENTETE_COLONNE_ETAT_RAPPROCHEMENT) {
@@ -569,37 +569,37 @@ public class OutilWrite {
         }
     }
 
-    public static CellStyle getCellStyleTotalAmount(CellStyle style, Short dataAmount) {
+    public CellStyle getCellStyleTotalAmount(CellStyle style, Short dataAmount) {
         style = getCellStyleAmount(style, dataAmount);
         style.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return style;
     }
 
-    public static CellStyle getCellStyleAmount(CellStyle style, Short dataAmount) {
+    public CellStyle getCellStyleAmount(CellStyle style, Short dataAmount) {
         style.setDataFormat(dataAmount);
         return style;
     }
 
-    public static CellStyle getCellStyleTotal(CellStyle styleTotal) {
+    public CellStyle getCellStyleTotal(CellStyle styleTotal) {
         styleTotal.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
         styleTotal.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return styleTotal;
     }
 
-    private static CellStyle getCellStyleAlignmentLeft(CellStyle style) {
+    private CellStyle getCellStyleAlignmentLeft(CellStyle style) {
         style.setAlignment(HorizontalAlignment.LEFT);
         return style;
     }
 
-    private static CellStyle getCellStyleEntete(CellStyle style) {
+    private CellStyle getCellStyleEntete(CellStyle style) {
         style.setAlignment(HorizontalAlignment.CENTER);
         style.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return style;
     }
 
-    private static boolean isDouble(String str) {
+    private boolean isDouble(String str) {
         if (str == null || str.isEmpty()) {
             return false; // Une chaîne nulle ou vide ne peut pas être un double
         }
@@ -610,5 +610,4 @@ public class OutilWrite {
             return false;
         }
     }
-
 }
