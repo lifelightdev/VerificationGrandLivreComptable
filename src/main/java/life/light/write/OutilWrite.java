@@ -333,15 +333,32 @@ public class OutilWrite {
                                     link.setAddress(fichierDuSousDossier.toURI().toString().replace("F:", "D:"));
                                     break;
                                 }
+                            } else if (fichierDuSousDossier.isDirectory()) {
+                                File[] sousSousDossier = fichierDuSousDossier.listFiles();
+                                if (null != sousSousDossier) {
+                                    for (File fichierDuSousSousDossier : sousSousDossier) {
+                                        if (fichierDuSousSousDossier.isFile()) {
+                                            if (fichierDuSousSousDossier.getName().contains(grandLivre.document())) {
+                                                verifCell.setCellValue("OK");
+                                                find = true;
+                                                message = fichierDuSousSousDossier.getAbsoluteFile().toString().replace("F:", "D:");
+                                                link.setAddress(fichierDuSousSousDossier.toURI().toString().replace("F:", "D:"));
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
             if (!find) {
-                message = "Impossible de trouver la pièce";
-                LOGGER.info("{} : {} dans le dossier : {} sur le compte {} libelle de l'opération {}",
-                        message, grandLivre.document(), pathDirectoryInvoice, grandLivre.account().account(), grandLivre.label());
+                message = "Impossible de trouver la pièce " + grandLivre.document()
+                        + " dans le dossier : " + pathDirectoryInvoice
+                        + " sur le compte " + grandLivre.account().account()
+                        + " avec libelle de l'opération " + grandLivre.label();
+                LOGGER.info("{}",message);
             }
         }
         return message;
