@@ -17,27 +17,26 @@ public class Account {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public Map<String, TypeAccount> getAccounts(String fileName, InfoGrandLivre infoGrandLivre, String codeCondominium) {
+    public Map<String, TypeAccount> getAccounts(String fileName, String codeCondominium) {
         Map<String, TypeAccount> accounts = new HashMap<>();
         Ledger ledger = new Ledger(codeCondominium);
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             accounts = reader.lines()
                     .filter(ledger::isAcccount)
                     .map(ledger::account)
-                    .collect(HashMap::new, 
-                            (map, account) -> map.put(account.account(), account), 
+                    .collect(HashMap::new,
+                            (map, account) -> map.put(account.account(), account),
                             HashMap::putAll);
         } catch (IOException e) {
             LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
         }
-        LOGGER.info("Il y a {} comptes dans le grandlivre", accounts.size());
+        return accounts;
+    }
 
-        String nameFile = "." + File.separator + "resultat"
-                + File.separator + "Plan comptable de " + infoGrandLivre.syndicName();
+    public void writeFilesAccounts(Map<String, TypeAccount> accounts, InfoGrandLivre infoGrandLivre, String outputPath) {
+        String nameFile = "." + File.separator + outputPath + File.separator + "Plan comptable de " + infoGrandLivre.syndicName();
         WriteFile writeFile = new WriteFile();
         writeFile.writeFileCSVAccounts(accounts, nameFile + ".csv");
         writeFile.writeFileExcelAccounts(accounts, nameFile + ".xlsx");
-
-        return accounts;
     }
 }

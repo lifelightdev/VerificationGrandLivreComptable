@@ -92,8 +92,8 @@ public class WriteFile {
         }
     }
 
-    public void writeFileCSVGrandLivre(Object[] grandLivres) {
-        String exitFile = ".\\temp\\GrandLivre.csv";
+    public void writeFileCSVGrandLivre(Object[] grandLivres, String exitFile ) {
+
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(exitFile))) {
             StringBuilder line = new StringBuilder("Pièce; Date; Compte; Journal; Contrepartie; N° chèque; Libellé; Débit; Crédit;");
             line.append(System.lineSeparator());

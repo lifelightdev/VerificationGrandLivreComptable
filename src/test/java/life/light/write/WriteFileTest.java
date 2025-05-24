@@ -31,7 +31,7 @@ class WriteFileTest {
     @Test
     void writeFileCSVAccountsTest() {
 
-        String filename = "." + File.separator + "temp" + File.separator + "ListeDesCompteTEST.csv";
+        String filename = "." + File.separator + "TEST_temp" + File.separator + "ListeDesCompteTEST.csv";
         writeFile.writeFileCSVAccounts(accounts, filename);
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             String line = reader.readLine();
@@ -48,7 +48,7 @@ class WriteFileTest {
 
     @Test
     void writeFileExcelAccountsTest() {
-        String filename = "." + File.separator + "temp" + File.separator + "ListeDesCompteTEST.xlsx";
+        String filename = "." + File.separator + "TEST_temp" + File.separator + "ListeDesCompteTEST.xlsx";
         writeFile.writeFileExcelAccounts(accounts, filename);
         try (FileInputStream fileInputStream = new FileInputStream(filename);
              Workbook workbook = new XSSFWorkbook(fileInputStream)) {
@@ -85,8 +85,8 @@ class WriteFileTest {
         Object[] grandLivres = {line1, line2, totalAccount1, totalAccount2, totalBuilding};
 
         // Execute the method to test
-        String filename = "." + File.separator + "temp" + File.separator + "GrandLivre.csv";
-        writeFile.writeFileCSVGrandLivre(grandLivres);
+        String filename = "." + File.separator + "TEST_temp" + File.separator + "GrandLivre.csv";
+        writeFile.writeFileCSVGrandLivre(grandLivres, filename);
 
         // Verify the file content
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {

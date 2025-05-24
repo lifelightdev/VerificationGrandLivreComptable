@@ -1,13 +1,11 @@
 package life.light.extract.info;
 
 import life.light.FileOfTest;
-import life.light.type.InfoGrandLivre;
 import life.light.type.TypeAccount;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
 import java.util.Map;
 
 class AccountTest {
@@ -27,10 +25,7 @@ class AccountTest {
 
     @Test
     void getAccounts() {
-        InfoGrandLivre infoGrandLivre = new InfoGrandLivre("Name",
-                LocalDate.of(2024, 12, 31), LocalDate.of(2024, 12, 31),
-                "75000");
-        Map<String, TypeAccount> accounts = account.getAccounts(nameFileTestLedger, infoGrandLivre, "001");
+        Map<String, TypeAccount> accounts = account.getAccounts(nameFileTestLedger, "001");
         Assertions.assertEquals(1, accounts.size());
         TypeAccount account = accounts.get("40100-0001");
         Assertions.assertEquals("40100-0001", account.account());

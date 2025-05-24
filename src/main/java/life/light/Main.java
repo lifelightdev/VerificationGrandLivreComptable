@@ -42,7 +42,8 @@ public class Main {
         InfoGrandLivre infoGrandLivre = ledger.getInfoGrandLivre(pathDirectoryLeger);
 
         Account account = new Account();
-        Map<String, TypeAccount> accounts = account.getAccounts(pathDirectoryLeger, infoGrandLivre, codeCondominium);
+        Map<String, TypeAccount> accounts = account.getAccounts(pathDirectoryLeger,  codeCondominium);
+        account.writeFilesAccounts(accounts, infoGrandLivre, "resultat");
 
         List<Line> lineBankInGrandLivre = ledger.getInfoBankGrandLivre(infoGrandLivre, accounts, pathDirectoryLeger,
                 pathDirectoryInvoice, accountsbank);

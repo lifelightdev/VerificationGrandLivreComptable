@@ -509,7 +509,8 @@ public class Ledger {
         }
 
         WriteFile writeFile = new WriteFile();
-        writeFile.writeFileCSVGrandLivre(grandLivres);
+        String exitFile = ".\\resultat\\GrandLivre.csv";
+        writeFile.writeFileCSVGrandLivre(grandLivres, exitFile);
         String nameFile = infoGrandLivre.printDate() + " Grand livre " + infoGrandLivre.syndicName()
                 + " au " + infoGrandLivre.stopDate() + ".xlsx";
         String path = "." + File.separator + "resultat" + File.separator + nameFile;
