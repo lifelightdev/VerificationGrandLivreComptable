@@ -314,16 +314,13 @@ public class OutilWrite {
 
     private String getMessageFindDocument(Line grandLivre, Cell verifCell, String message, Hyperlink link, String thePathDirectoryInvoice) {
         File pathDirectoryInvoice = new File(thePathDirectoryInvoice);
+        File fileFound = null;
         File[] files = pathDirectoryInvoice.listFiles();
         if (null != files) {
-            boolean find = false;
             for (File fichier : files) {
                 if (fichier.isFile()) {
                     if (fichier.getName().contains(grandLivre.document())) {
-                        verifCell.setCellValue("OK");
-                        find = true;
-                        message = fichier.getAbsoluteFile().toString().replace("F:", "D:");
-                        link.setAddress(fichier.toURI().toString().replace("F:", "D:"));
+                        fileFound = fichier;
                         break;
                     }
                 } else if (fichier.isDirectory()) {
@@ -332,10 +329,7 @@ public class OutilWrite {
                         for (File fichierDuSousDossier : sousDossier) {
                             if (fichierDuSousDossier.isFile()) {
                                 if (fichierDuSousDossier.getName().contains(grandLivre.document())) {
-                                    verifCell.setCellValue("OK");
-                                    find = true;
-                                    message = fichierDuSousDossier.getAbsoluteFile().toString().replace("F:", "D:");
-                                    link.setAddress(fichierDuSousDossier.toURI().toString().replace("F:", "D:"));
+                                    fileFound = fichierDuSousDossier;
                                     break;
                                 }
                             } else if (fichierDuSousDossier.isDirectory()) {
@@ -344,10 +338,7 @@ public class OutilWrite {
                                     for (File fichierDuSousSousDossier : sousSousDossier) {
                                         if (fichierDuSousSousDossier.isFile()) {
                                             if (fichierDuSousSousDossier.getName().contains(grandLivre.document())) {
-                                                verifCell.setCellValue("OK");
-                                                find = true;
-                                                message = fichierDuSousSousDossier.getAbsoluteFile().toString().replace("F:", "D:");
-                                                link.setAddress(fichierDuSousSousDossier.toURI().toString().replace("F:", "D:"));
+                                                fileFound = fichierDuSousSousDossier;
                                                 break;
                                             }
                                         }
@@ -358,7 +349,10 @@ public class OutilWrite {
                     }
                 }
             }
-            if (!find) {
+            if (fileFound != null){
+                message = fileFound.getAbsoluteFile().toString().replace("F:", "D:");
+                link.setAddress(fileFound.toURI().toString().replace("F:", "D:"));
+            } else  {
                 message = "Impossible de trouver la pièce " + grandLivre.document()
                         + " dans le dossier : " + pathDirectoryInvoice
                         + " sur le compte " + grandLivre.account().account()
