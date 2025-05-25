@@ -636,19 +636,26 @@ public class OutilWrite {
         return style;
     }
 
-    public void getLineOfExpenseKey(LineOfExpenseKey line, Row row, CellStyle styleBlue) {
+    public void getLineOfExpenseKey(LineOfExpenseKey line, Row row, CellStyle styleTotal) {
         Cell cell;
-        if (line != null) {
-            cell = row.createCell(2);
-            cell.setCellValue(line.label() + " : " + line.key() + " " + line.value());
-            cell.setCellStyle(styleBlue);
+        int index = 0;
+        for (String label : NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES) {
+            cell = row.createCell(index++);
+            if (index == 3){
+                cell.setCellValue(line.label() + " : " + line.key() + " " + line.value());
+            }
+            cell.setCellStyle(styleTotal);
         }
     }
 
     public void getLineOfExpenseTotal(LineOfExpenseTotal line, Row row, CellStyle styleTotal, CellStyle styleTotalAmount) {
         Cell cell;
+        cell = row.createCell(0);
+        cell.setCellStyle(styleTotal);
+        cell = row.createCell(1);
+        cell.setCellStyle(styleTotal);
         if (!line.key().isEmpty()) {
-            cell = row.createCell(0);
+            cell = row.createCell(2);
             if (line.type().equals(TypeOfExpense.Key)) {
                 cell.setCellValue("Total de la clé : " + line.key());
             }
@@ -661,23 +668,41 @@ public class OutilWrite {
             cell.setCellStyle(styleTotal);
         }
         if (!line.amount().isEmpty()) {
-            cell = row.createCell(1);
-            cell.setCellValue(line.amount());
+            cell = row.createCell(3);
+            cell.setCellValue(Double.parseDouble(line.amount()));
             cell.setCellStyle(styleTotalAmount);
         }
         if (!line.deduction().isEmpty()) {
-            cell = row.createCell(2);
-            cell.setCellValue(line.deduction());
+            cell = row.createCell(4);
+            cell.setCellValue(Double.parseDouble(line.deduction()));
             cell.setCellStyle(styleTotalAmount);
         }
         if (!line.recovery().isEmpty()) {
-            cell = row.createCell(3);
-            cell.setCellValue(line.recovery());
+            cell = row.createCell(5);
+            cell.setCellValue(Double.parseDouble(line.recovery()));
             cell.setCellStyle(styleTotalAmount);
         }
     }
 
-    public void getLineOfExpense(LineOfExpense line, Row row, CellStyle styleBlue, CellStyle styleAmountBlue, String pathDirectoryInvoice) {
+    public void getLineOfExpense(LineOfExpense line, Row row, String pathDirectoryInvoice) {
+        Cell cell;
+        int index = 0;
+        cell = row.createCell(index++);
+        cell.setCellValue(line.document());
+        cell = row.createCell(index++);
+        cell.setCellValue(line.date().format(DATE_FORMATTER));
+        cell = row.createCell(index++);
+        cell.setCellValue(line.label());
+        cell = row.createCell(index++);
+        cell.setCellValue(line.amount());
+        if (!line.deduction().isEmpty()) {
+            cell = row.createCell(index++);
+            cell.setCellValue(line.deduction());
+        }
+        if (!line.recovery().isEmpty()) {
+            cell = row.createCell(index++);
+            cell.setCellValue(line.recovery());
+        }
 
     }
 }

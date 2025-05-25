@@ -106,11 +106,11 @@ public class Expense {
         String[] words = outilInfo.getWords(line);
         int index = 0;
         WordInWords wordInWords = getWordInWords(words, index);
-        String label = wordInWords.word().trim();
+        String label = wordInWords.word();
         index = wordInWords.index();
         String key = words[index++];
-        String value = getWordInWords(words, index).word().trim();
-        return new LineOfExpenseKey(key, label, value, type);
+        String value = getWordInWords(words, index).word();
+        return new LineOfExpenseKey(key, label.trim(), value.trim(), type);
     }
 
     private LineOfExpenseTotal getLineOfExpenseTotal(OutilInfo outilInfo, String line, TypeOfExpense type) {

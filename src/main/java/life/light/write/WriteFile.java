@@ -308,22 +308,16 @@ public class WriteFile {
             Sheet sheet = workbook.createSheet("Liste des dépenses");
             outilWrite.getCellsEnteteListeDesDepenses(sheet, styleHeader);
             int rowNum = 1;
-            int lastRowNumTotal = 0;
-            List<Integer> lineTotals = new ArrayList<>();
             for (Object line : listeDesDepenses) {
                 Row row = sheet.createRow(rowNum);
                 if (line instanceof LineOfExpenseKey) {
-                    outilWrite.getLineOfExpenseKey((LineOfExpenseKey) line, row, styleBlue);
+                    outilWrite.getLineOfExpenseKey((LineOfExpenseKey) line, row, styleTotal);
                 }
                 if (line instanceof LineOfExpenseTotal) {
                     outilWrite.getLineOfExpenseTotal((LineOfExpenseTotal) line, row, styleTotal, styleTotalAmount);
                 }
                 if (line instanceof LineOfExpense) {
-                    if (rowNum % 2 == 0) {
-                        outilWrite.getLineOfExpense((LineOfExpense) line, row, styleBlue, styleAmountBlue, pathDirectoryInvoice);
-                    } else {
-                        outilWrite.getLineOfExpense((LineOfExpense) line, row, styleBlue, styleAmountBlue, pathDirectoryInvoice);
-                    }
+                    outilWrite.getLineOfExpense((LineOfExpense) line, row, pathDirectoryInvoice);
                 }
                 rowNum++;
             }
