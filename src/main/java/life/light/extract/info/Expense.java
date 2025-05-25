@@ -80,6 +80,10 @@ public class Expense {
                             WordInWords wordInWords = getAmoutInWords(words, i);
                             deduction = wordInWords.word();
                             i = wordInWords.index();
+                        } else {
+                            WordInWords wordInWords = getAmoutInWords(words, i);
+                            recovery = wordInWords.word();
+                            i = wordInWords.index();
                         }
                         while (outilWrite.isDouble(words[i])) {
                             amount.insert(0, words[i]);

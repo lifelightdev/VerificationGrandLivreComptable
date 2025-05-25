@@ -55,6 +55,14 @@ class ExpenseTest {
         assertEquals("0.00", expenseLine.deduction());
         assertEquals("0.00", expenseLine.recovery());
 
+        // Verify expense lines
+        LineOfExpense expenseLine1 = (LineOfExpense) result[7];
+        assertEquals("38688", expenseLine1.document());
+        assertEquals(LocalDate.parse("15/04/2024", DateTimeFormatter.ofPattern("dd/MM/yyyy")), expenseLine1.date());
+        assertEquals("Remplacement", expenseLine1.label());
+        assertEquals("1800.00", expenseLine1.amount());
+        assertEquals("1800.00", expenseLine1.recovery());
+
         // Verify total lines
         LineOfExpenseTotal totalNature = (LineOfExpenseTotal) result[4];
         assertEquals("61100", totalNature.key());
@@ -63,7 +71,7 @@ class ExpenseTest {
         assertEquals("0.00", totalNature.recovery());
         assertEquals(TypeOfExpense.Nature, totalNature.type());
 
-        LineOfExpenseTotal totalKey = (LineOfExpenseTotal) result[8];
+        LineOfExpenseTotal totalKey = (LineOfExpenseTotal) result[9];
         assertEquals("001", totalKey.key());
         assertEquals("450.00", totalKey.amount());
         assertEquals("0.00", totalKey.deduction());
@@ -71,7 +79,7 @@ class ExpenseTest {
         assertEquals(TypeOfExpense.Key, totalKey.type());
 
 
-        LineOfExpenseTotal totalBuilding = (LineOfExpenseTotal) result[9];
+        LineOfExpenseTotal totalBuilding = (LineOfExpenseTotal) result[10];
         assertEquals("570.00", totalBuilding.amount());
         assertEquals("0.00", totalBuilding.deduction());
         assertEquals("0.00", totalBuilding.recovery());

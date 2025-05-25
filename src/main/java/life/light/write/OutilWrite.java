@@ -24,8 +24,15 @@ public class OutilWrite {
     public static final XSSFColor BACKGROUND_COLOR_WHITE = new XSSFColor(new java.awt.Color(255, 255, 255), null);
     private static final XSSFColor BACKGROUND_COLOR_GRAY = new XSSFColor(new java.awt.Color(200, 200, 200), null);
     private static final XSSFColor BACKGROUND_COLOR_RED = new XSSFColor(new java.awt.Color(255, 0, 0), null);
-    protected static final String[] NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES = {"Pièce", "Date", "Libellé", "Montant",
+    public static final String[] NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES = {"Pièce", "Date", "Libellé", "Montant",
             "Déduction", "Récuperation"};
+    private static final int ID_DOCUMENT_OF_LIST_OF_EXPENSES = 0;
+    private static final int ID_DATE_OF_LIST_OF_EXPENSES = 1;
+    private static final int ID_LABEL_OF_LIST_OF_EXPENSES = 2;
+    private static final int ID_AMOUNT_OF_LIST_OF_EXPENSES = 3;
+    private static final int ID_DEDUCTION_OF_LIST_OF_EXPENSES = 4;
+    private static final int ID_RECOVERY_OF_LIST_OF_EXPENSES = 5;
+
     protected static final String[] NOM_ENTETE_COLONNE_GRAND_LIVRE = {"Compte", "Intitulé du compte", "Pièce", "Date",
             "Journal", "Contrepartie", "Intitulé de la contrepartie", "N° chèque", "Libellé", "Débit", "Crédit",
             "Solde (Calculé)", "Vérification", "Commentaire"};
@@ -638,10 +645,9 @@ public class OutilWrite {
 
     public void getLineOfExpenseKey(LineOfExpenseKey line, Row row, CellStyle styleTotal) {
         Cell cell;
-        int index = 0;
-        for (String label : NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES) {
-            cell = row.createCell(index++);
-            if (index == 3){
+        for (int index = 0; index<NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES.length; index++) {
+            cell = row.createCell(index);
+            if (index == ID_LABEL_OF_LIST_OF_EXPENSES) {
                 cell.setCellValue(line.label() + " : " + line.key() + " " + line.value());
             }
             cell.setCellStyle(styleTotal);
@@ -650,12 +656,12 @@ public class OutilWrite {
 
     public void getLineOfExpenseTotal(LineOfExpenseTotal line, Row row, CellStyle styleTotal, CellStyle styleTotalAmount) {
         Cell cell;
-        cell = row.createCell(0);
+        cell = row.createCell(ID_DOCUMENT_OF_LIST_OF_EXPENSES);
         cell.setCellStyle(styleTotal);
-        cell = row.createCell(1);
+        cell = row.createCell(ID_DATE_OF_LIST_OF_EXPENSES);
         cell.setCellStyle(styleTotal);
         if (!line.key().isEmpty()) {
-            cell = row.createCell(2);
+            cell = row.createCell(ID_LABEL_OF_LIST_OF_EXPENSES);
             if (line.type().equals(TypeOfExpense.Key)) {
                 cell.setCellValue("Total de la clé : " + line.key());
             }
@@ -668,41 +674,57 @@ public class OutilWrite {
             cell.setCellStyle(styleTotal);
         }
         if (!line.amount().isEmpty()) {
-            cell = row.createCell(3);
+            cell = row.createCell(ID_AMOUNT_OF_LIST_OF_EXPENSES);
             cell.setCellValue(Double.parseDouble(line.amount()));
             cell.setCellStyle(styleTotalAmount);
         }
         if (!line.deduction().isEmpty()) {
-            cell = row.createCell(4);
+            cell = row.createCell(ID_DEDUCTION_OF_LIST_OF_EXPENSES);
             cell.setCellValue(Double.parseDouble(line.deduction()));
             cell.setCellStyle(styleTotalAmount);
         }
         if (!line.recovery().isEmpty()) {
-            cell = row.createCell(5);
+            cell = row.createCell(ID_RECOVERY_OF_LIST_OF_EXPENSES);
             cell.setCellValue(Double.parseDouble(line.recovery()));
             cell.setCellStyle(styleTotalAmount);
         }
     }
 
-    public void getLineOfExpense(LineOfExpense line, Row row, String pathDirectoryInvoice) {
+    public void getLineOfExpense(LineOfExpense line, Row row,CellStyle styleColor, CellStyle styleAmountColor, String pathDirectoryInvoice) {
         Cell cell;
-        int index = 0;
-        cell = row.createCell(index++);
+
+        cell = row.createCell(ID_DOCUMENT_OF_LIST_OF_EXPENSES);
         cell.setCellValue(line.document());
-        cell = row.createCell(index++);
+        cell.setCellStyle(styleColor);
+
+        cell = row.createCell(ID_DATE_OF_LIST_OF_EXPENSES);
         cell.setCellValue(line.date().format(DATE_FORMATTER));
-        cell = row.createCell(index++);
+        cell.setCellStyle(styleColor);
+
+        cell = row.createCell(ID_LABEL_OF_LIST_OF_EXPENSES);
         cell.setCellValue(line.label());
-        cell = row.createCell(index++);
-        cell.setCellValue(line.amount());
+        cell.setCellStyle(styleColor);
+
+        cell = row.createCell(ID_AMOUNT_OF_LIST_OF_EXPENSES);
+        cell.setCellValue(Double.parseDouble(line.amount()));
+        cell.setCellStyle(styleAmountColor);
+
         if (!line.deduction().isEmpty()) {
-            cell = row.createCell(index++);
-            cell.setCellValue(line.deduction());
-        }
-        if (!line.recovery().isEmpty()) {
-            cell = row.createCell(index++);
-            cell.setCellValue(line.recovery());
+            cell = row.createCell(ID_DEDUCTION_OF_LIST_OF_EXPENSES);
+            cell.setCellValue(Double.parseDouble(line.deduction()));
+            cell.setCellStyle(styleAmountColor);
+        } else {
+            cell = row.createCell(ID_DEDUCTION_OF_LIST_OF_EXPENSES);
+            cell.setCellStyle(styleAmountColor);
         }
 
+        if (!line.recovery().isEmpty()) {
+            cell = row.createCell(ID_RECOVERY_OF_LIST_OF_EXPENSES);
+            cell.setCellValue(Double.parseDouble(line.recovery()));
+            cell.setCellStyle(styleAmountColor);
+        } else {
+            cell = row.createCell(ID_RECOVERY_OF_LIST_OF_EXPENSES);
+            cell.setCellStyle(styleAmountColor);
+        }
     }
 }

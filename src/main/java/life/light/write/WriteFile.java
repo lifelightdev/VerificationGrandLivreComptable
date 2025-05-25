@@ -299,9 +299,9 @@ public class WriteFile {
             styleBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
             styleBlue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             CellStyle styleAmountWhite = outilWrite.getCellStyleAmount(workbook.createCellStyle(), dataAmount);
-            styleAmountWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
+            styleAmountWhite.setFillBackgroundColor(BACKGROUND_COLOR_WHITE);
             CellStyle styleAmountBlue = outilWrite.getCellStyleAmount(workbook.createCellStyle(), dataAmount);
-            styleAmountBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
+            styleAmountBlue.setFillBackgroundColor(BACKGROUND_COLOR_BLUE);
             CellStyle styleHeader = workbook.createCellStyle();
 
             // Créer une nouvelle feuille dans le classeur pour le grand livre
@@ -317,7 +317,11 @@ public class WriteFile {
                     outilWrite.getLineOfExpenseTotal((LineOfExpenseTotal) line, row, styleTotal, styleTotalAmount);
                 }
                 if (line instanceof LineOfExpense) {
-                    outilWrite.getLineOfExpense((LineOfExpense) line, row, pathDirectoryInvoice);
+                    if (rowNum % 2 == 0) {
+                        outilWrite.getLineOfExpense((LineOfExpense) line, row, styleWhite, styleAmountWhite, pathDirectoryInvoice);
+                    } else {
+                        outilWrite.getLineOfExpense((LineOfExpense) line, row, styleBlue, styleAmountBlue, pathDirectoryInvoice);
+                    }
                 }
                 rowNum++;
             }
