@@ -150,4 +150,37 @@ public class FileOfTest {
             throw new RuntimeException(e);
         }
     }
+
+    public String createExpenseListFile() {
+        try {
+            List<String> lines = Arrays.asList(
+                    "C'est le nom du Syndic",
+                    "8 AVENUE DES CHAMPS ELYSE 11/04/2025 Page : 1",
+                    "",
+                    "75000 PARIS Liste des dépenses arrêtée au 31/12/2024",
+                    "",
+                    "Pièce Date              Libellé                                     Montant      Déduction    Récuperation",
+                    "",
+                    "",
+                    "Clé : 001 C'est la première clé",
+                    "",
+                    "Code Nature : 61100 Nettoyage",
+                    "33333 01/01/2024     Facture de nettoyage                           100.00 €     0.00 €       0.00 €",
+                    "44444 15/02/2024     Facture de nettoyage supplémentaire            150.00 €     0.00 €       0.00 €",
+                    "Total Nature : 61100                                                250.00 €     0.00 €       0.00 €",
+                    "",
+                    "Code Nature : 61500 Entretien",
+                    "55555 10/03/2024     Facture d'entretien                            200.00 €     0.00 € ",
+                    "Total Nature : 61500                                                200.00 €     0.00 €       0.00 €",
+                    "",
+                    "Total clé :    001                                                  450.00 €     0.00 €       0.00 €",
+                    "",
+                    "Total immeuble :                                                    570.00 €     0.00 €       0.00 €"
+            );
+            Files.write(tempTestDir.resolve("Liste_des_depenses.txt"), lines);
+            return tempTestDir + File.separator + "Liste_des_depenses.txt";
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
