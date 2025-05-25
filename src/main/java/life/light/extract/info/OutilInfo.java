@@ -1,7 +1,12 @@
 package life.light.extract.info;
 
 import life.light.type.TypeAccount;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -9,14 +14,23 @@ import java.util.Map;
 
 public class OutilInfo {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final String EURO = "€";
     public static final String REGEX_PHONE_NUMBER = "^0[1-9]([-. ]?\\d{2}){4}$";
 
-    public int getIndexOfWords(String[] words, int indexOfWords) {
-        if (words[indexOfWords].trim().isEmpty()) {
-            indexOfWords++;
+    public int getIndexOfNextWords(String[] words, int indexOfLastWords) {
+        if (words[indexOfLastWords].trim().isEmpty()) {
+            indexOfLastWords++;
         }
-        return indexOfWords;
+        return indexOfLastWords;
+    }
+
+    public String[] getWords(String line) {
+        return line.split(" ");
+    }
+
+    public boolean isAmount(String words) {
+        return !words.endsWith(EURO);
     }
 
     public int getNumberOfAmountsOn(String line) {
@@ -139,5 +153,20 @@ public class OutilInfo {
             }
         }
         return date;
+    }
+
+    public int getNumberOfLineInFile(String path) {
+        int numberOfLineInFile = 0;
+        try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.trim().isEmpty()) {
+                    numberOfLineInFile++;
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
+        }
+        return numberOfLineInFile;
     }
 }

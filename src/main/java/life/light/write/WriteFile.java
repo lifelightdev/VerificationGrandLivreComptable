@@ -267,7 +267,104 @@ public class WriteFile {
             for (Map.Entry<String, String> entry : ligneOfDocumentMissing.entrySet()) {
                 Row row = sheetDocument.createRow(index++);
                 Cell cellD = row.createCell(0);
-                cellD.setCellValue(Integer.valueOf(entry.getKey()));
+                cellD.setCellValue(Integer.parseInt(entry.getKey()));
+                Cell cellM = row.createCell(1);
+                cellM.setCellValue(entry.getValue());
+            }
+
+
+            // Écrire le contenu du classeur dans un fichier
+            outilWrite.writeWorkbook(pathNameFile, workbook);
+            // Fermer le classeur
+            workbook.close();
+        } catch (IOException e) {
+            LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", pathNameFile, e.getMessage());
+        }
+    }
+
+    public void writeFileExcelListeDesDepenses(Object[] listeDesDepenses, String pathNameFile, String pathDirectoryInvoice) {
+        try {
+            // Créer un nouveau classeur Excel
+            Workbook workbook = new XSSFWorkbook();
+
+            // Style
+            DataFormat dataFormat = workbook.createDataFormat();
+            Short dataAmount = dataFormat.getFormat("# ### ##0.00 €;[red]# ### ##0.00 €");
+            CellStyle styleTotal = outilWrite.getCellStyleTotal(workbook.createCellStyle());
+            CellStyle styleTotalAmount = outilWrite.getCellStyleTotalAmount(workbook.createCellStyle(), dataAmount);
+            CellStyle styleWhite = workbook.createCellStyle();
+            styleWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
+            styleWhite.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            CellStyle styleBlue = workbook.createCellStyle();
+            styleBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
+            styleBlue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            CellStyle styleAmountWhite = outilWrite.getCellStyleAmount(workbook.createCellStyle(), dataAmount);
+            styleAmountWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
+            CellStyle styleAmountBlue = outilWrite.getCellStyleAmount(workbook.createCellStyle(), dataAmount);
+            styleAmountBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
+            CellStyle styleHeader = workbook.createCellStyle();
+
+            // Créer une nouvelle feuille dans le classeur pour le grand livre
+            Sheet sheet = workbook.createSheet("Liste des dépenses");
+            outilWrite.getCellsEnteteListeDesDepenses(sheet, styleHeader);
+            int rowNum = 1;
+            int lastRowNumTotal = 0;
+            List<Integer> lineTotals = new ArrayList<>();
+            for (Object line : listeDesDepenses) {
+                Row row = sheet.createRow(rowNum);
+                if (line instanceof LineOfExpenseKey) {
+                    outilWrite.getLineOfExpenseKey((LineOfExpenseKey) line, row, styleBlue);
+                }
+                if (line instanceof LineOfExpenseTotal) {
+                    outilWrite.getLineOfExpenseTotal((LineOfExpenseTotal) line, row, styleTotal, styleTotalAmount);
+                }
+                if (line instanceof LineOfExpense) {
+                    if (rowNum % 2 == 0) {
+                        outilWrite.getLineOfExpense((LineOfExpense) line, row, styleBlue, styleAmountBlue, pathDirectoryInvoice);
+                    } else {
+                        outilWrite.getLineOfExpense((LineOfExpense) line, row, styleBlue, styleAmountBlue, pathDirectoryInvoice);
+                    }
+                }
+                rowNum++;
+            }
+            int cellNumEntete = NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES.length;
+            for (int idCollum = 0; idCollum < cellNumEntete; idCollum++) {
+                sheet.autoSizeColumn(idCollum);
+            }
+            sheet.createFreezePane(0, 1);
+
+            // Créer une nouvelle feuille pour les pieces manquantes
+            Sheet sheetDocument = workbook.createSheet("Pieces manquante");
+            TreeMap<String, String> ligneOfDocumentMissing = new TreeMap<>();
+            for (Row row : sheet) {
+                if (row.getCell(cellNumEntete - 1) != null) {
+                    if (row.getCell(cellNumEntete - 1).getCellType() == CellType.STRING) {
+                        if (row.getCell(cellNumEntete - 1).getStringCellValue().contains("Impossible de trouver la pièce")) {
+                            String document;
+                            if (row.getCell(2).getCellType() == CellType.NUMERIC) {
+                                document = String.valueOf(row.getCell(2).getNumericCellValue());
+                            } else {
+                                document = row.getCell(2).getStringCellValue();
+                            }
+                            String message = row.getCell(cellNumEntete - 1).getStringCellValue();
+                            ligneOfDocumentMissing.put(document.replace(".0", ""), message);
+                        }
+                    }
+                }
+            }
+
+            int index = 0;
+            Row headerRow = sheetDocument.createRow(index);
+            Cell cellDocument = headerRow.createCell(0);
+            cellDocument.setCellValue("Piece");
+            //cellDocument.setCellStyle(getCellStyleEntete(styleHeader));
+            Cell cellMessage = headerRow.createCell(1);
+            cellMessage.setCellValue("Piece");
+            //cellMessage.setCellStyle(getCellStyleEntete(styleHeader));
+            for (Map.Entry<String, String> entry : ligneOfDocumentMissing.entrySet()) {
+                Row row = sheetDocument.createRow(index++);
+                Cell cellD = row.createCell(0);
+                cellD.setCellValue(Integer.parseInt(entry.getKey()));
                 Cell cellM = row.createCell(1);
                 cellM.setCellValue(entry.getValue());
             }

@@ -10,20 +10,19 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
 import static life.light.extract.info.OutilInfo.EURO;
+import static life.light.write.OutilWrite.DATE_FORMATTER;
 
 public class Ledger {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int NAME_JOURNAL_SIZE = 2;
     private static final String REGEX_NUMBER = "^-?[0-9]+$";
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static String codeCondominium;
     private static String postalCode;
     private OutilInfo outilInfo = new OutilInfo();
@@ -71,7 +70,7 @@ public class Ledger {
         if (date.isEmpty()) {
             return null;
         }
-        return LocalDate.parse(outilInfo.findDateIn(line), formatter);
+        return LocalDate.parse(outilInfo.findDateIn(line), DATE_FORMATTER);
     }
 
     TypeAccount account(String line) {
@@ -154,7 +153,7 @@ public class Ledger {
             indexOfWords++;
         }
 
-        indexOfWords = outilInfo.getIndexOfWords(words, indexOfWords);
+        indexOfWords = outilInfo.getIndexOfNextWords(words, indexOfWords);
 
         // Extraction de la date de l'opération
         String date = words[indexOfWords];
@@ -234,19 +233,19 @@ public class Ledger {
             // le premier montant est dans le libellé
             // le second montant est le débit
             // le troisème montant est le crédit
-            while (!words[indexOfWords].endsWith(EURO)) {
+            while (outilInfo.isAmount(words[indexOfWords])) {
                 label.append(" ").append(words[indexOfWords]);
                 indexOfWords++;
             }
             label.append(" ").append(words[indexOfWords]);
             indexOfWords++;
-            while (!words[indexOfWords].endsWith(EURO)) {
+            while (outilInfo.isAmount(words[indexOfWords])) {
                 debit.append(" ").append(words[indexOfWords]);
                 indexOfWords++;
             }
             debit.append(" ").append(words[indexOfWords]);
             indexOfWords++;
-            while (!words[indexOfWords].endsWith(EURO)) {
+            while (outilInfo.isAmount(words[indexOfWords])) {
                 credit.append(" ").append(words[indexOfWords]);
                 indexOfWords++;
             }
@@ -354,19 +353,19 @@ public class Ledger {
         StringBuilder debit = new StringBuilder();
         StringBuilder credit = new StringBuilder();
         if (numberOfAmounts == 3) {
-            while (!words[indexOfWords].endsWith(EURO)) {
+            while (outilInfo.isAmount(words[indexOfWords])) {
                 debit.append(" ").append(words[indexOfWords]);
                 indexOfWords++;
             }
             debit.append(" ").append(words[indexOfWords]);
             indexOfWords++;
-            while (!words[indexOfWords].endsWith(EURO)) {
+            while (outilInfo.isAmount(words[indexOfWords])) {
                 credit.append(" ").append(words[indexOfWords]);
                 indexOfWords++;
             }
             credit.append(" ").append(words[indexOfWords]);
         } else if (numberOfAmounts >= 2) {
-            while (!words[indexOfWords].endsWith(EURO)) {
+            while (outilInfo.isAmount(words[indexOfWords])) {
                 debit.append(" ").append(words[indexOfWords]);
                 indexOfWords++;
             }
@@ -442,7 +441,7 @@ public class Ledger {
         StringBuilder debit = new StringBuilder();
         StringBuilder credit = new StringBuilder();
         if (numberOfAmounts == 3) {
-            while (!words[indexOfWords].endsWith(EURO)) {
+            while (outilInfo.isAmount(words[indexOfWords])) {
                 label.append(" ").append(words[indexOfWords]);
                 indexOfWords++;
             }
@@ -452,13 +451,13 @@ public class Ledger {
             indexOfWords++;
             label.append(" ").append(words[indexOfWords]);
             debit.append(" ").append(words[indexOfWords]);
-            while (!words[indexOfWords].endsWith(EURO)) {
+            while (outilInfo.isAmount(words[indexOfWords])) {
                 debit.append(" ").append(words[indexOfWords]);
                 indexOfWords++;
             }
             debit.append(" ").append(words[indexOfWords]);
             indexOfWords++;
-            while (!words[indexOfWords].endsWith(EURO)) {
+            while (outilInfo.isAmount(words[indexOfWords])) {
                 credit.append(" ").append(words[indexOfWords]);
                 indexOfWords++;
             }

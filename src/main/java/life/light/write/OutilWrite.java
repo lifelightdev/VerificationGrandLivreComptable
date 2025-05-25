@@ -1,9 +1,6 @@
 package life.light.write;
 
-import life.light.type.BankLine;
-import life.light.type.Line;
-import life.light.type.TotalAccount;
-import life.light.type.TotalBuilding;
+import life.light.type.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.common.usermodel.HyperlinkType;
@@ -21,12 +18,14 @@ import java.util.List;
 
 public class OutilWrite {
 
+    public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final Logger LOGGER = LogManager.getLogger();
     public static final XSSFColor BACKGROUND_COLOR_BLUE = new XSSFColor(new java.awt.Color(240, 255, 255), null);
     public static final XSSFColor BACKGROUND_COLOR_WHITE = new XSSFColor(new java.awt.Color(255, 255, 255), null);
     private static final XSSFColor BACKGROUND_COLOR_GRAY = new XSSFColor(new java.awt.Color(200, 200, 200), null);
     private static final XSSFColor BACKGROUND_COLOR_RED = new XSSFColor(new java.awt.Color(255, 0, 0), null);
-
+    protected static final String[] NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES = {"Pièce", "Date", "Libellé", "Montant",
+            "Déduction", "Récuperation"};
     protected static final String[] NOM_ENTETE_COLONNE_GRAND_LIVRE = {"Compte", "Intitulé du compte", "Pièce", "Date",
             "Journal", "Contrepartie", "Intitulé de la contrepartie", "N° chèque", "Libellé", "Débit", "Crédit",
             "Solde (Calculé)", "Vérification", "Commentaire"};
@@ -243,12 +242,11 @@ public class OutilWrite {
             addlineBlue(getCellStyleAlignmentLeft(style), labelAccountReleveCell);
             cellNum++;
             Cell operationDateReleveCell = row.createCell(cellNum);
-            DateTimeFormatter formateur = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            operationDateReleveCell.setCellValue(bankLine.operationDate().format(formateur));
+            operationDateReleveCell.setCellValue(bankLine.operationDate().format(DATE_FORMATTER));
             addlineBlue(getCellStyleAlignmentLeft(style), operationDateReleveCell);
             cellNum++;
             Cell valueDateReleveCell = row.createCell(cellNum);
-            valueDateReleveCell.setCellValue(bankLine.valueDate().format(formateur));
+            valueDateReleveCell.setCellValue(bankLine.valueDate().format(DATE_FORMATTER));
             addlineBlue(getCellStyleAlignmentLeft(style), valueDateReleveCell);
             cellNum++;
             Cell labelReleveCell = row.createCell(cellNum);
@@ -358,7 +356,7 @@ public class OutilWrite {
                         + " dans le dossier : " + pathDirectoryInvoice
                         + " sur le compte " + grandLivre.account().account()
                         + " avec libelle de l'opération " + grandLivre.label();
-                LOGGER.info("{}",message);
+                LOGGER.info("{}", message);
             }
         }
         return message;
@@ -566,10 +564,32 @@ public class OutilWrite {
         cell.setCellStyle(cellStyle);
     }
 
+    public boolean isDouble(String str) {
+        if (str == null || str.isEmpty()) {
+            return false; // Une chaîne nulle ou vide ne peut pas être un double
+        }
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (NumberFormatException _) {
+            return false;
+        }
+    }
+
     public void getCellsEnteteGrandLivre(Sheet sheet, CellStyle styleHeader) {
         int index = 0;
         Row headerRow = sheet.createRow(index);
         for (String label : NOM_ENTETE_COLONNE_GRAND_LIVRE) {
+            Cell cell = headerRow.createCell(index++);
+            cell.setCellValue(label);
+            cell.setCellStyle(getCellStyleEntete(styleHeader));
+        }
+    }
+
+    public void getCellsEnteteListeDesDepenses(Sheet sheet, CellStyle styleHeader) {
+        int index = 0;
+        Row headerRow = sheet.createRow(index);
+        for (String label : NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES) {
             Cell cell = headerRow.createCell(index++);
             cell.setCellValue(label);
             cell.setCellStyle(getCellStyleEntete(styleHeader));
@@ -616,15 +636,48 @@ public class OutilWrite {
         return style;
     }
 
-    private boolean isDouble(String str) {
-        if (str == null || str.isEmpty()) {
-            return false; // Une chaîne nulle ou vide ne peut pas être un double
+    public void getLineOfExpenseKey(LineOfExpenseKey line, Row row, CellStyle styleBlue) {
+        Cell cell;
+        if (line != null) {
+            cell = row.createCell(2);
+            cell.setCellValue(line.label() + " : " + line.key() + " " + line.value());
+            cell.setCellStyle(styleBlue);
         }
-        try {
-            Double.parseDouble(str);
-            return true;
-        } catch (NumberFormatException _) {
-            return false;
+    }
+
+    public void getLineOfExpenseTotal(LineOfExpenseTotal line, Row row, CellStyle styleTotal, CellStyle styleTotalAmount) {
+        Cell cell;
+        if (!line.key().isEmpty()) {
+            cell = row.createCell(0);
+            if (line.type().equals(TypeOfExpense.Key)) {
+                cell.setCellValue("Total de la clé : " + line.key());
+            }
+            if (line.type().equals(TypeOfExpense.Nature)) {
+                cell.setCellValue("Total de la nature : " + line.key());
+            }
+            if (line.type().equals(TypeOfExpense.Building)) {
+                cell.setCellValue("Total de l'immeuble : " + line.key());
+            }
+            cell.setCellStyle(styleTotal);
         }
+        if (!line.amount().isEmpty()) {
+            cell = row.createCell(1);
+            cell.setCellValue(line.amount());
+            cell.setCellStyle(styleTotalAmount);
+        }
+        if (!line.deduction().isEmpty()) {
+            cell = row.createCell(2);
+            cell.setCellValue(line.deduction());
+            cell.setCellStyle(styleTotalAmount);
+        }
+        if (!line.recovery().isEmpty()) {
+            cell = row.createCell(3);
+            cell.setCellValue(line.recovery());
+            cell.setCellStyle(styleTotalAmount);
+        }
+    }
+
+    public void getLineOfExpense(LineOfExpense line, Row row, CellStyle styleBlue, CellStyle styleAmountBlue, String pathDirectoryInvoice) {
+
     }
 }

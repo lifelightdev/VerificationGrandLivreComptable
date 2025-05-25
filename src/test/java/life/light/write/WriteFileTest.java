@@ -135,7 +135,7 @@ class WriteFileTest {
              Workbook workbook = new XSSFWorkbook(fileInputStream)) {
 
             // Check number of sheets (Grand Livre + 2 journals)
-            Assertions.assertEquals(3, workbook.getNumberOfSheets());
+            Assertions.assertEquals(4, workbook.getNumberOfSheets());
 
             // Check sheet names
             Assertions.assertEquals("Grand Livre", workbook.getSheetAt(0).getSheetName());
