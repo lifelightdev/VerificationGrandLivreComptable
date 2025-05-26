@@ -3,6 +3,7 @@ package life.light.write;
 import life.light.type.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -303,6 +304,8 @@ public class WriteFile {
             CellStyle styleAmountBlue = outilWrite.getCellStyleAmount(workbook.createCellStyle(), dataAmount);
             styleAmountBlue.setFillBackgroundColor(BACKGROUND_COLOR_BLUE);
             CellStyle styleHeader = workbook.createCellStyle();
+            CreationHelper createHelper = workbook.getCreationHelper();
+            Hyperlink link = createHelper.createHyperlink(HyperlinkType.FILE);
 
             // Créer une nouvelle feuille dans le classeur pour le grand livre
             Sheet sheet = workbook.createSheet("Liste des dépenses");
@@ -318,9 +321,9 @@ public class WriteFile {
                 }
                 if (line instanceof LineOfExpense) {
                     if (rowNum % 2 == 0) {
-                        outilWrite.getLineOfExpense((LineOfExpense) line, row, styleWhite, styleAmountWhite, pathDirectoryInvoice);
+                        outilWrite.getLineOfExpense((LineOfExpense) line, row, styleWhite, styleAmountWhite, link, pathDirectoryInvoice);
                     } else {
-                        outilWrite.getLineOfExpense((LineOfExpense) line, row, styleBlue, styleAmountBlue, pathDirectoryInvoice);
+                        outilWrite.getLineOfExpense((LineOfExpense) line, row, styleBlue, styleAmountBlue, link, pathDirectoryInvoice);
                     }
                 }
                 rowNum++;
@@ -355,18 +358,15 @@ public class WriteFile {
             Row headerRow = sheetDocument.createRow(index);
             Cell cellDocument = headerRow.createCell(0);
             cellDocument.setCellValue("Piece");
-            //cellDocument.setCellStyle(getCellStyleEntete(styleHeader));
             Cell cellMessage = headerRow.createCell(1);
             cellMessage.setCellValue("Piece");
-            //cellMessage.setCellStyle(getCellStyleEntete(styleHeader));
             for (Map.Entry<String, String> entry : ligneOfDocumentMissing.entrySet()) {
                 Row row = sheetDocument.createRow(index++);
-                Cell cellD = row.createCell(0);
-                cellD.setCellValue(Integer.parseInt(entry.getKey()));
+                //Cell cellD = row.createCell(0);
+                //cellD.setCellValue(Integer.parseInt(entry.getKey()));
                 Cell cellM = row.createCell(1);
                 cellM.setCellValue(entry.getValue());
             }
-
 
             // Écrire le contenu du classeur dans un fichier
             outilWrite.writeWorkbook(pathNameFile, workbook);

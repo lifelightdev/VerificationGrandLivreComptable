@@ -77,6 +77,33 @@ public class FileOfTest {
         }
     }
 
+    public void copyInvoiceFiles() {
+        try {
+            List<String> lines = Arrays.asList();
+
+            File invoice1 = new File(tempTestDir + File.separator + "invoice" + File.separator);
+            invoice1.mkdir();
+
+            Files.write(tempTestDir.resolve(invoice1.getAbsoluteFile() + File.separator
+                    + "Invoice123 - supplier 1.txt"), lines);
+
+            File invoice2 = new File(tempTestDir + File.separator + "invoice" + File.separator
+                    + "Supplier 2" + File.separator);
+            invoice2.mkdir();
+            Files.write(tempTestDir.resolve(invoice2.getAbsoluteFile() + File.separator
+                    + "Invoice234 - supplier 2.txt"), lines);
+
+            File invoice3 = new File(tempTestDir + File.separator + "invoice" + File.separator
+                    + "Supplier 2" + File.separator + "Directory" + File.separator);
+            invoice3.mkdir();
+            Files.write(tempTestDir.resolve(invoice3.getAbsoluteFile() + File.separator
+                    + "Invoice345 - supplier 3.txt"), lines);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void copyBankFiles(String accountBank1, String accountBank2) {
         try {
             File tempBank = new File(tempTestDir + File.separator + "bank" + File.separator);

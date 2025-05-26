@@ -25,13 +25,14 @@ public class OutilWrite {
     private static final XSSFColor BACKGROUND_COLOR_GRAY = new XSSFColor(new java.awt.Color(200, 200, 200), null);
     private static final XSSFColor BACKGROUND_COLOR_RED = new XSSFColor(new java.awt.Color(255, 0, 0), null);
     public static final String[] NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES = {"Pièce", "Date", "Libellé", "Montant",
-            "Déduction", "Récuperation"};
+            "Déduction", "Récuperation", "Commentaire"};
     private static final int ID_DOCUMENT_OF_LIST_OF_EXPENSES = 0;
     private static final int ID_DATE_OF_LIST_OF_EXPENSES = 1;
     private static final int ID_LABEL_OF_LIST_OF_EXPENSES = 2;
     private static final int ID_AMOUNT_OF_LIST_OF_EXPENSES = 3;
     private static final int ID_DEDUCTION_OF_LIST_OF_EXPENSES = 4;
     private static final int ID_RECOVERY_OF_LIST_OF_EXPENSES = 5;
+    private static final int ID_COMMENT_OF_LIST_OF_EXPENSES = 6;
 
     protected static final String[] NOM_ENTETE_COLONNE_GRAND_LIVRE = {"Compte", "Intitulé du compte", "Pièce", "Date",
             "Journal", "Contrepartie", "Intitulé de la contrepartie", "N° chèque", "Libellé", "Débit", "Crédit",
@@ -283,7 +284,7 @@ public class OutilWrite {
         } else {
             if (grandLivre.account().account().startsWith(CLASSE_6)
                     || (grandLivre.account().account().startsWith("401")) && (grandLivre.accountCounterpart().account().startsWith(CLASSE_6))) {
-                message = getMessageFindDocument(grandLivre, verifCell, message, link, pathDirectoryInvoice);
+                message = getMessageFindDocument(grandLivre.document(), link, pathDirectoryInvoice);
             }
             if (grandLivre.accountCounterpart() == null) {
                 verifCell.setCellValue(KO);
@@ -312,55 +313,51 @@ public class OutilWrite {
         return cellNum;
     }
 
-    private String getMessageFindDocument(Line grandLivre, Cell verifCell, String message, Hyperlink link, String thePathDirectoryInvoice) {
+    private String getMessageFindDocument(String document, Hyperlink link, String thePathDirectoryInvoice) {
+        String message = "";
         File pathDirectoryInvoice = new File(thePathDirectoryInvoice);
         File fileFound = null;
         File[] files = pathDirectoryInvoice.listFiles();
         if (null != files) {
             for (File fichier : files) {
-                if (fichier.isFile()) {
-                    if (fichier.getName().contains(grandLivre.document())) {
-                        fileFound = fichier;
+                if (fichier.getName().startsWith(document)) {
+                    fileFound = fichier;
+                    break;
+                } else {
+                    fileFound = getFileInDirectory(document, fichier);
+                    if (fileFound != null) {
                         break;
-                    }
-                } else if (fichier.isDirectory()) {
-                    File[] sousDossier = fichier.listFiles();
-                    if (null != sousDossier) {
-                        for (File fichierDuSousDossier : sousDossier) {
-                            if (fichierDuSousDossier.isFile()) {
-                                if (fichierDuSousDossier.getName().contains(grandLivre.document())) {
-                                    fileFound = fichierDuSousDossier;
-                                    break;
-                                }
-                            } else if (fichierDuSousDossier.isDirectory()) {
-                                File[] sousSousDossier = fichierDuSousDossier.listFiles();
-                                if (null != sousSousDossier) {
-                                    for (File fichierDuSousSousDossier : sousSousDossier) {
-                                        if (fichierDuSousSousDossier.isFile()) {
-                                            if (fichierDuSousSousDossier.getName().contains(grandLivre.document())) {
-                                                fileFound = fichierDuSousSousDossier;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
                     }
                 }
             }
-            if (fileFound != null){
+            if (fileFound != null) {
                 message = fileFound.getAbsoluteFile().toString().replace("F:", "D:");
                 link.setAddress(fileFound.toURI().toString().replace("F:", "D:"));
-            } else  {
-                message = "Impossible de trouver la pièce " + grandLivre.document()
-                        + " dans le dossier : " + pathDirectoryInvoice
-                        + " sur le compte " + grandLivre.account().account()
-                        + " avec libelle de l'opération " + grandLivre.label();
+            } else {
+                message = "Impossible de trouver la pièce " + document
+                        + " dans le dossier : " + pathDirectoryInvoice;
                 LOGGER.info("{}", message);
             }
         }
         return message;
+    }
+
+    private static File getFileInDirectory(String document, File file) {
+        File fileFound = null;
+        File[] listOfFiles = file.listFiles();
+        if (null != listOfFiles) {
+            for (File fileOfDirectory : listOfFiles) {
+                if (fileOfDirectory.isFile()) {
+                    if (fileOfDirectory.getName().contains(document)) {
+                        fileFound = fileOfDirectory;
+                        break;
+                    }
+                } else if (fileOfDirectory.isDirectory()) {
+                    fileFound = getFileInDirectory(document, fileOfDirectory);
+                }
+            }
+        }
+        return fileFound;
     }
 
     private String getMessageVerifLineReport(Line grandLivre, Cell verifCell, CellStyle style, String message) {
@@ -639,7 +636,7 @@ public class OutilWrite {
 
     public void getLineOfExpenseKey(LineOfExpenseKey line, Row row, CellStyle styleTotal) {
         Cell cell;
-        for (int index = 0; index<NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES.length; index++) {
+        for (int index = 0; index < NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES.length; index++) {
             cell = row.createCell(index);
             if (index == ID_LABEL_OF_LIST_OF_EXPENSES) {
                 cell.setCellValue(line.label() + " : " + line.key() + " " + line.value());
@@ -684,7 +681,7 @@ public class OutilWrite {
         }
     }
 
-    public void getLineOfExpense(LineOfExpense line, Row row,CellStyle styleColor, CellStyle styleAmountColor, String pathDirectoryInvoice) {
+    public void getLineOfExpense(LineOfExpense line, Row row, CellStyle styleColor, CellStyle styleAmountColor, Hyperlink link, String pathDirectoryInvoice) {
         Cell cell;
 
         cell = row.createCell(ID_DOCUMENT_OF_LIST_OF_EXPENSES);
@@ -720,5 +717,9 @@ public class OutilWrite {
             cell = row.createCell(ID_RECOVERY_OF_LIST_OF_EXPENSES);
             cell.setCellStyle(styleAmountColor);
         }
+
+        cell = row.createCell(ID_COMMENT_OF_LIST_OF_EXPENSES);
+        cell.setCellValue(getMessageFindDocument(line.document(), link, pathDirectoryInvoice));
+        cell.setCellStyle(styleColor);
     }
 }

@@ -1,19 +1,20 @@
 package life.light.write;
 
+import life.light.FileOfTest;
 import life.light.type.*;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.common.usermodel.HyperlinkType;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static life.light.FileOfTest.tempTestDir;
+import static org.junit.jupiter.api.Assertions.*;
 
 class OutilWriteTest {
 
@@ -269,5 +270,70 @@ class OutilWriteTest {
         assertEquals("Débit", workbook.getSheetAt(0).getRow(0).getCell(18).getStringCellValue());
         assertEquals("Crédit", workbook.getSheetAt(0).getRow(0).getCell(19).getStringCellValue());
         assertEquals("Commentaire", workbook.getSheetAt(0).getRow(0).getCell(20).getStringCellValue());
+    }
+
+    @Test
+    void getLineOfExpense() {
+
+        FileOfTest fileOfTest = new FileOfTest();
+        try {
+            fileOfTest.copyInvoiceFiles();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        // Create workbook and sheet
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Liste des dépenses");
+        Row row = sheet.createRow(1);
+
+        // Create styles
+        CellStyle styleColor = workbook.createCellStyle();
+        CellStyle styleAmountColor = workbook.createCellStyle();
+
+        // Create hyperlink
+        Hyperlink link = workbook.getCreationHelper().createHyperlink(HyperlinkType.FILE);
+
+        // Create LineOfExpense object
+        String document = "Invoice123";
+        LocalDate date = LocalDate.of(2024, 1, 15);
+        String label = "Achat fournitures";
+        String amount = "150.50";
+        String deduction = "20.00";
+        String recovery = "10.00";
+        LineOfExpense line = new LineOfExpense(document, date, label, amount, deduction, recovery);
+
+        // Path to invoice directory
+        String pathDirectoryInvoice = tempTestDir + File.separator + "invoice" + File.separator;
+
+
+        outilWrite.getLineOfExpense(line, row, styleColor, styleAmountColor, link, pathDirectoryInvoice);
+
+        row = sheet.createRow(2);
+        LineOfExpense line2 = new LineOfExpense("Invoice234", date, label, amount, deduction, recovery);
+        outilWrite.getLineOfExpense(line2, row, styleColor, styleAmountColor, link, pathDirectoryInvoice);
+
+        row = sheet.createRow(3);
+        LineOfExpense line3 = new LineOfExpense("Invoice345", date, label, amount, deduction, recovery);
+        outilWrite.getLineOfExpense(line3, row, styleColor, styleAmountColor, link, pathDirectoryInvoice);
+
+        // Verify the cells
+        assertEquals(document, workbook.getSheetAt(0).getRow(1).getCell(0).getStringCellValue());
+        assertEquals(date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                workbook.getSheetAt(0).getRow(1).getCell(1).getStringCellValue());
+        assertEquals(label, workbook.getSheetAt(0).getRow(1).getCell(2).getStringCellValue());
+        assertEquals(Double.parseDouble(amount),
+                workbook.getSheetAt(0).getRow(1).getCell(3).getNumericCellValue());
+        assertEquals(Double.parseDouble(deduction),
+                workbook.getSheetAt(0).getRow(1).getCell(4).getNumericCellValue());
+        assertEquals(Double.parseDouble(recovery),
+                workbook.getSheetAt(0).getRow(1).getCell(5).getNumericCellValue());
+
+        // We can't directly test the result of getMessageFindDocument since it's private,
+        // but we can verify that cell 6 has a value
+        assertFalse(workbook.getSheetAt(0).getRow(1).getCell(6).getStringCellValue().contains("Impossible"));
+        assertFalse(workbook.getSheetAt(0).getRow(2).getCell(6).getStringCellValue().contains("Impossible"));
+        assertFalse(workbook.getSheetAt(0).getRow(3).getCell(6).getStringCellValue().contains("Impossible"));
+        assertTrue(workbook.getSheetAt(0).getRow(3).getCell(6).getStringCellValue().contains("Invoice345"));
     }
 }
