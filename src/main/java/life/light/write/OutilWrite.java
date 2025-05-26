@@ -26,13 +26,13 @@ public class OutilWrite {
     private static final XSSFColor BACKGROUND_COLOR_RED = new XSSFColor(new java.awt.Color(255, 0, 0), null);
     public static final String[] NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES = {"Pièce", "Date", "Libellé", "Montant",
             "Déduction", "Récuperation", "Commentaire"};
-    private static final int ID_DOCUMENT_OF_LIST_OF_EXPENSES = 0;
+    public static final int ID_DOCUMENT_OF_LIST_OF_EXPENSES = 0;
     private static final int ID_DATE_OF_LIST_OF_EXPENSES = 1;
     private static final int ID_LABEL_OF_LIST_OF_EXPENSES = 2;
     private static final int ID_AMOUNT_OF_LIST_OF_EXPENSES = 3;
     private static final int ID_DEDUCTION_OF_LIST_OF_EXPENSES = 4;
     private static final int ID_RECOVERY_OF_LIST_OF_EXPENSES = 5;
-    private static final int ID_COMMENT_OF_LIST_OF_EXPENSES = 6;
+    public static final int ID_COMMENT_OF_LIST_OF_EXPENSES = 6;
 
     protected static final String[] NOM_ENTETE_COLONNE_GRAND_LIVRE = {"Compte", "Intitulé du compte", "Pièce", "Date",
             "Journal", "Contrepartie", "Intitulé de la contrepartie", "N° chèque", "Libellé", "Débit", "Crédit",

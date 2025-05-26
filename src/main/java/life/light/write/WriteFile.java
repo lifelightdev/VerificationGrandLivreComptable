@@ -338,19 +338,17 @@ public class WriteFile {
             Sheet sheetDocument = workbook.createSheet("Pieces manquante");
             TreeMap<String, String> ligneOfDocumentMissing = new TreeMap<>();
             for (Row row : sheet) {
-                if (row.getCell(cellNumEntete - 1) != null) {
-                    if (row.getCell(cellNumEntete - 1).getCellType() == CellType.STRING) {
-                        if (row.getCell(cellNumEntete - 1).getStringCellValue().contains("Impossible de trouver la pièce")) {
-                            String document;
-                            if (row.getCell(2).getCellType() == CellType.NUMERIC) {
-                                document = String.valueOf(row.getCell(2).getNumericCellValue());
-                            } else {
-                                document = row.getCell(2).getStringCellValue();
-                            }
-                            String message = row.getCell(cellNumEntete - 1).getStringCellValue();
-                            ligneOfDocumentMissing.put(document.replace(".0", ""), message);
-                        }
+                if (row.getCell(ID_COMMENT_OF_LIST_OF_EXPENSES) != null
+                        && row.getCell(ID_COMMENT_OF_LIST_OF_EXPENSES).getCellType() == CellType.STRING
+                        && row.getCell(ID_COMMENT_OF_LIST_OF_EXPENSES).getStringCellValue().contains("Impossible de trouver la pièce")) {
+                    String document;
+                    if (row.getCell(ID_DOCUMENT_OF_LIST_OF_EXPENSES).getCellType() == CellType.NUMERIC) {
+                        document = String.valueOf(row.getCell(ID_DOCUMENT_OF_LIST_OF_EXPENSES).getNumericCellValue());
+                    } else {
+                        document = row.getCell(ID_DOCUMENT_OF_LIST_OF_EXPENSES).getStringCellValue();
                     }
+                    String message = row.getCell(ID_COMMENT_OF_LIST_OF_EXPENSES).getStringCellValue();
+                    ligneOfDocumentMissing.put(document.replace(".0", ""), message);
                 }
             }
 
@@ -362,8 +360,8 @@ public class WriteFile {
             cellMessage.setCellValue("Piece");
             for (Map.Entry<String, String> entry : ligneOfDocumentMissing.entrySet()) {
                 Row row = sheetDocument.createRow(index++);
-                //Cell cellD = row.createCell(0);
-                //cellD.setCellValue(Integer.parseInt(entry.getKey()));
+                Cell cellD = row.createCell(0);
+                cellD.setCellValue(Integer.parseInt(entry.getKey()));
                 Cell cellM = row.createCell(1);
                 cellM.setCellValue(entry.getValue());
             }
