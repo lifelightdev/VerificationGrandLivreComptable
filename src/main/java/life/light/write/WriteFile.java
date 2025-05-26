@@ -199,7 +199,7 @@ public class WriteFile {
             }
 
             // Créer une nouvelle feuille pour les pieces manquantes
-            outilWrite.writeDocumentMission(workbook, ID_COMMENT_OF_LEDGER, ID_DOCUMENT_OF_LEDGER);
+            outilWrite.writeDocumentMission(workbook, sheet, ID_COMMENT_OF_LEDGER, ID_DOCUMENT_OF_LEDGER);
 
             // Écrire le contenu du classeur dans un fichier
             outilWrite.writeWorkbook(pathNameFile, workbook);
@@ -237,7 +237,7 @@ public class WriteFile {
             outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES.length, sheet);
 
             // Créer une nouvelle feuille pour les pieces manquantes
-            outilWrite.writeDocumentMission(workbook, ID_COMMENT_OF_LIST_OF_EXPENSES, ID_DOCUMENT_OF_LIST_OF_EXPENSES);
+            outilWrite.writeDocumentMission(workbook, sheet, ID_COMMENT_OF_LIST_OF_EXPENSES, ID_DOCUMENT_OF_LIST_OF_EXPENSES);
 
             // Écrire le contenu du classeur dans un fichier
             outilWrite.writeWorkbook(pathNameFile, workbook);

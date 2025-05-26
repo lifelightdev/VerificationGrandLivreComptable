@@ -61,7 +61,6 @@ public class Ledger {
         } catch (IOException e) {
             LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
         }
-        LOGGER.info("Il y a {} lignes dans le grand livre", numberOfLineInFile);
         return numberOfLineInFile;
     }
 

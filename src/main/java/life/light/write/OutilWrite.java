@@ -837,9 +837,9 @@ public class OutilWrite {
         return ligneOfDocumentMissing;
     }
 
-    public void writeDocumentMission(Workbook workbook, int idCellComment, int idCellDocumment) {
+    public void writeDocumentMission(Workbook workbook, Sheet sheet, int idCellComment, int idCellDocumment) {
         Sheet sheetDocument = workbook.createSheet("Pieces manquante");
-        TreeMap<String, String> ligneOfDocumentMissing = getListOfDocumentMissing(sheetDocument, idCellComment, idCellDocumment);
+        TreeMap<String, String> ligneOfDocumentMissing = getListOfDocumentMissing(sheet, idCellComment, idCellDocumment);
         writeListOfDocumentMissing(ligneOfDocumentMissing, sheetDocument);
     }
 }
