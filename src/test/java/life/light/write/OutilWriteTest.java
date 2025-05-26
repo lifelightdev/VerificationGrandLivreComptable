@@ -2,7 +2,6 @@ package life.light.write;
 
 import life.light.FileOfTest;
 import life.light.type.*;
-import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -28,36 +27,34 @@ class OutilWriteTest {
         Sheet sheet = workbook.createSheet("Grand Livre");
         int rowNum = 1;
         Row row = sheet.createRow(rowNum++);
-        CellStyle styleTotal = workbook.createCellStyle();
-        CellStyle styleTotalAmount = workbook.createCellStyle();
         List<Integer> lineTotals = new ArrayList<>();
         lineTotals.add(1);
         Line line = new Line("000001", "01/01/2024",
                 new TypeAccount("401", "Fournisseur"), "Journal",
                 new TypeAccount("512", "Banque"), "VIRT",
                 "Label", "0.00", "0.00");
-        outilWrite.getLineGrandLivre(line, row, styleTotal, styleTotalAmount, workbook, false, null);
+        outilWrite.getLineGrandLivre(line, row, false, null);
         row = sheet.createRow(rowNum++);
         TotalAccount totalAccount = new TotalAccount("Total 0.00",
                 new TypeAccount("401", "Fournisseur"), "0.00", "0.00");
         int lastRowNumTotal = 0;
-        outilWrite.getTotalAccount(totalAccount, row, styleTotal, styleTotalAmount, workbook, lastRowNumTotal);
+        outilWrite.getTotalAccount(totalAccount, row, lastRowNumTotal);
         row = sheet.createRow(rowNum++);
 
         line = new Line("000002", "01/01/2024",
                 new TypeAccount("512", "Banque"), "Journal",
                 new TypeAccount("401", "Fournisseur"), "VIRT",
                 "Label", "0.00", "0.00");
-        outilWrite.getLineGrandLivre(line, row, styleTotal, styleTotalAmount, workbook, false, null);
+        outilWrite.getLineGrandLivre(line, row, false, null);
         row = sheet.createRow(rowNum++);
         totalAccount = new TotalAccount("Total 0.00",
                 new TypeAccount("512", "Banque"), "0.00", "0.00");
         lastRowNumTotal = rowNum;
         lineTotals.add(rowNum);
-        outilWrite.getTotalAccount(totalAccount, row, styleTotal, styleTotalAmount, workbook, lastRowNumTotal);
+        outilWrite.getTotalAccount(totalAccount, row, lastRowNumTotal);
         row = sheet.createRow(rowNum);
         TotalBuilding totalBuilding = new TotalBuilding("Total 0.00", "0.00", "0.00");
-        outilWrite.getTotalBuilding(totalBuilding, row, styleTotal, styleTotalAmount, workbook, lineTotals);
+        outilWrite.getTotalBuilding(totalBuilding, row, lineTotals);
         assertEquals("Total 0.00", workbook.getSheetAt(0).getRow(5).getCell(8).getStringCellValue());
         assertEquals("J1+J5", workbook.getSheetAt(0).getRow(5).getCell(9).getCellFormula());
         assertEquals("K1+K5", workbook.getSheetAt(0).getRow(5).getCell(10).getCellFormula());
@@ -70,18 +67,16 @@ class OutilWriteTest {
         Sheet sheet = workbook.createSheet("Grand Livre");
         int rowNum = 1;
         Row row = sheet.createRow(rowNum++);
-        CellStyle styleTotal = workbook.createCellStyle();
-        CellStyle styleTotalAmount = workbook.createCellStyle();
         Line line = new Line("000001", "01/01/2024",
                 new TypeAccount("401", "Fournisseur"), "Journal",
                 new TypeAccount("512", "Banque"), "VIRT",
                 "Label", "0.00", "0.00");
-        outilWrite.getLineGrandLivre(line, row, styleTotal, styleTotalAmount, workbook, false, null);
+        outilWrite.getLineGrandLivre(line, row, false, null);
         row = sheet.createRow(rowNum);
         TotalAccount totalAccount = new TotalAccount("Total 0.00",
                 new TypeAccount("401", "Fournisseur"), "0.00", "0.00");
         int lastRowNumTotal = 0;
-        outilWrite.getTotalAccount(totalAccount, row, styleTotal, styleTotalAmount, workbook, lastRowNumTotal);
+        outilWrite.getTotalAccount(totalAccount, row, lastRowNumTotal);
         assertEquals(401.0, workbook.getSheetAt(0).getRow(2).getCell(0).getNumericCellValue());
         assertEquals("Fournisseur", workbook.getSheetAt(0).getRow(2).getCell(1).getStringCellValue());
         assertEquals("Total 0.00", workbook.getSheetAt(0).getRow(2).getCell(8).getStringCellValue());
@@ -95,8 +90,6 @@ class OutilWriteTest {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Grand Livre");
         Row row = sheet.createRow(1);
-        CellStyle styleTotal = workbook.createCellStyle();
-        CellStyle styleTotalAmount = workbook.createCellStyle();
         String document = "000001";
         String date = "01/01/2024";
         Double codeAccount = 401.0;
@@ -113,7 +106,7 @@ class OutilWriteTest {
                 new TypeAccount(Double.toString(codeAccount), labelAccount), journal,
                 new TypeAccount(Double.toString(codeAccount2), labelAccount2), type,
                 label, Double.toString(amountDebit), Double.toString(amountCredit));
-        outilWrite.getLineGrandLivre(line, row, styleTotal, styleTotalAmount, workbook, false, null);
+        outilWrite.getLineGrandLivre(line, row, false, null);
 
         assertEquals(codeAccount, workbook.getSheetAt(0).getRow(1).getCell(0).getNumericCellValue());
         assertEquals(labelAccount, workbook.getSheetAt(0).getRow(1).getCell(1).getStringCellValue());
@@ -134,8 +127,6 @@ class OutilWriteTest {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Grand Livre");
         Row row = sheet.createRow(1);
-        CellStyle styleTotal = workbook.createCellStyle();
-        CellStyle styleTotalAmount = workbook.createCellStyle();
         String document = "";
         String date = "01/01/2024";
         Double codeAccount = 401.0;
@@ -152,7 +143,7 @@ class OutilWriteTest {
                 new TypeAccount(Double.toString(codeAccount), labelAccount), journal,
                 new TypeAccount(codeAccount2.toString(), labelAccount2), type,
                 label, amountDebit.toString(), amountCredit.toString());
-        outilWrite.getLineGrandLivre(line, row, styleTotal, styleTotalAmount, workbook, false, null);
+        outilWrite.getLineGrandLivre(line, row, false, null);
 
         assertEquals(codeAccount, workbook.getSheetAt(0).getRow(1).getCell(0).getNumericCellValue());
         assertEquals(labelAccount, workbook.getSheetAt(0).getRow(1).getCell(1).getStringCellValue());
@@ -173,8 +164,6 @@ class OutilWriteTest {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Pointage");
         Row row = sheet.createRow(1);
-        CellStyle styleBlue = workbook.createCellStyle();
-        CellStyle styleAmountBlue = workbook.createCellStyle();
         String document = "000001";
         String date = "01/01/2024";
         Double codeAccount = 512.0;
@@ -198,7 +187,7 @@ class OutilWriteTest {
         bankLineFound = new BankLine(year, month, operationDate, valueDate,
                 new TypeAccount(Double.toString(codeAccount), labelAccount), label, amountCredit, amountDebit);
         String message = "Message";
-        outilWrite.getLineEtatRapprochement(line, row, styleBlue, styleAmountBlue, bankLineFound, message);
+        outilWrite.getLineEtatRapprochement(line, row, bankLineFound, message);
 
         assertEquals(codeAccount, workbook.getSheetAt(0).getRow(1).getCell(0).getNumericCellValue());
         assertEquals(labelAccount, workbook.getSheetAt(0).getRow(1).getCell(1).getStringCellValue());
@@ -227,8 +216,7 @@ class OutilWriteTest {
     void getCellsEnteteGrandLivre() {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Grand Livre");
-        CellStyle styleHeader = workbook.createCellStyle();
-        outilWrite.getCellsEnteteGrandLivre(sheet, styleHeader);
+        outilWrite.getCellsEnteteGrandLivre(sheet);
         assertEquals("Compte", workbook.getSheetAt(0).getRow(0).getCell(0).getStringCellValue());
         assertEquals("Intitulé du compte", workbook.getSheetAt(0).getRow(0).getCell(1).getStringCellValue());
         assertEquals("Pièce", workbook.getSheetAt(0).getRow(0).getCell(2).getStringCellValue());
@@ -249,8 +237,7 @@ class OutilWriteTest {
     void getCellsEnteteEtatRapprochement() {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Grand Livre");
-        CellStyle styleHeader = workbook.createCellStyle();
-        outilWrite.getCellsEnteteEtatRapprochement(sheet, styleHeader);
+        outilWrite.getCellsEnteteEtatRapprochement(sheet);
         assertEquals("Compte", workbook.getSheetAt(0).getRow(0).getCell(0).getStringCellValue());
         assertEquals("Intitulé du compte", workbook.getSheetAt(0).getRow(0).getCell(1).getStringCellValue());
         assertEquals("Pièce", workbook.getSheetAt(0).getRow(0).getCell(2).getStringCellValue());
@@ -289,10 +276,6 @@ class OutilWriteTest {
         Sheet sheet = workbook.createSheet("Liste des dépenses");
         Row row = sheet.createRow(1);
 
-        // Create styles
-        CellStyle styleColor = workbook.createCellStyle();
-        CellStyle styleAmountColor = workbook.createCellStyle();
-
         // Create LineOfExpense object
         String document = "Invoice123";
         LocalDate date = LocalDate.of(2024, 1, 15);
@@ -306,15 +289,15 @@ class OutilWriteTest {
         String pathDirectoryInvoice = tempTestDir + File.separator + "invoice" + File.separator;
 
 
-        outilWrite.getLineOfExpense(line, row, styleColor, styleAmountColor, pathDirectoryInvoice);
+        outilWrite.getLineOfExpense(line, row, pathDirectoryInvoice);
 
         row = sheet.createRow(2);
         LineOfExpense line2 = new LineOfExpense("Invoice234", date, label, amount, deduction, recovery);
-        outilWrite.getLineOfExpense(line2, row, styleColor, styleAmountColor, pathDirectoryInvoice);
+        outilWrite.getLineOfExpense(line2, row, pathDirectoryInvoice);
 
         row = sheet.createRow(3);
         LineOfExpense line3 = new LineOfExpense("Invoice345", date, label, amount, deduction, recovery);
-        outilWrite.getLineOfExpense(line3, row, styleColor, styleAmountColor, pathDirectoryInvoice);
+        outilWrite.getLineOfExpense(line3, row, pathDirectoryInvoice);
 
         // Verify the cells
         assertEquals(document, workbook.getSheetAt(0).getRow(1).getCell(0).getStringCellValue());

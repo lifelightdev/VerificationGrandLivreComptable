@@ -43,37 +43,27 @@ public class WriteFile {
             // Créer un nouveau classeur Excel
             Workbook workbook = new XSSFWorkbook();
 
-            // Style
-            CellStyle styleWhite = outilWrite.getCellStyleWhite(workbook);
-            styleWhite.setAlignment(HorizontalAlignment.LEFT);
-            CellStyle styleBlue = outilWrite.getCellStyleBlue(workbook);
-            styleBlue.setAlignment(HorizontalAlignment.LEFT);
-
             // Créer une nouvelle feuille dans le classeur
             Sheet sheet = workbook.createSheet("Plan comptable");
             int rowNum = 0;
             // Créer la ligne d'en-tête
             Row headerRow = sheet.createRow(rowNum);
-            int numColAccount = 0;
-            Cell cell = headerRow.createCell(numColAccount);
+            Cell cell = headerRow.createCell(0);
             cell.setCellValue("Compte");
-            int numColLabelle = 1;
-            cell = headerRow.createCell(numColLabelle);
+            cell = headerRow.createCell(1);
             cell.setCellValue("Intitulé du compte");
 
             rowNum++;
             for (Map.Entry<String, TypeAccount> entry : accounts.entrySet()) {
                 Row row = sheet.createRow(rowNum);
-                Cell accountNumberCell = outilWrite.getAccountNumberCell(entry.getKey(), row, numColAccount);
-                Cell labelCell = row.createCell(numColLabelle);
-                labelCell.setCellValue(entry.getValue().label());
-                if (rowNum % 2 == 0) {
-                    accountNumberCell.setCellStyle(styleWhite);
-                    labelCell.setCellStyle(styleWhite);
+                Cell cellAccountNumber = row.createCell(0);
+                if (outilWrite.isDouble(entry.getKey())) {
+                    cellAccountNumber.setCellValue(Double.parseDouble(entry.getKey()));
                 } else {
-                    accountNumberCell.setCellStyle(styleBlue);
-                    labelCell.setCellStyle(styleBlue);
+                    cellAccountNumber.setCellValue(entry.getKey());
                 }
+                Cell labelCell = row.createCell(1);
+                labelCell.setCellValue(entry.getValue().label());
                 rowNum++;
             }
             sheet.createFreezePane(0, 1);
@@ -156,41 +146,24 @@ public class WriteFile {
             // Créer un nouveau classeur Excel
             Workbook workbook = new XSSFWorkbook();
 
-            // Style
-            DataFormat dataFormat = workbook.createDataFormat();
-            Short dataAmount = dataFormat.getFormat("# ### ##0.00 €;[red]# ### ##0.00 €");
-            CellStyle styleTotal = outilWrite.getCellStyleTotal(workbook);
-            CellStyle styleTotalAmount = outilWrite.getCellStyleTotalAmount(workbook);
-            CellStyle styleWhite = outilWrite.getCellStyleWhite(workbook);
-            CellStyle styleBlue = outilWrite.getCellStyleBlue(workbook);
-            CellStyle styleAmountWhite = outilWrite.getCellStyleAmount(workbook);
-            styleAmountWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
-            CellStyle styleAmountBlue = outilWrite.getCellStyleAmount(workbook);
-            styleAmountBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
-            CellStyle styleHeader = workbook.createCellStyle();
-
             // Créer une nouvelle feuille dans le classeur pour le grand livre
             Sheet sheet = workbook.createSheet("Grand Livre");
-            outilWrite.getCellsEnteteGrandLivre(sheet, styleHeader);
+            outilWrite.getCellsEnteteGrandLivre(sheet);
             int rowNum = 1;
             int lastRowNumTotal = 0;
             List<Integer> lineTotals = new ArrayList<>();
             for (Object grandLivre : grandLivres) {
                 Row row = sheet.createRow(rowNum);
                 if (grandLivre instanceof Line) {
-                    if (rowNum % 2 == 0) {
-                        outilWrite.getLineGrandLivre((Line) grandLivre, row, styleBlue, styleAmountBlue, workbook, true, pathDirectoryInvoice);
-                    } else {
-                        outilWrite.getLineGrandLivre((Line) grandLivre, row, styleWhite, styleAmountWhite, workbook, true, pathDirectoryInvoice);
-                    }
+                    outilWrite.getLineGrandLivre((Line) grandLivre, row, true, pathDirectoryInvoice);
                 }
                 if (grandLivre instanceof TotalAccount) {
-                    outilWrite.getTotalAccount((TotalAccount) grandLivre, row, styleTotal, styleTotalAmount, workbook, lastRowNumTotal);
+                    outilWrite.getTotalAccount((TotalAccount) grandLivre, row, lastRowNumTotal);
                     lastRowNumTotal = rowNum;
                     lineTotals.add(rowNum + 1);
                 }
                 if (grandLivre instanceof TotalBuilding) {
-                    outilWrite.getTotalBuilding((TotalBuilding) grandLivre, row, styleTotal, styleTotalAmount, workbook, lineTotals);
+                    outilWrite.getTotalBuilding((TotalBuilding) grandLivre, row, lineTotals);
                 }
                 rowNum++;
             }
@@ -211,16 +184,12 @@ public class WriteFile {
                         }
                     }
                 }
-                outilWrite.getCellsEnteteGrandLivre(sheetJournal, styleHeader);
+                outilWrite.getCellsEnteteGrandLivre(sheetJournal);
                 rowNum = 1;
-                outilWrite.getCellsEnteteGrandLivre(sheetJournal, styleHeader);
+                outilWrite.getCellsEnteteGrandLivre(sheetJournal);
                 for (Map.Entry<String, Line> line : ligneOfJournal.entrySet()) {
                     Row row = sheetJournal.createRow(rowNum);
-                    if (rowNum % 2 == 0) {
-                        outilWrite.getLineGrandLivre(line.getValue(), row, styleBlue, styleAmountBlue, workbook, false, pathDirectoryInvoice);
-                    } else {
-                        outilWrite.getLineGrandLivre(line.getValue(), row, styleWhite, styleAmountWhite, workbook, false, pathDirectoryInvoice);
-                    }
+                    outilWrite.getLineGrandLivre(line.getValue(), row, false, pathDirectoryInvoice);
                     rowNum++;
                 }
                 for (int idCollum = 0; idCollum < cellNumEntete; idCollum++) {
@@ -252,10 +221,8 @@ public class WriteFile {
             Row headerRow = sheetDocument.createRow(index);
             Cell cellDocument = headerRow.createCell(0);
             cellDocument.setCellValue("Piece");
-            //cellDocument.setCellStyle(getCellStyleEntete(styleHeader));
             Cell cellMessage = headerRow.createCell(1);
             cellMessage.setCellValue("Piece");
-            //cellMessage.setCellStyle(getCellStyleEntete(styleHeader));
             for (Map.Entry<String, String> entry : ligneOfDocumentMissing.entrySet()) {
                 Row row = sheetDocument.createRow(index++);
                 Cell cellD = row.createCell(0);
@@ -263,7 +230,6 @@ public class WriteFile {
                 Cell cellM = row.createCell(1);
                 cellM.setCellValue(entry.getValue());
             }
-
 
             // Écrire le contenu du classeur dans un fichier
             outilWrite.writeWorkbook(pathNameFile, workbook);
@@ -279,34 +245,24 @@ public class WriteFile {
             // Créer un nouveau classeur Excel
             Workbook workbook = new XSSFWorkbook();
 
-            // Style
-            CellStyle styleTotal = outilWrite.getCellStyleTotal(workbook);
-            CellStyle styleTotalAmount = outilWrite.getCellStyleTotalAmount(workbook);
-            CellStyle styleWhite = outilWrite.getCellStyleWhite(workbook);
-            CellStyle styleBlue = outilWrite.getCellStyleBlue(workbook);
-            CellStyle styleAmountWhite = outilWrite.getCellStyleAmountWhite(workbook);
-            CellStyle styleAmountBlue = outilWrite.getCellStyleAmountBlue(workbook);
-
             // Créer une nouvelle feuille dans le classeur pour le grand livre
             Sheet sheet = workbook.createSheet("Liste des dépenses");
             outilWrite.getCellsEnteteListeDesDepenses(sheet);
             int rowNum = 1;
             for (Object line : listeDesDepenses) {
-                Row row = sheet.createRow(rowNum);
-                if (line instanceof LineOfExpenseKey) {
-                    outilWrite.getLineOfExpenseKey((LineOfExpenseKey) line, row, styleTotal);
-                }
-                if (line instanceof LineOfExpenseTotal) {
-                    outilWrite.getLineOfExpenseTotal((LineOfExpenseTotal) line, row, styleTotal, styleTotalAmount);
-                }
-                if (line instanceof LineOfExpense) {
-                    if (rowNum % 2 == 0) {
-                        outilWrite.getLineOfExpense((LineOfExpense) line, row, styleWhite, styleAmountWhite, pathDirectoryInvoice);
-                    } else {
-                        outilWrite.getLineOfExpense((LineOfExpense) line, row, styleBlue, styleAmountBlue, pathDirectoryInvoice);
+                if (line != null) {
+                    Row row = sheet.createRow(rowNum);
+                    if (line instanceof LineOfExpenseKey) {
+                        outilWrite.getLineOfExpenseKey((LineOfExpenseKey) line, row);
                     }
+                    if (line instanceof LineOfExpenseTotal) {
+                        outilWrite.getLineOfExpenseTotal((LineOfExpenseTotal) line, row);
+                    }
+                    if (line instanceof LineOfExpense) {
+                        outilWrite.getLineOfExpense((LineOfExpense) line, row, pathDirectoryInvoice);
+                    }
+                    rowNum++;
                 }
-                rowNum++;
             }
             int cellNumEntete = NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES.length;
             for (int idCollum = 0; idCollum < cellNumEntete; idCollum++) {
@@ -360,17 +316,8 @@ public class WriteFile {
             // Créer un nouveau classeur Excel
             Workbook workbook = new XSSFWorkbook();
 
-            // Style
-            CellStyle cellStyleWhite = outilWrite.getCellStyleWhite(workbook);
-            CellStyle cellStyleBlue = outilWrite.getCellStyleBlue(workbook);
-            CellStyle cellStyleAmountWhite = outilWrite.getCellStyleAmountWhite(workbook);
-            CellStyle cellStyleAmountBlue = outilWrite.getCellStyleAmountBlue(workbook);
-            CellStyle cellStyleHeader = workbook.createCellStyle();
-
-            pointageReleve(new ArrayList<>(grandLivres), new ArrayList<>(bankLines), workbook,
-                    cellStyleHeader, cellStyleBlue, cellStyleAmountBlue, cellStyleWhite, cellStyleAmountWhite);
-            pointageGL(new ArrayList<>(grandLivres), new ArrayList<>(bankLines), workbook,
-                    cellStyleHeader, cellStyleBlue, cellStyleAmountBlue, cellStyleWhite, cellStyleAmountWhite);
+            pointageReleve(new ArrayList<>(grandLivres), new ArrayList<>(bankLines), workbook);
+            pointageGL(new ArrayList<>(grandLivres), new ArrayList<>(bankLines), workbook);
 
             if (workbook.getSheet(POINTAGE_RELEVE_OK).getLastRowNum() != workbook.getSheet(POINTAGE_GL_OK).getLastRowNum()) {
                 LOGGER.error(("Il n'y a pas le même nombre d'opération pointées OK dans le grand livre et sur les relevés de compte"));
@@ -385,13 +332,11 @@ public class WriteFile {
         }
     }
 
-    private void pointageReleve(List<Line> grandLivres, List<BankLine> bankLines, Workbook workbook,
-                                CellStyle styleHeader, CellStyle styleBlue, CellStyle styleAmountBlue,
-                                CellStyle styleWhite, CellStyle styleAmountWhite) {
+    private void pointageReleve(List<Line> grandLivres, List<BankLine> bankLines, Workbook workbook) {
         Sheet sheetPointage = workbook.createSheet(POINTAGE_RELEVE_OK);
         List<Line> grandLivresKO = new ArrayList<>();
         List<BankLine> bankLinesKO = new ArrayList<>();
-        outilWrite.getCellsEnteteEtatRapprochement(sheetPointage, styleHeader);
+        outilWrite.getCellsEnteteEtatRapprochement(sheetPointage);
         int rowNumPointage = 1;
         for (Line grandLivre : grandLivres) {
             Row row = sheetPointage.createRow(rowNumPointage);
@@ -417,11 +362,7 @@ public class WriteFile {
                 grandLivresKO.add(grandLivre);
             } else {
                 message = "Correspondante entre le grand livre et les relevés de banque";
-                if (rowNumPointage % 2 == 0) {
-                    outilWrite.getLineEtatRapprochement(grandLivre, row, styleBlue, styleAmountBlue, bankLineFound, message);
-                } else {
-                    outilWrite.getLineEtatRapprochement(grandLivre, row, styleWhite, styleAmountWhite, bankLineFound, message);
-                }
+                outilWrite.getLineEtatRapprochement(grandLivre, row, bankLineFound, message);
                 bankLines.remove(bankLineFound);
                 rowNumPointage++;
             }
@@ -432,7 +373,7 @@ public class WriteFile {
         sheetPointage.createFreezePane(0, 1);
 
         Sheet sheetPointage1 = workbook.createSheet("Pointage Relevé KO");
-        outilWrite.getCellsEnteteEtatRapprochement(sheetPointage1, styleHeader);
+        outilWrite.getCellsEnteteEtatRapprochement(sheetPointage1);
         rowNumPointage = 1;
         for (Line grandLivre : grandLivresKO) {
             Row row = sheetPointage1.createRow(rowNumPointage);
@@ -453,11 +394,7 @@ public class WriteFile {
             }
             if (message.equals(KO)) {
                 message = "Aucune correspondance du grand livre dans les relevés de banque";
-                if (rowNumPointage % 2 == 0) {
-                    outilWrite.getLineEtatRapprochement(grandLivre, row, styleBlue, styleAmountBlue, bankLineFound, message);
-                } else {
-                    outilWrite.getLineEtatRapprochement(grandLivre, row, styleWhite, styleAmountWhite, bankLineFound, message);
-                }
+                outilWrite.getLineEtatRapprochement(grandLivre, row, bankLineFound, message);
                 bankLines.remove(bankLineFound);
                 rowNumPointage++;
             }
@@ -468,13 +405,11 @@ public class WriteFile {
         sheetPointage1.createFreezePane(0, 1);
     }
 
-    private void pointageGL(List<Line> grandLivres, List<BankLine> bankLines, Workbook workbook,
-                            CellStyle styleHeader, CellStyle styleBlue, CellStyle styleAmountBlue,
-                            CellStyle styleWhite, CellStyle styleAmountWhite) {
+    private void pointageGL(List<Line> grandLivres, List<BankLine> bankLines, Workbook workbook) {
         Sheet sheetPointage = workbook.createSheet(POINTAGE_GL_OK);
         List<Line> grandLivresKO = new ArrayList<>();
         List<BankLine> bankLinesKO = new ArrayList<>();
-        outilWrite.getCellsEnteteEtatRapprochement(sheetPointage, styleHeader);
+        outilWrite.getCellsEnteteEtatRapprochement(sheetPointage);
         int rowNumPointage = 1;
         for (BankLine bankLine : bankLines) {
             Row row = sheetPointage.createRow(rowNumPointage);
@@ -500,11 +435,7 @@ public class WriteFile {
                 bankLinesKO.add(bankLine);
             } else {
                 message = "Correspondante entre le grand livre et les relevés de banque";
-                if (rowNumPointage % 2 == 0) {
-                    outilWrite.getLineEtatRapprochement(lineGLFound, row, styleBlue, styleAmountBlue, bankLine, message);
-                } else {
-                    outilWrite.getLineEtatRapprochement(lineGLFound, row, styleWhite, styleAmountWhite, bankLine, message);
-                }
+                outilWrite.getLineEtatRapprochement(lineGLFound, row, bankLine, message);
                 grandLivres.remove(lineGLFound);
                 rowNumPointage++;
             }
@@ -515,7 +446,7 @@ public class WriteFile {
         sheetPointage.createFreezePane(0, 1);
 
         Sheet sheetPointage1 = workbook.createSheet("Pointage GL KO");
-        outilWrite.getCellsEnteteEtatRapprochement(sheetPointage1, styleHeader);
+        outilWrite.getCellsEnteteEtatRapprochement(sheetPointage1);
         rowNumPointage = 1;
         for (BankLine bankLine : bankLinesKO) {
             Row row = sheetPointage1.createRow(rowNumPointage);
@@ -536,12 +467,7 @@ public class WriteFile {
             }
             if (message.equals(KO)) {
                 message = "Aucune correspondance du relevé de banque dans le grand livre";
-
-                if (rowNumPointage % 2 == 0) {
-                    outilWrite.getLineEtatRapprochement(lineGrandLivreFound, row, styleBlue, styleAmountBlue, bankLine, message);
-                } else {
-                    outilWrite.getLineEtatRapprochement(lineGrandLivreFound, row, styleWhite, styleAmountWhite, bankLine, message);
-                }
+                outilWrite.getLineEtatRapprochement(lineGrandLivreFound, row, bankLine, message);
                 grandLivres.remove(lineGrandLivreFound);
                 rowNumPointage++;
             }
@@ -551,5 +477,4 @@ public class WriteFile {
         }
         sheetPointage1.createFreezePane(0, 1);
     }
-
 }
