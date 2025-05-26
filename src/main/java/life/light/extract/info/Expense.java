@@ -4,7 +4,7 @@ import life.light.type.LineOfExpense;
 import life.light.type.LineOfExpenseKey;
 import life.light.type.LineOfExpenseTotal;
 import life.light.type.TypeOfExpense;
-import life.light.write.OutilWrite;
+import life.light.write.WriteOutil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,14 +13,14 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
 
-import static life.light.write.OutilWrite.DATE_FORMATTER;
+import static life.light.write.WriteOutil.DATE_FORMATTER;
 
 public class Expense {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     OutilInfo outilInfo = new OutilInfo();
-    OutilWrite outilWrite = new OutilWrite();
+    WriteOutil outilWrite = new WriteOutil();
 
     public Object[] getList(String fileName) {
         Object[] listOfExpense = new Object[outilInfo.getNumberOfLineInFile(fileName)];

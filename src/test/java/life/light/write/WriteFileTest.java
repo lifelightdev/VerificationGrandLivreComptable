@@ -23,6 +23,7 @@ class WriteFileTest {
     void setUp() {
         accounts.put("512", new TypeAccount("512", "Banque"));
         accounts.put("10500", new TypeAccount("10500", "Fond travaux"));
+        accounts.put("401", new TypeAccount("401", "Un compte"));
 
         journals.add("BQ");
         journals.add("JR");
@@ -38,6 +39,8 @@ class WriteFileTest {
             Assertions.assertEquals("Compte;Intitulé du compte;", line);
             line = reader.readLine();
             Assertions.assertEquals("10500 ; Fond travaux ; ", line);
+            line = reader.readLine();
+            Assertions.assertEquals("401 ; Un compte ; ", line);
             line = reader.readLine();
             Assertions.assertEquals("512 ; Banque ; ", line);
         } catch (IOException e) {
@@ -55,7 +58,7 @@ class WriteFileTest {
             Assertions.assertEquals(1, workbook.getNumberOfSheets());
             Assertions.assertEquals("Plan comptable", workbook.getSheetAt(0).getSheetName());
             Sheet sheet = workbook.getSheetAt(0);
-            Assertions.assertEquals(2, sheet.getLastRowNum());
+            Assertions.assertEquals(3, sheet.getLastRowNum());
             Row row = sheet.getRow(0);
             Assertions.assertEquals("Compte", row.getCell(0).getStringCellValue());
             Assertions.assertEquals("Intitulé du compte", row.getCell(1).getStringCellValue());
@@ -63,6 +66,9 @@ class WriteFileTest {
             Assertions.assertEquals(10500, row.getCell(0).getNumericCellValue());
             Assertions.assertEquals("Fond travaux", row.getCell(1).getStringCellValue());
             row = sheet.getRow(2);
+            Assertions.assertEquals(401, row.getCell(0).getNumericCellValue());
+            Assertions.assertEquals("Un compte", row.getCell(1).getStringCellValue());
+            row = sheet.getRow(3);
             Assertions.assertEquals(512, row.getCell(0).getNumericCellValue());
             Assertions.assertEquals("Banque", row.getCell(1).getStringCellValue());
         } catch (IOException e) {
@@ -114,7 +120,7 @@ class WriteFileTest {
 
         Line line1 = new Line("000001", "2024-01-15", accounts.get("512"), journals.getFirst(), accounts.get("10500"), "CHK123", "Paiement travaux", "1000.00", "");
         Line line2 = new Line("000002", "2024-01-20", accounts.get("10500"), journals.getFirst(), accounts.get("512"), "CHK124", "Remboursement", "", "500.00");
-        Line line3 = new Line("000003", "2024-01-25", accounts.get("512"), journals.getLast(), null, "CHK125", "Autre opération", "500.00", "");
+        Line line3 = new Line("000003", "2024-01-25", accounts.get("512"), journals.getLast(), accounts.get("401"), "CHK125", "Autre opération", "500.00", "");
 
         TotalAccount totalAccount1 = new TotalAccount("Total compte 1 500.00 €", accounts.get("512"), "1500.00", "0.00");
         TotalAccount totalAccount2 = new TotalAccount("Total compte 500.00 €", accounts.get("10500"), "0.00", "500.00");

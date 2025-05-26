@@ -7,7 +7,6 @@ import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.ss.util.CellReference;
-import org.apache.poi.xssf.usermodel.XSSFColor;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -18,17 +17,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class OutilWrite {
+public class WriteOutil {
+
+    private WriteCellStyle writeCellStyle = new WriteCellStyle();
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    public static final String AMOUNT_FORMATTER = "# ### ##0.00 €;[red]# ### ##0.00 €";
-
-    public static final XSSFColor BACKGROUND_COLOR_BLUE = new XSSFColor(new java.awt.Color(240, 255, 255), null);
-    public static final XSSFColor BACKGROUND_COLOR_WHITE = new XSSFColor(new java.awt.Color(255, 255, 255), null);
-    private static final XSSFColor BACKGROUND_COLOR_GRAY = new XSSFColor(new java.awt.Color(200, 200, 200), null);
-    private static final XSSFColor BACKGROUND_COLOR_RED = new XSSFColor(new java.awt.Color(255, 0, 0), null);
 
     public static final String[] NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES = {"Pièce", "Date", "Libellé", "Montant",
             "Déduction", "Récuperation", "Commentaire"};
@@ -89,20 +84,31 @@ public class OutilWrite {
         }
     }
 
-    public void getTotalBuilding(TotalBuilding grandLivre, Row row, List<Integer> lineTotals) {
-        Cell cell;
-        CellStyle styleTotal = getCellStyleTotal(row.getSheet().getWorkbook());
-        CellStyle styleTotalAmount = getCellStyleTotalAmount(row.getSheet().getWorkbook());
-        for (int idCell = ID_ACOUNT_NUMBER_OF_LEDGER; idCell < ID_LABEL_OF_LEDGER; idCell++) {
-            cell = row.createCell(idCell);
-            cell.setCellStyle(styleTotal);
-        }
+    public void getTotalBuilding(TotalBuilding lineOfTotalBuildingInLedger, Row row, List<Integer> lineTotals) {
 
-        cell = row.createCell(ID_LABEL_OF_LEDGER);
-        cell.setCellValue(grandLivre.label());
-        cell.setCellStyle(styleTotal);
+        CellStyle styleTotal = writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook());
+        CellStyle styleTotalAmount = writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook());
 
-        Cell debitCell = row.createCell(ID_DEBIT_OF_LEDGER);
+        addCellEmpty(ID_ACOUNT_NUMBER_OF_LEDGER, ID_LABEL_OF_LEDGER, row, styleTotal);
+        addCell(row, ID_LABEL_OF_LEDGER, lineOfTotalBuildingInLedger.label(), styleTotal,
+                lineOfTotalBuildingInLedger.toString(), "le libellé", "le grand livre");
+
+        Cell debitCell = addCellAmountOfTotalBuildingInLedger(row, ID_DEBIT_OF_LEDGER, lineTotals, styleTotalAmount);
+        Cell creditCell = addCellAmountOfTotalBuildingInLedger(row, ID_CREDIT_OF_LEDGER, lineTotals, styleTotalAmount);
+
+        addCellBalanceOfTotalInLedger(row, debitCell, creditCell, styleTotalAmount);
+    }
+
+    private Cell addCellBalanceOfTotalInLedger(Row row, Cell debitCell, Cell creditCell, CellStyle styleTotalAmount) {
+        Cell soldeCell = row.createCell(ID_BALANCE_OF_LEDGER);
+        soldeCell.setCellFormula(debitCell.getAddress() + "-" + creditCell.getAddress());
+        soldeCell.setCellStyle(styleTotalAmount);
+        row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
+        return soldeCell;
+    }
+
+    private Cell addCellAmountOfTotalBuildingInLedger(Row row, int idDebitOfLedger, List<Integer> lineTotals, CellStyle styleTotalAmount) {
+        Cell debitCell = row.createCell(idDebitOfLedger);
         StringBuilder sumDebit = new StringBuilder();
         for (Integer numRow : lineTotals) {
             sumDebit.append(CellReference.convertNumToColString(debitCell.getColumnIndex())).append(numRow).append("+");
@@ -110,69 +116,49 @@ public class OutilWrite {
         debitCell.setCellFormula(sumDebit.substring(0, sumDebit.lastIndexOf("+")));
         row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
         debitCell.setCellStyle(styleTotalAmount);
-
-        Cell creditCell = row.createCell(ID_CREDIT_OF_LEDGER);
-        StringBuilder sumCredit = new StringBuilder();
-        for (Integer numRow : lineTotals) {
-            sumCredit.append(CellReference.convertNumToColString(creditCell.getColumnIndex())).append(numRow).append("+");
-        }
-        creditCell.setCellFormula(sumCredit.substring(0, sumCredit.lastIndexOf("+")));
-        row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
-        creditCell.setCellStyle(styleTotalAmount);
-
-        Cell soldeCell = row.createCell(ID_BALANCE_OF_LEDGER);
-        soldeCell.setCellFormula(debitCell.getAddress() + "-" + creditCell.getAddress());
-        soldeCell.setCellStyle(styleTotalAmount);
-        row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
+        return debitCell;
     }
 
-    public void getTotalAccount(TotalAccount grandLivre, Row row, int lastRowNumTotal) {
-        Cell cell;
-        CellStyle cellStyle = getCellStyleTotal(row.getSheet().getWorkbook());
-        CellStyle cellStyleAmount = getCellStyleTotalAmount(row.getSheet().getWorkbook());
-        if (!grandLivre.account().account().isEmpty()) {
-            cell = row.createCell(ID_ACOUNT_NUMBER_OF_LEDGER);
-            cell.setCellValue(grandLivre.account().account());
-            if (isDouble(grandLivre.account().account())) {
-                double account = Double.parseDouble(grandLivre.account().account());
-                cell.setCellValue(account);
+    private void addCell(Row row, int idColum, String value, CellStyle style, String line, String name, String place) {
+        Cell cell = row.createCell(idColum);
+        if (isDouble(value)) {
+            cell.setCellValue(Double.parseDouble(value));
+        } else if (!value.isEmpty()) {
+            cell.setCellValue(value);
+        } else {
+            if (name != null && !name.isEmpty()) {
+                LOGGER.error("Il manque {} dans {} à la ligne {}", name, place, line);
             }
-            cell.setCellStyle(cellStyle);
         }
-        if (!grandLivre.account().label().isEmpty()) {
-            cell = row.createCell(ID_ACOUNT_LABEL_OF_LEDGER);
-            cell.setCellValue(grandLivre.account().label());
-            cell.setCellStyle(cellStyle);
+        cell.setCellStyle(style);
+    }
+
+    private void addCellEmpty(int idFirstColum, int idLastColum, Row row, CellStyle style) {
+        for (int idCell = idFirstColum; idCell < idLastColum; idCell++) {
+            Cell cell = row.createCell(idCell);
+            cell.setCellStyle(style);
         }
-        for (int idCell = ID_DOCUMENT_OF_LEDGER; idCell < ID_LABEL_OF_LEDGER; idCell++) {
-            cell = row.createCell(idCell);
-            cell.setCellStyle(cellStyle);
-        }
+    }
 
-        cell = row.createCell(ID_LABEL_OF_LEDGER);
-        cell.setCellValue(grandLivre.label());
-        cell.setCellStyle(cellStyle);
+    public void getTotalAccount(TotalAccount lineOfTotalAccountInLedger, Row row, int lastRowNumTotal) {
 
-        Cell debitCell = row.createCell(ID_DEBIT_OF_LEDGER);
-        CellAddress debitCellAddressFirst = new CellAddress(lastRowNumTotal + 1, debitCell.getAddress().getColumn());
-        CellAddress debitCellAddressEnd = new CellAddress(debitCell.getAddress().getRow() - 1, debitCell.getAddress().getColumn());
-        debitCell.setCellFormula("SUM(" + debitCellAddressFirst + ":" + debitCellAddressEnd + ")");
-        row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
-        debitCell.setCellStyle(cellStyleAmount);
+        CellStyle cellStyle = writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook());
+        CellStyle cellStyleAmount = writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook());
 
-        Cell creditCell = row.createCell(ID_CREDIT_OF_LEDGER);
-        creditCell.setCellStyle(cellStyleAmount);
-        CellAddress creditCellAddressFirst = new CellAddress(lastRowNumTotal + 1, creditCell.getAddress().getColumn());
-        CellAddress creditCellAddressEnd = new CellAddress(creditCell.getAddress().getRow() - 1, creditCell.getAddress().getColumn());
-        creditCell.setCellFormula("SUM(" + creditCellAddressFirst + ":" + creditCellAddressEnd + ")");
+        addCell(row, ID_ACOUNT_NUMBER_OF_LEDGER, lineOfTotalAccountInLedger.account().account(), cellStyle,
+                lineOfTotalAccountInLedger.toString(), "le numéro de compte", "le grand livre");
+        addCell(row, ID_ACOUNT_LABEL_OF_LEDGER, lineOfTotalAccountInLedger.account().label(), cellStyle,
+                lineOfTotalAccountInLedger.toString(), "le libellé du compte", "le grand livre");
+        addCellEmpty(ID_DOCUMENT_OF_LEDGER, ID_LABEL_OF_LEDGER, row, cellStyle);
+        addCell(row, ID_LABEL_OF_LEDGER, lineOfTotalAccountInLedger.label(), cellStyle,
+                lineOfTotalAccountInLedger.toString(), "le libellé", "le grand livre");
 
-        Cell soldeCell = row.createCell(ID_BALANCE_OF_LEDGER);
-        soldeCell.setCellFormula(debitCell.getAddress() + "-" + creditCell.getAddress());
-        soldeCell.setCellStyle(cellStyleAmount);
-        row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
+        Cell debitCell = addCellDebitOfTotalAccountInLedger(row, lastRowNumTotal, cellStyleAmount);
+        Cell creditCell = addCellCreditOfTotalAccountInLedger(row, lastRowNumTotal, cellStyleAmount);
+        Cell soldeCell = addCellBalanceOfTotalInLedger(row, debitCell, creditCell, cellStyleAmount);
 
         Cell cellVerif = row.createCell(ID_VERIFFICATION_OF_LEDGER);
-        String amount = grandLivre.label()
+        String amount = lineOfTotalAccountInLedger.label()
                 .replace("Total", " ")
                 .replace("compte", " ")
                 .replace("(Solde", " ")
@@ -189,9 +175,9 @@ public class OutilWrite {
         FormulaEvaluator evaluator = row.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
         double solde = (double) Math.round(evaluator.evaluate(soldeCell).getNumberValue() * 100) / 100;
         double debitExcel = (double) Math.round(evaluator.evaluate(debitCell).getNumberValue() * 100) / 100;
-        double debitGrandLivre = Double.parseDouble(grandLivre.debit());
+        double debitGrandLivre = Double.parseDouble(lineOfTotalAccountInLedger.debit());
         double creditExcel = (double) Math.round(evaluator.evaluate(creditCell).getNumberValue() * 100) / 100;
-        double creditGrandLivre = Double.parseDouble(grandLivre.credit());
+        double creditGrandLivre = Double.parseDouble(lineOfTotalAccountInLedger.credit());
         if (Double.parseDouble(amount) == solde) {
             if (debitExcel == debitGrandLivre) {
                 if (creditExcel == creditGrandLivre) {
@@ -207,12 +193,12 @@ public class OutilWrite {
             verif = KO;
         }
         if (verif.equals(KO)) {
-            cellVerif.setCellStyle(getCellStyleVerifRed(cellStyle));
+            cellVerif.setCellStyle(writeCellStyle.getCellStyleVerifRed(cellStyle));
             LOGGER.info("Vérification du total du compte [{}] Solde PDF [{}] Solde Excel [{}] débit PDF [{}] débit Excel [{}] crédit PDF [{}] crédit Excel [{}] ligne [{}]",
-                    grandLivre.account().account(), amount, solde,
+                    lineOfTotalAccountInLedger.account().account(), amount, solde,
                     debitGrandLivre, debitExcel,
                     creditGrandLivre, creditExcel,
-                    grandLivre);
+                    lineOfTotalAccountInLedger);
         }
         cellVerif.setCellValue(verif);
 
@@ -225,79 +211,120 @@ public class OutilWrite {
         cellMessqage.setCellStyle(cellStyle);
     }
 
-    public void getLineGrandLivre(Line grandLivre, Row row, boolean verif, String pathDirectoryInvoice) {
+    private Cell addCellCreditOfTotalAccountInLedger(Row row, int lastRowNumTotal, CellStyle cellStyleAmount) {
+        Cell creditCell = row.createCell(ID_CREDIT_OF_LEDGER);
+        creditCell.setCellStyle(cellStyleAmount);
+        CellAddress creditCellAddressFirst = new CellAddress(lastRowNumTotal + 1, creditCell.getAddress().getColumn());
+        CellAddress creditCellAddressEnd = new CellAddress(creditCell.getAddress().getRow() - 1, creditCell.getAddress().getColumn());
+        creditCell.setCellFormula("SUM(" + creditCellAddressFirst + ":" + creditCellAddressEnd + ")");
+        return creditCell;
+    }
+
+    private Cell addCellDebitOfTotalAccountInLedger(Row row, int lastRowNumTotal, CellStyle cellStyleAmount) {
+        Cell debitCell = row.createCell(ID_DEBIT_OF_LEDGER);
+        CellAddress debitCellAddressFirst = new CellAddress(lastRowNumTotal + 1, debitCell.getAddress().getColumn());
+        CellAddress debitCellAddressEnd = new CellAddress(debitCell.getAddress().getRow() - 1, debitCell.getAddress().getColumn());
+        debitCell.setCellFormula("SUM(" + debitCellAddressFirst + ":" + debitCellAddressEnd + ")");
+        row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
+        debitCell.setCellStyle(cellStyleAmount);
+        return debitCell;
+    }
+
+    public void getLineGrandLivre(Line lineOfLedger, Row row, boolean verif, String pathDirectoryInvoice) {
         CellStyle cellStyle;
         CellStyle cellStyleAmount;
         if (row.getRowNum() % 2 == 0) {
-            cellStyle = getCellStyleWhite(row.getSheet().getWorkbook());
-            cellStyleAmount = getCellStyleAmountWhite(row.getSheet().getWorkbook());
+            cellStyle = writeCellStyle.getCellStyleWhite(row.getSheet().getWorkbook());
+            cellStyleAmount = writeCellStyle.getCellStyleAmountWhite(row.getSheet().getWorkbook());
         } else {
-            cellStyle = getCellStyleBlue(row.getSheet().getWorkbook());
-            cellStyleAmount = getCellStyleAmountBlue(row.getSheet().getWorkbook());
+            cellStyle = writeCellStyle.getCellStyleBlue(row.getSheet().getWorkbook());
+            cellStyleAmount = writeCellStyle.getCellStyleAmountBlue(row.getSheet().getWorkbook());
         }
 
-        addAccountCell(grandLivre, row, cellStyle);
-        addDocumentCell(grandLivre, row, cellStyle);
-        addDateCell(grandLivre, row, cellStyle);
-        addJournalCell(grandLivre, row, cellStyle);
-        addCounterPartCell(grandLivre, row, cellStyle);
-        addCheckNumberCell(grandLivre, row, cellStyle);
-        addLabelCell(grandLivre, row, cellStyle);
+        addCell(row, ID_ACOUNT_NUMBER_OF_LEDGER, lineOfLedger.account().account(), cellStyle, lineOfLedger.toString(),
+                "le numéro de compte", "legrand livre");
+        addCell(row, ID_ACOUNT_LABEL_OF_LEDGER, lineOfLedger.account().label(), cellStyle, lineOfLedger.toString(),
+                "le libellé du compte", "le grand livre");
+        if (!lineOfLedger.label().contains(REPORT_DE)) {
+            addCell(row, ID_DOCUMENT_OF_LEDGER, lineOfLedger.document(), cellStyle, lineOfLedger.toString(),
+                    "la piéce", "le grand livre");
+        } else {
+            addCellEmpty(ID_DOCUMENT_OF_LEDGER, ID_DATE_OF_LEDGER, row, cellStyle);
+        }
+        addCell(row, ID_DATE_OF_LEDGER, lineOfLedger.date(), cellStyle, lineOfLedger.toString(), "la date",
+                "le grand livre");
 
-        Cell debitCell = addDebitCell(grandLivre, row, cellStyleAmount);
-        Cell creditCell = addCreditCell(grandLivre, row, cellStyleAmount);
-        addSoldeCell(grandLivre, row, cellStyleAmount, creditCell, debitCell);
+        if (!lineOfLedger.label().contains(REPORT_DE)) {
+            addCell(row, ID_JOURNAL_OF_LEDGER, lineOfLedger.journal(), cellStyle, lineOfLedger.toString(), null,
+                    "le grand livre");
+            addCell(row, ID_COUNTERPART_NUMBER_OF_LEDGER, lineOfLedger.accountCounterpart().account(), cellStyle,
+                    lineOfLedger.toString(), "le numéro de compte de la contrepartie", "le grand livre");
+            addCell(row, ID_COUNTERPART_LABEL_OF_LEDGER, lineOfLedger.accountCounterpart().label(), cellStyle,
+                    lineOfLedger.toString(), "le libellé de la contrepartie", "le grand livre");
+        } else {
+            addCellEmpty(ID_JOURNAL_OF_LEDGER, ID_CHECK_OF_LEDGER, row, cellStyle);
+        }
+        addCell(row, ID_CHECK_OF_LEDGER, lineOfLedger.checkNumber(), cellStyle, lineOfLedger.toString(), null,
+                "le grand livre");
+        addCell(row, ID_LABEL_OF_LEDGER, lineOfLedger.label(), cellStyle, lineOfLedger.toString(),
+                "le libellé", "le grand livre");
+
+        Cell debitCell = addDebitCell(lineOfLedger, row, cellStyleAmount);
+        Cell creditCell = addCreditCell(lineOfLedger, row, cellStyleAmount);
+        addSoldeCell(lineOfLedger, row, cellStyleAmount, creditCell, debitCell);
 
         if (verif) {
-            addVerifCells(grandLivre, row, cellStyle, pathDirectoryInvoice);
+            addVerifCells(lineOfLedger, row, cellStyle, pathDirectoryInvoice);
         }
     }
 
-    public void getLineEtatRapprochement(Line grandLivre, Row row, BankLine bankLine, String message) {
+    public void getLineEtatRapprochement(Line lineOfLedger, Row row, BankLine bankLine, String message) {
         CellStyle cellStyle;
         CellStyle cellStyleAmount;
         if (row.getRowNum() % 2 == 0) {
-            cellStyle = getCellStyleWhite(row.getSheet().getWorkbook());
-            cellStyleAmount = getCellStyleAmountWhite(row.getSheet().getWorkbook());
+            cellStyle = writeCellStyle.getCellStyleWhite(row.getSheet().getWorkbook());
+            cellStyleAmount = writeCellStyle.getCellStyleAmountWhite(row.getSheet().getWorkbook());
         } else {
-            cellStyle = getCellStyleBlue(row.getSheet().getWorkbook());
-            cellStyleAmount = getCellStyleAmountBlue(row.getSheet().getWorkbook());
+            cellStyle = writeCellStyle.getCellStyleBlue(row.getSheet().getWorkbook());
+            cellStyleAmount = writeCellStyle.getCellStyleAmountBlue(row.getSheet().getWorkbook());
         }
-        if (grandLivre != null) {
-            addAccountCell(grandLivre, row, cellStyle);
-            addDocumentCell(grandLivre, row, cellStyle);
-            addDateCell(grandLivre, row, cellStyle);
-            addJournalCell(grandLivre, row, cellStyle);
-            addCounterPartCell(grandLivre, row, cellStyle);
-            addCheckNumberCell(grandLivre, row, cellStyle);
-            addLabelCell(grandLivre, row, cellStyle);
-            addDebitCell(grandLivre, row, cellStyleAmount);
-            addCreditCell(grandLivre, row, cellStyleAmount);
+        if (lineOfLedger != null) {
+            String place = "le grand livre de l'état de rapprochement";
+            addCell(row, ID_ACOUNT_NUMBER_OF_LEDGER, lineOfLedger.account().account(), cellStyle,
+                    lineOfLedger.toString(), "le numéro de compte", place);
+            addCell(row, ID_ACOUNT_LABEL_OF_LEDGER, lineOfLedger.account().label(), cellStyle, lineOfLedger.toString(),
+                    "le libellé de compte", place);
+            addCell(row, ID_DOCUMENT_OF_LEDGER, lineOfLedger.document(), cellStyle, lineOfLedger.toString(),
+                    "la piéce", place);
+            addCell(row, ID_DATE_OF_LEDGER, lineOfLedger.date(), cellStyle, lineOfLedger.toString(),
+                    "la date", place);
+            addCell(row, ID_JOURNAL_OF_LEDGER, lineOfLedger.journal(), cellStyle, lineOfLedger.toString(), null,
+                    place);
+            addCell(row, ID_COUNTERPART_NUMBER_OF_LEDGER, lineOfLedger.accountCounterpart().account(), cellStyle,
+                    lineOfLedger.toString(), "le numéro de compte de la contrepartie", place);
+            addCell(row, ID_COUNTERPART_LABEL_OF_LEDGER, lineOfLedger.accountCounterpart().label(), cellStyle,
+                    lineOfLedger.toString(), "le libellé de la contrepartie", place);
+            addCell(row, ID_CHECK_OF_LEDGER, lineOfLedger.checkNumber(), cellStyle, lineOfLedger.toString(),
+                    null, place);
+            addCell(row, ID_LABEL_OF_LEDGER, lineOfLedger.label(), cellStyle, lineOfLedger.toString(),
+                    "le libellé", place);
+            addDebitCell(lineOfLedger, row, cellStyleAmount);
+            addCreditCell(lineOfLedger, row, cellStyleAmount);
         }
         if (bankLine != null) {
-            Cell dateReleveCell = row.createCell(ID_MONTH_OF_SATEMENT_OF_RECONCILIATION);
-            dateReleveCell.setCellValue(bankLine.year() + "-" + bankLine.mounth());
-            dateReleveCell.setCellStyle(cellStyle);
-
-            Cell accountReleveCell = row.createCell(ID_ACOUNT_NUMBER_OF_RECONCILIATION);
-            accountReleveCell.setCellValue(Double.parseDouble(bankLine.account().account()));
-            accountReleveCell.setCellStyle(cellStyle);
-
-            Cell labelAccountReleveCell = row.createCell(ID_ACOUNT_LABEL_OF_RECONCILIATION);
-            labelAccountReleveCell.setCellValue(bankLine.account().label());
-            labelAccountReleveCell.setCellStyle(cellStyle);
-
-            Cell operationDateReleveCell = row.createCell(ID_OPERATION_DATE_OF_RECONCILIATION);
-            operationDateReleveCell.setCellValue(bankLine.operationDate().format(DATE_FORMATTER));
-            operationDateReleveCell.setCellStyle(cellStyle);
-
-            Cell valueDateReleveCell = row.createCell(ID_VALUE_DATE_OF_RECONCILIATION);
-            valueDateReleveCell.setCellValue(bankLine.valueDate().format(DATE_FORMATTER));
-            valueDateReleveCell.setCellStyle(cellStyle);
-
-            Cell labelReleveCell = row.createCell(ID_LABEL_OF_RECONCILIATION);
-            labelReleveCell.setCellValue(bankLine.label());
-            labelReleveCell.setCellStyle(cellStyle);
+            String place = "le relevé de compte banque";
+            addCell(row, ID_MONTH_OF_SATEMENT_OF_RECONCILIATION, bankLine.year() + "-" + bankLine.mounth(),
+                    cellStyle, bankLine.toString(), "le mois et l'année", place);
+            addCell(row, ID_ACOUNT_NUMBER_OF_RECONCILIATION, bankLine.account().account(), cellStyle,
+                    bankLine.toString(), "le numéro du compte", place);
+            addCell(row, ID_ACOUNT_LABEL_OF_RECONCILIATION, bankLine.account().label(), cellStyle, bankLine.toString(),
+                    "le libellé du compte", place);
+            addCell(row, ID_OPERATION_DATE_OF_RECONCILIATION, bankLine.operationDate().format(DATE_FORMATTER),
+                    cellStyle, bankLine.toString(), "la date de l'opération", place);
+            addCell(row, ID_VALUE_DATE_OF_RECONCILIATION, bankLine.valueDate().format(DATE_FORMATTER), cellStyle,
+                    bankLine.toString(), "la date de valeur", place);
+            addCell(row, ID_LABEL_OF_RECONCILIATION, bankLine.label(), cellStyle, bankLine.toString(),
+                    "le libellé", place);
 
             Cell debitReleveCell = row.createCell(ID_DEBIT_OF_RECONCILIATION);
             debitReleveCell.setCellValue(bankLine.debit());
@@ -307,9 +334,7 @@ public class OutilWrite {
             creditReleveCell.setCellValue(bankLine.credit());
             creditReleveCell.setCellStyle(cellStyleAmount);
         }
-        Cell messageCell = row.createCell(ID_COMMENT_OF_RECONCILIATION);
-        messageCell.setCellValue(message);
-        messageCell.setCellStyle(cellStyle);
+        addCell(row, ID_COMMENT_OF_RECONCILIATION, message, cellStyle, null, null, null);
     }
 
     private void addVerifCells(Line grandLivre, Row row, CellStyle style, String pathDirectoryInvoice) {
@@ -335,11 +360,11 @@ public class OutilWrite {
             if (grandLivre.debit().isEmpty() && grandLivre.credit().isEmpty()) {
                 verifCell.setCellValue(KO);
                 message = "Il n'y a aucun montant";
-                LOGGER.info("{} sur cette ligne : {}", message, grandLivre);
+                LOGGER.info("{} sur cette ligne : {}", message, grandLivre.toString());
             }
         }
         if (verifCell.getStringCellValue().equals(KO)) {
-            verifCell.setCellStyle(getCellStyleVerifRed(style));
+            verifCell.setCellStyle(writeCellStyle.getCellStyleVerifRed(style));
         } else {
             verifCell.setCellStyle(style);
         }
@@ -349,7 +374,7 @@ public class OutilWrite {
             messageCell.setHyperlink(link);
         }
         messageCell.setCellValue(message.trim());
-        addlineBlue(style, messageCell);
+        messageCell.setCellStyle(style);
     }
 
     private String getMessageFindDocument(String document, Hyperlink link, String thePathDirectoryInvoice) {
@@ -403,7 +428,6 @@ public class OutilWrite {
     }
 
     private String getMessageVerifLineReport(Line grandLivre, Cell verifCell, CellStyle style, String message) {
-        getCellStyleVerifRed(style);
         verifCell.setCellStyle(style);
         String amount = getAmountInLineReport(grandLivre);
         if (isDouble(amount)) {
@@ -420,7 +444,7 @@ public class OutilWrite {
             String nombreFormate = df.format((debit - credit)).replace(",", ".");
             if (amountDouble == Double.parseDouble(nombreFormate)) {
                 verifCell.setCellValue("OK");
-                addlineBlue(style, verifCell);
+                verifCell.setCellStyle(style);
             } else {
                 message = "Le montant du report est de %s le solde est de  %s le débit est de %s le credit est de %s"
                         .formatted(amount, Double.parseDouble(nombreFormate), Double.parseDouble(grandLivre.debit()), Double.parseDouble(grandLivre.credit()));
@@ -474,115 +498,6 @@ public class OutilWrite {
         return debitCell;
     }
 
-    private void addLabelCell(Line grandLivre, Row row, CellStyle style) {
-        Cell labelCell = row.createCell(ID_LABEL_OF_LEDGER);
-        if (!grandLivre.label().isEmpty()) {
-            labelCell.setCellValue(grandLivre.label());
-        } else {
-            LOGGER.error("Le libellé est absent sur la ligne : {}", grandLivre);
-        }
-        labelCell.setCellStyle(style);
-    }
-
-    private void addCheckNumberCell(Line grandLivre, Row row, CellStyle style) {
-        Cell checkNumberCell = row.createCell(ID_CHECK_OF_LEDGER);
-        if (isDouble(grandLivre.checkNumber())) {
-            checkNumberCell.setCellValue(Double.parseDouble(grandLivre.checkNumber()));
-        } else {
-            checkNumberCell.setCellValue(grandLivre.checkNumber());
-        }
-        checkNumberCell.setCellStyle(style);
-    }
-
-    private void addCounterPartCell(Line grandLivre, Row row, CellStyle style) {
-        Cell counterPartCell = row.createCell(ID_COUNTERPART_NUMBER_OF_LEDGER);
-        if (grandLivre.accountCounterpart() != null) {
-            if (isDouble(grandLivre.accountCounterpart().account())) {
-                counterPartCell.setCellValue(Double.parseDouble(grandLivre.accountCounterpart().account()));
-            } else {
-                counterPartCell.setCellValue(grandLivre.accountCounterpart().account());
-            }
-            Cell labelCounterPartCell = row.createCell(ID_COUNTERPART_LABEL_OF_LEDGER);
-            labelCounterPartCell.setCellValue(grandLivre.accountCounterpart().label());
-            labelCounterPartCell.setCellStyle(style);
-        } else if (!grandLivre.label().contains(REPORT_DE)) {
-            LOGGER.error("La contre partie est absente sur la ligne : {}", grandLivre);
-        }
-        counterPartCell.setCellStyle(style);
-
-    }
-
-    private void addJournalCell(Line grandLivre, Row row, CellStyle style) {
-        Cell journalCell = row.createCell(ID_JOURNAL_OF_LEDGER);
-        journalCell.setCellValue(grandLivre.journal());
-        if (!grandLivre.journal().isEmpty()) {
-            if (isDouble(grandLivre.journal())) {
-                journalCell.setCellValue(Double.parseDouble(grandLivre.journal()));
-            } else {
-                journalCell.setCellValue(grandLivre.journal());
-            }
-        } else if (!grandLivre.label().contains(REPORT_DE)) {
-            LOGGER.error("Le journal est absent sur la ligne : {}", grandLivre);
-        }
-        journalCell.setCellStyle(style);
-    }
-
-    private void addDateCell(Line grandLivre, Row row, CellStyle style) {
-        Cell dateCell = row.createCell(ID_DATE_OF_LEDGER);
-        dateCell.setCellValue(grandLivre.date());
-        dateCell.setCellStyle(style);
-    }
-
-    private void addDocumentCell(Line grandLivre, Row row, CellStyle cellStyle) {
-        Cell documentCell = row.createCell(ID_DOCUMENT_OF_LEDGER);
-        documentCell.setCellValue(grandLivre.document());
-        if (isDouble(grandLivre.document())) {
-            double document = Double.parseDouble(grandLivre.document());
-            documentCell.setCellValue(document);
-        } else if ((!grandLivre.label().contains(REPORT_DE)) && grandLivre.document().isEmpty()) {
-            LOGGER.error("Le numéro de piéce est absente sur la ligne : {}", grandLivre);
-        } else if (!grandLivre.label().contains(REPORT_DE)) {
-            LOGGER.error("Le numéro de piéce n'est pas numérique ({}) sur la ligne : {}", grandLivre.document(), grandLivre);
-        }
-        documentCell.setCellStyle(cellStyle);
-    }
-
-    private void addAccountCell(Line grandLivre, Row row, CellStyle cellStyle) {
-        String numAccount = grandLivre.account().account();
-        boolean isNotEmptyAccount = !numAccount.isEmpty();
-        if (isNotEmptyAccount) {
-            Cell accountNumberCell = row.createCell(ID_ACOUNT_NUMBER_OF_LEDGER);
-            if (isDouble(numAccount)) {
-                accountNumberCell.setCellValue(Double.parseDouble(numAccount));
-            } else {
-                accountNumberCell.setCellValue(numAccount);
-            }
-            accountNumberCell.setCellStyle(cellStyle);
-
-            Cell accountLabelCell = row.createCell(ID_ACOUNT_LABEL_OF_LEDGER);
-            accountLabelCell.setCellValue(grandLivre.account().label());
-            accountLabelCell.setCellStyle(cellStyle);
-        } else {
-            LOGGER.error("Il manque le numéro de compte sur cette ligne : {}", grandLivre);
-        }
-    }
-
-    private CellStyle getCellStyleVerifRed(CellStyle style) {
-        style.setFillForegroundColor(BACKGROUND_COLOR_RED);
-        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        return style;
-    }
-
-    private void addlineBlue(CellStyle cellStyle, Cell cell) {
-        if (cell.getRowIndex() % 2 == 0) {
-            cellStyle.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
-        } else {
-            cellStyle.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
-        }
-        cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        cell.setCellStyle(cellStyle);
-    }
-
     public boolean isDouble(String str) {
         if (str == null || str.isEmpty()) {
             return false; // Une chaîne nulle ou vide ne peut pas être un double
@@ -600,20 +515,16 @@ public class OutilWrite {
         Row headerRow = sheet.createRow(index);
         CellStyle styleHeader = sheet.getWorkbook().createCellStyle();
         for (String label : NOM_ENTETE_COLONNE_GRAND_LIVRE) {
-            Cell cell = headerRow.createCell(index++);
-            cell.setCellValue(label);
-            cell.setCellStyle(styleHeader);
+            addCell(headerRow, index++, label, styleHeader, "", null, null);
         }
     }
 
     public void getCellsEnteteListeDesDepenses(Sheet sheet) {
         int index = 0;
         Row headerRow = sheet.createRow(index);
-        CellStyle cellStyleHeader = getCellStyleEntete(sheet.getWorkbook().createCellStyle());
+        CellStyle cellStyleHeader = writeCellStyle.getCellStyleEntete(sheet.getWorkbook().createCellStyle());
         for (String label : NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES) {
-            Cell cell = headerRow.createCell(index++);
-            cell.setCellValue(label);
-            cell.setCellStyle(cellStyleHeader);
+            addCell(headerRow, index++, label, cellStyleHeader, "", null, null);
         }
     }
 
@@ -622,37 +533,8 @@ public class OutilWrite {
         Row headerRow = sheet.createRow(index);
         CellStyle styleHeader = sheet.getWorkbook().createCellStyle();
         for (String label : NOM_ENTETE_COLONNE_ETAT_RAPPROCHEMENT) {
-            Cell cell = headerRow.createCell(index++);
-            cell.setCellValue(label);
-            cell.setCellStyle(getCellStyleEntete(styleHeader));
+            addCell(headerRow, index++, label, writeCellStyle.getCellStyleEntete(styleHeader), "", null, null);
         }
-    }
-
-    private CellStyle getCellStyleTotalAmount(Workbook workbook) {
-        CellStyle style = getCellStyleAmount(workbook);
-        style.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
-        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        return style;
-    }
-
-    private CellStyle getCellStyleAmount(Workbook workbook) {
-        CellStyle style = workbook.createCellStyle();
-        style.setDataFormat(workbook.createDataFormat().getFormat(AMOUNT_FORMATTER));
-        return style;
-    }
-
-    private CellStyle getCellStyleTotal(Workbook workbook) {
-        CellStyle styleTotal = workbook.createCellStyle();
-        styleTotal.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
-        styleTotal.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        return styleTotal;
-    }
-
-    private CellStyle getCellStyleEntete(CellStyle style) {
-        style.setAlignment(HorizontalAlignment.CENTER);
-        style.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
-        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        return style;
     }
 
     public void getLineOfExpenseKey(LineOfExpenseKey line, Row row) {
@@ -662,16 +544,16 @@ public class OutilWrite {
             if (index == ID_LABEL_OF_LIST_OF_EXPENSES) {
                 cell.setCellValue(line.label() + " : " + line.key() + " " + line.value());
             }
-            cell.setCellStyle(getCellStyleTotal(row.getSheet().getWorkbook()));
+            cell.setCellStyle(writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook()));
         }
     }
 
     public void getLineOfExpenseTotal(LineOfExpenseTotal line, Row row) {
         Cell cell;
         cell = row.createCell(ID_DOCUMENT_OF_LIST_OF_EXPENSES);
-        cell.setCellStyle(getCellStyleTotal(row.getSheet().getWorkbook()));
+        cell.setCellStyle(writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook()));
         cell = row.createCell(ID_DATE_OF_LIST_OF_EXPENSES);
-        cell.setCellStyle(getCellStyleTotal(row.getSheet().getWorkbook()));
+        cell.setCellStyle(writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook()));
         if (!line.key().isEmpty()) {
             cell = row.createCell(ID_LABEL_OF_LIST_OF_EXPENSES);
             if (line.type().equals(TypeOfExpense.Key)) {
@@ -683,25 +565,25 @@ public class OutilWrite {
             if (line.type().equals(TypeOfExpense.Building)) {
                 cell.setCellValue("Total de l'immeuble : " + line.key());
             }
-            cell.setCellStyle(getCellStyleTotal(row.getSheet().getWorkbook()));
+            cell.setCellStyle(writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook()));
         }
         if (!line.amount().isEmpty()) {
             cell = row.createCell(ID_AMOUNT_OF_LIST_OF_EXPENSES);
             cell.setCellValue(Double.parseDouble(line.amount()));
-            cell.setCellStyle(getCellStyleTotalAmount(row.getSheet().getWorkbook()));
+            cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
         }
         if (!line.deduction().isEmpty()) {
             cell = row.createCell(ID_DEDUCTION_OF_LIST_OF_EXPENSES);
             cell.setCellValue(Double.parseDouble(line.deduction()));
-            cell.setCellStyle(getCellStyleTotalAmount(row.getSheet().getWorkbook()));
+            cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
         }
         if (!line.recovery().isEmpty()) {
             cell = row.createCell(ID_RECOVERY_OF_LIST_OF_EXPENSES);
             cell.setCellValue(Double.parseDouble(line.recovery()));
-            cell.setCellStyle(getCellStyleTotalAmount(row.getSheet().getWorkbook()));
+            cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
         }
         cell = row.createCell(ID_COMMENT_OF_LIST_OF_EXPENSES);
-        cell.setCellStyle(getCellStyleTotal(row.getSheet().getWorkbook()));
+        cell.setCellStyle(writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook()));
     }
 
     public void getLineOfExpense(LineOfExpense line, Row row, String pathDirectoryInvoice) {
@@ -711,16 +593,14 @@ public class OutilWrite {
         CellStyle styleColor;
         CellStyle styleAmountColor;
         if (row.getRowNum() % 2 == 0) {
-            styleColor = getCellStyleWhite(row.getSheet().getWorkbook());
-            styleAmountColor = getCellStyleAmountWhite(row.getSheet().getWorkbook());
+            styleColor = writeCellStyle.getCellStyleWhite(row.getSheet().getWorkbook());
+            styleAmountColor = writeCellStyle.getCellStyleAmountWhite(row.getSheet().getWorkbook());
         } else {
-            styleColor = getCellStyleBlue(row.getSheet().getWorkbook());
-            styleAmountColor = getCellStyleAmountBlue(row.getSheet().getWorkbook());
+            styleColor = writeCellStyle.getCellStyleBlue(row.getSheet().getWorkbook());
+            styleAmountColor = writeCellStyle.getCellStyleAmountBlue(row.getSheet().getWorkbook());
         }
 
-        Cell cell;
-
-        cell = row.createCell(ID_DOCUMENT_OF_LIST_OF_EXPENSES);
+        Cell cell = row.createCell(ID_DOCUMENT_OF_LIST_OF_EXPENSES);
         if (isDouble(line.document())) {
             cell.setCellValue(Double.parseDouble(line.document()));
         } else {
@@ -765,34 +645,6 @@ public class OutilWrite {
         }
         cell.setCellValue(message);
         cell.setCellStyle(styleColor);
-    }
-
-    private CellStyle getCellStyleWhite(Workbook workbook) {
-        CellStyle styleWhite = workbook.createCellStyle();
-        styleWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
-        styleWhite.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        return styleWhite;
-    }
-
-    private CellStyle getCellStyleBlue(Workbook workbook) {
-        CellStyle styleBlue = workbook.createCellStyle();
-        styleBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
-        styleBlue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        return styleBlue;
-    }
-
-    private CellStyle getCellStyleAmountWhite(Workbook workbook) {
-        CellStyle styleAmountWhite = getCellStyleAmount(workbook);
-        styleAmountWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
-        styleAmountWhite.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        return styleAmountWhite;
-    }
-
-    private CellStyle getCellStyleAmountBlue(Workbook workbook) {
-        CellStyle styleAmountBlue = getCellStyleAmount(workbook);
-        styleAmountBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
-        styleAmountBlue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        return styleAmountBlue;
     }
 
     public void autoSizeCollum(int numberOfColumns, Sheet sheet) {

@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class OutilWriteTest {
 
-    private OutilWrite outilWrite = new OutilWrite();
+    private WriteOutil outilWrite = new WriteOutil();
 
     @Test
     void getTotalBuilding() {

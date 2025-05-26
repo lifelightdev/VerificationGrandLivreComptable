@@ -14,7 +14,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
-import static life.light.write.OutilWrite.*;
+import static life.light.write.WriteOutil.*;
 
 public class WriteFile {
 
@@ -22,7 +22,7 @@ public class WriteFile {
     public static final String POINTAGE_RELEVE_OK = "Pointage Relevé OK";
     public static final String POINTAGE_GL_OK = "Pointage GL OK";
 
-    private OutilWrite outilWrite = new OutilWrite();
+    private WriteOutil outilWrite = new WriteOutil();
 
     // TODO faire la gestion des fichiers (existe, n'existe pas, pas de dossier ...)
 

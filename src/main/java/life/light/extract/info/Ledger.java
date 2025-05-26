@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import static life.light.extract.info.OutilInfo.EURO;
-import static life.light.write.OutilWrite.DATE_FORMATTER;
+import static life.light.write.WriteOutil.DATE_FORMATTER;
 
 public class Ledger {
 
