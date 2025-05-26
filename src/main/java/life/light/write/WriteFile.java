@@ -159,13 +159,13 @@ public class WriteFile {
             // Style
             DataFormat dataFormat = workbook.createDataFormat();
             Short dataAmount = dataFormat.getFormat("# ### ##0.00 €;[red]# ### ##0.00 €");
-            CellStyle styleTotal = outilWrite.getCellStyleTotal(workbook.createCellStyle());
-            CellStyle styleTotalAmount = outilWrite.getCellStyleTotalAmount(workbook.createCellStyle(), dataAmount);
+            CellStyle styleTotal = outilWrite.getCellStyleTotal(workbook);
+            CellStyle styleTotalAmount = outilWrite.getCellStyleTotalAmount(workbook);
             CellStyle styleWhite = outilWrite.getCellStyleWhite(workbook);
             CellStyle styleBlue = outilWrite.getCellStyleBlue(workbook);
-            CellStyle styleAmountWhite = outilWrite.getCellStyleAmount(workbook.createCellStyle(), dataAmount);
+            CellStyle styleAmountWhite = outilWrite.getCellStyleAmount(workbook);
             styleAmountWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
-            CellStyle styleAmountBlue = outilWrite.getCellStyleAmount(workbook.createCellStyle(), dataAmount);
+            CellStyle styleAmountBlue = outilWrite.getCellStyleAmount(workbook);
             styleAmountBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
             CellStyle styleHeader = workbook.createCellStyle();
 
@@ -280,14 +280,12 @@ public class WriteFile {
             Workbook workbook = new XSSFWorkbook();
 
             // Style
-            DataFormat dataFormat = workbook.createDataFormat();
-            Short dataAmount = dataFormat.getFormat("# ### ##0.00 €;[red]# ### ##0.00 €");
-            CellStyle styleTotal = outilWrite.getCellStyleTotal(workbook.createCellStyle());
-            CellStyle styleTotalAmount = outilWrite.getCellStyleTotalAmount(workbook.createCellStyle(), dataAmount);
+            CellStyle styleTotal = outilWrite.getCellStyleTotal(workbook);
+            CellStyle styleTotalAmount = outilWrite.getCellStyleTotalAmount(workbook);
             CellStyle styleWhite = outilWrite.getCellStyleWhite(workbook);
             CellStyle styleBlue = outilWrite.getCellStyleBlue(workbook);
-            CellStyle styleAmountWhite = outilWrite.getCellStyleAmountWhite(workbook, dataAmount);
-            CellStyle styleAmountBlue = outilWrite.getCellStyleAmountBlue(workbook, dataAmount);
+            CellStyle styleAmountWhite = outilWrite.getCellStyleAmountWhite(workbook);
+            CellStyle styleAmountBlue = outilWrite.getCellStyleAmountBlue(workbook);
 
             // Créer une nouvelle feuille dans le classeur pour le grand livre
             Sheet sheet = workbook.createSheet("Liste des dépenses");
@@ -361,23 +359,18 @@ public class WriteFile {
         try {
             // Créer un nouveau classeur Excel
             Workbook workbook = new XSSFWorkbook();
+
             // Style
-            DataFormat dataFormat = workbook.createDataFormat();
-            Short dataAmount = dataFormat.getFormat("# ### ##0.00 €;[red]# ### ##0.00 €");
-            CellStyle styleWhite = workbook.createCellStyle();
-            styleWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
-            CellStyle styleBlue = workbook.createCellStyle();
-            styleBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
-            CellStyle styleAmountWhite = outilWrite.getCellStyleAmount(workbook.createCellStyle(), dataAmount);
-            styleAmountWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
-            CellStyle styleAmountBlue = outilWrite.getCellStyleAmount(workbook.createCellStyle(), dataAmount);
-            styleAmountBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
-            CellStyle styleHeader = workbook.createCellStyle();
+            CellStyle cellStyleWhite = outilWrite.getCellStyleWhite(workbook);
+            CellStyle cellStyleBlue = outilWrite.getCellStyleBlue(workbook);
+            CellStyle cellStyleAmountWhite = outilWrite.getCellStyleAmountWhite(workbook);
+            CellStyle cellStyleAmountBlue = outilWrite.getCellStyleAmountBlue(workbook);
+            CellStyle cellStyleHeader = workbook.createCellStyle();
 
             pointageReleve(new ArrayList<>(grandLivres), new ArrayList<>(bankLines), workbook,
-                    styleHeader, styleBlue, styleAmountBlue, styleWhite, styleAmountWhite);
+                    cellStyleHeader, cellStyleBlue, cellStyleAmountBlue, cellStyleWhite, cellStyleAmountWhite);
             pointageGL(new ArrayList<>(grandLivres), new ArrayList<>(bankLines), workbook,
-                    styleHeader, styleBlue, styleAmountBlue, styleWhite, styleAmountWhite);
+                    cellStyleHeader, cellStyleBlue, cellStyleAmountBlue, cellStyleWhite, cellStyleAmountWhite);
 
             if (workbook.getSheet(POINTAGE_RELEVE_OK).getLastRowNum() != workbook.getSheet(POINTAGE_GL_OK).getLastRowNum()) {
                 LOGGER.error(("Il n'y a pas le même nombre d'opération pointées OK dans le grand livre et sur les relevés de compte"));

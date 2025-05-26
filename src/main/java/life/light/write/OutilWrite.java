@@ -19,6 +19,7 @@ import java.util.List;
 public class OutilWrite {
 
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    public static final String AMOUNT_FORMATTER = "# ### ##0.00 €;[red]# ### ##0.00 €";
     private static final Logger LOGGER = LogManager.getLogger();
     public static final XSSFColor BACKGROUND_COLOR_BLUE = new XSSFColor(new java.awt.Color(240, 255, 255), null);
     public static final XSSFColor BACKGROUND_COLOR_WHITE = new XSSFColor(new java.awt.Color(255, 255, 255), null);
@@ -611,19 +612,21 @@ public class OutilWrite {
         }
     }
 
-    public CellStyle getCellStyleTotalAmount(CellStyle style, Short dataAmount) {
-        style = getCellStyleAmount(style, dataAmount);
+    public CellStyle getCellStyleTotalAmount(Workbook workbook) {
+        CellStyle style = getCellStyleAmount(workbook);
         style.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return style;
     }
 
-    public CellStyle getCellStyleAmount(CellStyle style, Short dataAmount) {
-        style.setDataFormat(dataAmount);
+    public CellStyle getCellStyleAmount(Workbook workbook) {
+        CellStyle style = workbook.createCellStyle();
+        style.setDataFormat(workbook.createDataFormat().getFormat(AMOUNT_FORMATTER));
         return style;
     }
 
-    public CellStyle getCellStyleTotal(CellStyle styleTotal) {
+    public CellStyle getCellStyleTotal(Workbook workbook) {
+        CellStyle styleTotal = workbook.createCellStyle();
         styleTotal.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
         styleTotal.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return styleTotal;
@@ -751,14 +754,14 @@ public class OutilWrite {
         return styleBlue;
     }
 
-    public CellStyle getCellStyleAmountWhite(Workbook workbook, Short dataAmount) {
-        CellStyle styleAmountWhite = getCellStyleAmount(workbook.createCellStyle(), dataAmount);
+    public CellStyle getCellStyleAmountWhite(Workbook workbook) {
+        CellStyle styleAmountWhite = getCellStyleAmount(workbook);
         styleAmountWhite.setFillBackgroundColor(BACKGROUND_COLOR_WHITE);
         return styleAmountWhite;
     }
 
-    CellStyle getCellStyleAmountBlue(Workbook workbook, Short dataAmount) {
-        CellStyle styleAmountBlue = getCellStyleAmount(workbook.createCellStyle(), dataAmount);
+    CellStyle getCellStyleAmountBlue(Workbook workbook) {
+        CellStyle styleAmountBlue = getCellStyleAmount(workbook);
         styleAmountBlue.setFillBackgroundColor(BACKGROUND_COLOR_BLUE);
         return styleAmountBlue;
     }
