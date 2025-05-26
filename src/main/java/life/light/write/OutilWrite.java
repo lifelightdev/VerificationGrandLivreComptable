@@ -285,6 +285,9 @@ public class OutilWrite {
             if (grandLivre.account().account().startsWith(CLASSE_6)
                     || (grandLivre.account().account().startsWith("401")) && (grandLivre.accountCounterpart().account().startsWith(CLASSE_6))) {
                 message = getMessageFindDocument(grandLivre.document(), link, pathDirectoryInvoice);
+                if (message.startsWith("Impossible")) {
+                    message = message + " pour le compte " + grandLivre.account().account() + " avec ce Libellé d'opération " + grandLivre.label();
+                }
             }
             if (grandLivre.accountCounterpart() == null) {
                 verifCell.setCellValue(KO);
@@ -323,7 +326,7 @@ public class OutilWrite {
                 if (fichier.getName().startsWith(document)) {
                     fileFound = fichier;
                     break;
-                } else {
+                } else if (fichier.isDirectory()) {
                     fileFound = getFileInDirectory(document, fichier);
                     if (fileFound != null) {
                         break;
@@ -336,7 +339,6 @@ public class OutilWrite {
             } else {
                 message = "Impossible de trouver la pièce " + document
                         + " dans le dossier : " + pathDirectoryInvoice;
-                LOGGER.info("{}", message);
             }
         }
         return message;
@@ -353,7 +355,11 @@ public class OutilWrite {
                         break;
                     }
                 } else if (fileOfDirectory.isDirectory()) {
-                    fileFound = getFileInDirectory(document, fileOfDirectory);
+                    if (fileFound == null) {
+                        fileFound = getFileInDirectory(document, fileOfDirectory);
+                    } else {
+                        break;
+                    }
                 }
             }
         }
@@ -719,7 +725,11 @@ public class OutilWrite {
         }
 
         cell = row.createCell(ID_COMMENT_OF_LIST_OF_EXPENSES);
-        cell.setCellValue(getMessageFindDocument(line.document(), link, pathDirectoryInvoice));
+        String message = getMessageFindDocument(line.document(), link, pathDirectoryInvoice);
+        if (message.startsWith("Impossible de trouver la pièce")) {
+            message = message + " avec ce libellé " + line.label();
+        }
+        cell.setCellValue(message);
         cell.setCellStyle(styleColor);
     }
 }
