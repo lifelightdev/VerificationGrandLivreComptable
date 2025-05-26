@@ -2,8 +2,10 @@ package life.light.write;
 
 import life.light.FileOfTest;
 import life.light.type.*;
-import org.apache.poi.common.usermodel.HyperlinkType;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
@@ -291,9 +293,6 @@ class OutilWriteTest {
         CellStyle styleColor = workbook.createCellStyle();
         CellStyle styleAmountColor = workbook.createCellStyle();
 
-        // Create hyperlink
-        Hyperlink link = workbook.getCreationHelper().createHyperlink(HyperlinkType.FILE);
-
         // Create LineOfExpense object
         String document = "Invoice123";
         LocalDate date = LocalDate.of(2024, 1, 15);
@@ -307,15 +306,15 @@ class OutilWriteTest {
         String pathDirectoryInvoice = tempTestDir + File.separator + "invoice" + File.separator;
 
 
-        outilWrite.getLineOfExpense(line, row, styleColor, styleAmountColor, link, pathDirectoryInvoice);
+        outilWrite.getLineOfExpense(line, row, styleColor, styleAmountColor, pathDirectoryInvoice);
 
         row = sheet.createRow(2);
         LineOfExpense line2 = new LineOfExpense("Invoice234", date, label, amount, deduction, recovery);
-        outilWrite.getLineOfExpense(line2, row, styleColor, styleAmountColor, link, pathDirectoryInvoice);
+        outilWrite.getLineOfExpense(line2, row, styleColor, styleAmountColor, pathDirectoryInvoice);
 
         row = sheet.createRow(3);
         LineOfExpense line3 = new LineOfExpense("Invoice345", date, label, amount, deduction, recovery);
-        outilWrite.getLineOfExpense(line3, row, styleColor, styleAmountColor, link, pathDirectoryInvoice);
+        outilWrite.getLineOfExpense(line3, row, styleColor, styleAmountColor, pathDirectoryInvoice);
 
         // Verify the cells
         assertEquals(document, workbook.getSheetAt(0).getRow(1).getCell(0).getStringCellValue());

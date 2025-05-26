@@ -3,7 +3,6 @@ package life.light.write;
 import life.light.type.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -45,13 +44,9 @@ public class WriteFile {
             Workbook workbook = new XSSFWorkbook();
 
             // Style
-            CellStyle styleWhite = workbook.createCellStyle();
-            styleWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
-            styleWhite.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            CellStyle styleWhite = outilWrite.getCellStyleWhite(workbook);
             styleWhite.setAlignment(HorizontalAlignment.LEFT);
-            CellStyle styleBlue = workbook.createCellStyle();
-            styleBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
-            styleBlue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            CellStyle styleBlue = outilWrite.getCellStyleBlue(workbook);
             styleBlue.setAlignment(HorizontalAlignment.LEFT);
 
             // Créer une nouvelle feuille dans le classeur
@@ -166,12 +161,8 @@ public class WriteFile {
             Short dataAmount = dataFormat.getFormat("# ### ##0.00 €;[red]# ### ##0.00 €");
             CellStyle styleTotal = outilWrite.getCellStyleTotal(workbook.createCellStyle());
             CellStyle styleTotalAmount = outilWrite.getCellStyleTotalAmount(workbook.createCellStyle(), dataAmount);
-            CellStyle styleWhite = workbook.createCellStyle();
-            styleWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
-            styleWhite.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            CellStyle styleBlue = workbook.createCellStyle();
-            styleBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
-            styleBlue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            CellStyle styleWhite = outilWrite.getCellStyleWhite(workbook);
+            CellStyle styleBlue = outilWrite.getCellStyleBlue(workbook);
             CellStyle styleAmountWhite = outilWrite.getCellStyleAmount(workbook.createCellStyle(), dataAmount);
             styleAmountWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
             CellStyle styleAmountBlue = outilWrite.getCellStyleAmount(workbook.createCellStyle(), dataAmount);
@@ -293,23 +284,14 @@ public class WriteFile {
             Short dataAmount = dataFormat.getFormat("# ### ##0.00 €;[red]# ### ##0.00 €");
             CellStyle styleTotal = outilWrite.getCellStyleTotal(workbook.createCellStyle());
             CellStyle styleTotalAmount = outilWrite.getCellStyleTotalAmount(workbook.createCellStyle(), dataAmount);
-            CellStyle styleWhite = workbook.createCellStyle();
-            styleWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
-            styleWhite.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            CellStyle styleBlue = workbook.createCellStyle();
-            styleBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
-            styleBlue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            CellStyle styleAmountWhite = outilWrite.getCellStyleAmount(workbook.createCellStyle(), dataAmount);
-            styleAmountWhite.setFillBackgroundColor(BACKGROUND_COLOR_WHITE);
-            CellStyle styleAmountBlue = outilWrite.getCellStyleAmount(workbook.createCellStyle(), dataAmount);
-            styleAmountBlue.setFillBackgroundColor(BACKGROUND_COLOR_BLUE);
-            CellStyle styleHeader = workbook.createCellStyle();
-            CreationHelper createHelper = workbook.getCreationHelper();
-            Hyperlink link = createHelper.createHyperlink(HyperlinkType.FILE);
+            CellStyle styleWhite = outilWrite.getCellStyleWhite(workbook);
+            CellStyle styleBlue = outilWrite.getCellStyleBlue(workbook);
+            CellStyle styleAmountWhite = outilWrite.getCellStyleAmountWhite(workbook, dataAmount);
+            CellStyle styleAmountBlue = outilWrite.getCellStyleAmountBlue(workbook, dataAmount);
 
             // Créer une nouvelle feuille dans le classeur pour le grand livre
             Sheet sheet = workbook.createSheet("Liste des dépenses");
-            outilWrite.getCellsEnteteListeDesDepenses(sheet, styleHeader);
+            outilWrite.getCellsEnteteListeDesDepenses(sheet);
             int rowNum = 1;
             for (Object line : listeDesDepenses) {
                 Row row = sheet.createRow(rowNum);
@@ -321,9 +303,9 @@ public class WriteFile {
                 }
                 if (line instanceof LineOfExpense) {
                     if (rowNum % 2 == 0) {
-                        outilWrite.getLineOfExpense((LineOfExpense) line, row, styleWhite, styleAmountWhite, link, pathDirectoryInvoice);
+                        outilWrite.getLineOfExpense((LineOfExpense) line, row, styleWhite, styleAmountWhite, pathDirectoryInvoice);
                     } else {
-                        outilWrite.getLineOfExpense((LineOfExpense) line, row, styleBlue, styleAmountBlue, link, pathDirectoryInvoice);
+                        outilWrite.getLineOfExpense((LineOfExpense) line, row, styleBlue, styleAmountBlue, pathDirectoryInvoice);
                     }
                 }
                 rowNum++;

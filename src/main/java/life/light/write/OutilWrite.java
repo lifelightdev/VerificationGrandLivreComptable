@@ -590,13 +590,14 @@ public class OutilWrite {
         }
     }
 
-    public void getCellsEnteteListeDesDepenses(Sheet sheet, CellStyle styleHeader) {
+    public void getCellsEnteteListeDesDepenses(Sheet sheet) {
         int index = 0;
         Row headerRow = sheet.createRow(index);
+        CellStyle cellStyleHeader = getCellStyleEntete(sheet.getWorkbook().createCellStyle());
         for (String label : NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES) {
             Cell cell = headerRow.createCell(index++);
             cell.setCellValue(label);
-            cell.setCellStyle(getCellStyleEntete(styleHeader));
+            cell.setCellStyle(cellStyleHeader);
         }
     }
 
@@ -687,7 +688,10 @@ public class OutilWrite {
         }
     }
 
-    public void getLineOfExpense(LineOfExpense line, Row row, CellStyle styleColor, CellStyle styleAmountColor, Hyperlink link, String pathDirectoryInvoice) {
+    public void getLineOfExpense(LineOfExpense line, Row row, CellStyle styleColor, CellStyle styleAmountColor, String pathDirectoryInvoice) {
+        CreationHelper createHelper = row.getSheet().getWorkbook().getCreationHelper();
+        Hyperlink link = createHelper.createHyperlink(HyperlinkType.FILE);
+
         Cell cell;
 
         cell = row.createCell(ID_DOCUMENT_OF_LIST_OF_EXPENSES);
@@ -731,5 +735,31 @@ public class OutilWrite {
         }
         cell.setCellValue(message);
         cell.setCellStyle(styleColor);
+    }
+
+    public CellStyle getCellStyleWhite(Workbook workbook) {
+        CellStyle styleWhite = workbook.createCellStyle();
+        styleWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
+        styleWhite.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        return styleWhite;
+    }
+
+    public CellStyle getCellStyleBlue(Workbook workbook) {
+        CellStyle styleBlue = workbook.createCellStyle();
+        styleBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
+        styleBlue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        return styleBlue;
+    }
+
+    public CellStyle getCellStyleAmountWhite(Workbook workbook, Short dataAmount) {
+        CellStyle styleAmountWhite = getCellStyleAmount(workbook.createCellStyle(), dataAmount);
+        styleAmountWhite.setFillBackgroundColor(BACKGROUND_COLOR_WHITE);
+        return styleAmountWhite;
+    }
+
+    CellStyle getCellStyleAmountBlue(Workbook workbook, Short dataAmount) {
+        CellStyle styleAmountBlue = getCellStyleAmount(workbook.createCellStyle(), dataAmount);
+        styleAmountBlue.setFillBackgroundColor(BACKGROUND_COLOR_BLUE);
+        return styleAmountBlue;
     }
 }
