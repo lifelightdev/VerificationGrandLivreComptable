@@ -3,7 +3,10 @@ package life.light.write;
 import life.light.type.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.BufferedWriter;
@@ -18,6 +21,7 @@ public class WriteFile {
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String POINTAGE_RELEVE_OK = "Pointage Relevé OK";
     public static final String POINTAGE_GL_OK = "Pointage GL OK";
+
     private OutilWrite outilWrite = new OutilWrite();
 
     // TODO faire la gestion des fichiers (existe, n'existe pas, pas de dossier ...)
@@ -153,25 +157,24 @@ public class WriteFile {
             int lastRowNumTotal = 0;
             List<Integer> lineTotals = new ArrayList<>();
             for (Object grandLivre : grandLivres) {
-                Row row = sheet.createRow(rowNum);
-                if (grandLivre instanceof Line) {
-                    outilWrite.getLineGrandLivre((Line) grandLivre, row, true, pathDirectoryInvoice);
+                if (grandLivre != null) {
+                    Row row = sheet.createRow(rowNum);
+                    if (grandLivre instanceof Line) {
+                        outilWrite.getLineGrandLivre((Line) grandLivre, row, true, pathDirectoryInvoice);
+                    }
+                    if (grandLivre instanceof TotalAccount) {
+                        outilWrite.getTotalAccount((TotalAccount) grandLivre, row, lastRowNumTotal);
+                        lastRowNumTotal = rowNum;
+                        lineTotals.add(rowNum + 1);
+                    }
+                    if (grandLivre instanceof TotalBuilding) {
+                        outilWrite.getTotalBuilding((TotalBuilding) grandLivre, row, lineTotals);
+                    }
+                    rowNum++;
                 }
-                if (grandLivre instanceof TotalAccount) {
-                    outilWrite.getTotalAccount((TotalAccount) grandLivre, row, lastRowNumTotal);
-                    lastRowNumTotal = rowNum;
-                    lineTotals.add(rowNum + 1);
-                }
-                if (grandLivre instanceof TotalBuilding) {
-                    outilWrite.getTotalBuilding((TotalBuilding) grandLivre, row, lineTotals);
-                }
-                rowNum++;
             }
-            int cellNumEntete = NOM_ENTETE_COLONNE_GRAND_LIVRE.length;
-            for (int idCollum = 0; idCollum < cellNumEntete; idCollum++) {
-                sheet.autoSizeColumn(idCollum);
-            }
-            sheet.createFreezePane(0, 1);
+
+            outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheet);
 
             // Créer une nouvelle feuille par journal
             for (String journal : journals) {
@@ -192,44 +195,11 @@ public class WriteFile {
                     outilWrite.getLineGrandLivre(line.getValue(), row, false, pathDirectoryInvoice);
                     rowNum++;
                 }
-                for (int idCollum = 0; idCollum < cellNumEntete; idCollum++) {
-                    sheetJournal.autoSizeColumn(idCollum);
-                }
-                sheetJournal.createFreezePane(0, 1);
-            }
-            // Créer une nouvelle feuille pour les pieces manquantes
-            Sheet sheetDocument = workbook.createSheet("Pieces manquante");
-            TreeMap<String, String> ligneOfDocumentMissing = new TreeMap<>();
-            for (Row row : sheet) {
-                if (row.getCell(cellNumEntete - 1) != null) {
-                    if (row.getCell(cellNumEntete - 1).getCellType() == CellType.STRING) {
-                        if (row.getCell(cellNumEntete - 1).getStringCellValue().contains("Impossible de trouver la pièce")) {
-                            String document;
-                            if (row.getCell(2).getCellType() == CellType.NUMERIC) {
-                                document = String.valueOf(row.getCell(2).getNumericCellValue());
-                            } else {
-                                document = row.getCell(2).getStringCellValue();
-                            }
-                            String message = row.getCell(cellNumEntete - 1).getStringCellValue();
-                            ligneOfDocumentMissing.put(document.replace(".0", ""), message);
-                        }
-                    }
-                }
+                outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetJournal);
             }
 
-            int index = 0;
-            Row headerRow = sheetDocument.createRow(index);
-            Cell cellDocument = headerRow.createCell(0);
-            cellDocument.setCellValue("Piece");
-            Cell cellMessage = headerRow.createCell(1);
-            cellMessage.setCellValue("Piece");
-            for (Map.Entry<String, String> entry : ligneOfDocumentMissing.entrySet()) {
-                Row row = sheetDocument.createRow(index++);
-                Cell cellD = row.createCell(0);
-                cellD.setCellValue(Integer.parseInt(entry.getKey()));
-                Cell cellM = row.createCell(1);
-                cellM.setCellValue(entry.getValue());
-            }
+            // Créer une nouvelle feuille pour les pieces manquantes
+            outilWrite.writeDocumentMission(workbook, ID_COMMENT_OF_LEDGER, ID_DOCUMENT_OF_LEDGER);
 
             // Écrire le contenu du classeur dans un fichier
             outilWrite.writeWorkbook(pathNameFile, workbook);
@@ -264,43 +234,10 @@ public class WriteFile {
                     rowNum++;
                 }
             }
-            int cellNumEntete = NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES.length;
-            for (int idCollum = 0; idCollum < cellNumEntete; idCollum++) {
-                sheet.autoSizeColumn(idCollum);
-            }
-            sheet.createFreezePane(0, 1);
+            outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES.length, sheet);
 
             // Créer une nouvelle feuille pour les pieces manquantes
-            Sheet sheetDocument = workbook.createSheet("Pieces manquante");
-            TreeMap<String, String> ligneOfDocumentMissing = new TreeMap<>();
-            for (Row row : sheet) {
-                if (row.getCell(ID_COMMENT_OF_LIST_OF_EXPENSES) != null
-                        && row.getCell(ID_COMMENT_OF_LIST_OF_EXPENSES).getCellType() == CellType.STRING
-                        && row.getCell(ID_COMMENT_OF_LIST_OF_EXPENSES).getStringCellValue().contains("Impossible de trouver la pièce")) {
-                    String document;
-                    if (row.getCell(ID_DOCUMENT_OF_LIST_OF_EXPENSES).getCellType() == CellType.NUMERIC) {
-                        document = String.valueOf(row.getCell(ID_DOCUMENT_OF_LIST_OF_EXPENSES).getNumericCellValue());
-                    } else {
-                        document = row.getCell(ID_DOCUMENT_OF_LIST_OF_EXPENSES).getStringCellValue();
-                    }
-                    String message = row.getCell(ID_COMMENT_OF_LIST_OF_EXPENSES).getStringCellValue();
-                    ligneOfDocumentMissing.put(document.replace(".0", ""), message);
-                }
-            }
-
-            int index = 0;
-            Row headerRow = sheetDocument.createRow(index);
-            Cell cellDocument = headerRow.createCell(0);
-            cellDocument.setCellValue("Piece");
-            Cell cellMessage = headerRow.createCell(1);
-            cellMessage.setCellValue("Piece");
-            for (Map.Entry<String, String> entry : ligneOfDocumentMissing.entrySet()) {
-                Row row = sheetDocument.createRow(index++);
-                Cell cellD = row.createCell(0);
-                cellD.setCellValue(Integer.parseInt(entry.getKey()));
-                Cell cellM = row.createCell(1);
-                cellM.setCellValue(entry.getValue());
-            }
+            outilWrite.writeDocumentMission(workbook, ID_COMMENT_OF_LIST_OF_EXPENSES, ID_DOCUMENT_OF_LIST_OF_EXPENSES);
 
             // Écrire le contenu du classeur dans un fichier
             outilWrite.writeWorkbook(pathNameFile, workbook);
@@ -367,10 +304,7 @@ public class WriteFile {
                 rowNumPointage++;
             }
         }
-        for (int idCollum = 0; idCollum < NOM_ENTETE_COLONNE_GRAND_LIVRE.length; idCollum++) {
-            sheetPointage.autoSizeColumn(idCollum);
-        }
-        sheetPointage.createFreezePane(0, 1);
+        outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetPointage);
 
         Sheet sheetPointage1 = workbook.createSheet("Pointage Relevé KO");
         outilWrite.getCellsEnteteEtatRapprochement(sheetPointage1);
@@ -399,10 +333,7 @@ public class WriteFile {
                 rowNumPointage++;
             }
         }
-        for (int idCollum = 0; idCollum < NOM_ENTETE_COLONNE_GRAND_LIVRE.length; idCollum++) {
-            sheetPointage1.autoSizeColumn(idCollum);
-        }
-        sheetPointage1.createFreezePane(0, 1);
+        outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetPointage1);
     }
 
     private void pointageGL(List<Line> grandLivres, List<BankLine> bankLines, Workbook workbook) {
@@ -440,10 +371,7 @@ public class WriteFile {
                 rowNumPointage++;
             }
         }
-        for (int idCollum = 0; idCollum < NOM_ENTETE_COLONNE_GRAND_LIVRE.length; idCollum++) {
-            sheetPointage.autoSizeColumn(idCollum);
-        }
-        sheetPointage.createFreezePane(0, 1);
+        outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetPointage);
 
         Sheet sheetPointage1 = workbook.createSheet("Pointage GL KO");
         outilWrite.getCellsEnteteEtatRapprochement(sheetPointage1);
@@ -472,9 +400,6 @@ public class WriteFile {
                 rowNumPointage++;
             }
         }
-        for (int idCollum = 0; idCollum < NOM_ENTETE_COLONNE_GRAND_LIVRE.length; idCollum++) {
-            sheetPointage1.autoSizeColumn(idCollum);
-        }
-        sheetPointage1.createFreezePane(0, 1);
+        outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetPointage1);
     }
 }

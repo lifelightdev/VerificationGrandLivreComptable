@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class OutilWrite {
 
@@ -43,7 +45,7 @@ public class OutilWrite {
             "Solde (Calculé)", "Vérification", "Commentaire"};
     private static final int ID_ACOUNT_NUMBER_OF_LEDGER = 0;
     private static final int ID_ACOUNT_LABEL_OF_LEDGER = 1;
-    private static final int ID_DOCUMENT_OF_LEDGER = 2;
+    public static final int ID_DOCUMENT_OF_LEDGER = 2;
     private static final int ID_DATE_OF_LEDGER = 3;
     private static final int ID_JOURNAL_OF_LEDGER = 4;
     private static final int ID_COUNTERPART_NUMBER_OF_LEDGER = 5;
@@ -54,7 +56,7 @@ public class OutilWrite {
     private static final int ID_CREDIT_OF_LEDGER = 10;
     private static final int ID_BALANCE_OF_LEDGER = 11;
     private static final int ID_VERIFFICATION_OF_LEDGER = 12;
-    private static final int ID_COMMENT_OF_LEDGER = 13;
+    public static final int ID_COMMENT_OF_LEDGER = 13;
 
     protected static final String[] NOM_ENTETE_COLONNE_ETAT_RAPPROCHEMENT = {"Compte", "Intitulé du compte", "Pièce",
             "Date", "Journal", "Contrepartie", "Intitulé de la contrepartie", "N° chèque", "Libellé", "Débit", "Crédit",
@@ -72,6 +74,7 @@ public class OutilWrite {
     private static final int ID_COMMENT_OF_RECONCILIATION = 20;
 
     private static final String REPORT_DE = "Report de";
+    public static final String IMPOSSIBLE_DE_TROUVER_LA_PIECE = "Impossible de trouver la pièce ";
 
     private static final String CLASSE_6 = "6";
     public static final String KO = "KO";
@@ -86,7 +89,7 @@ public class OutilWrite {
         }
     }
 
-    public void getTotalBuilding(TotalBuilding grandLivre, Row row,  List<Integer> lineTotals) {
+    public void getTotalBuilding(TotalBuilding grandLivre, Row row, List<Integer> lineTotals) {
         Cell cell;
         CellStyle styleTotal = getCellStyleTotal(row.getSheet().getWorkbook());
         CellStyle styleTotalAmount = getCellStyleTotalAmount(row.getSheet().getWorkbook());
@@ -232,6 +235,7 @@ public class OutilWrite {
             cellStyle = getCellStyleBlue(row.getSheet().getWorkbook());
             cellStyleAmount = getCellStyleAmountBlue(row.getSheet().getWorkbook());
         }
+
         addAccountCell(grandLivre, row, cellStyle);
         addDocumentCell(grandLivre, row, cellStyle);
         addDateCell(grandLivre, row, cellStyle);
@@ -242,7 +246,6 @@ public class OutilWrite {
 
         Cell debitCell = addDebitCell(grandLivre, row, cellStyleAmount);
         Cell creditCell = addCreditCell(grandLivre, row, cellStyleAmount);
-
         addSoldeCell(grandLivre, row, cellStyleAmount, creditCell, debitCell);
 
         if (verif) {
@@ -370,7 +373,7 @@ public class OutilWrite {
                 message = fileFound.getAbsoluteFile().toString().replace("F:", "D:");
                 link.setAddress(fileFound.toURI().toString().replace("F:", "D:"));
             } else {
-                message = "Impossible de trouver la pièce " + document
+                message = IMPOSSIBLE_DE_TROUVER_LA_PIECE + document
                         + " dans le dossier : " + pathDirectoryInvoice;
             }
         }
@@ -558,7 +561,7 @@ public class OutilWrite {
 
             Cell accountLabelCell = row.createCell(ID_ACOUNT_LABEL_OF_LEDGER);
             accountLabelCell.setCellValue(grandLivre.account().label());
-            addlineBlue(getCellStyleAlignmentLeft(cellStyle), accountLabelCell);
+            accountLabelCell.setCellStyle(cellStyle);
         } else {
             LOGGER.error("Il manque le numéro de compte sur cette ligne : {}", grandLivre);
         }
@@ -625,29 +628,24 @@ public class OutilWrite {
         }
     }
 
-    public CellStyle getCellStyleTotalAmount(Workbook workbook) {
+    private CellStyle getCellStyleTotalAmount(Workbook workbook) {
         CellStyle style = getCellStyleAmount(workbook);
         style.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return style;
     }
 
-    public CellStyle getCellStyleAmount(Workbook workbook) {
+    private CellStyle getCellStyleAmount(Workbook workbook) {
         CellStyle style = workbook.createCellStyle();
         style.setDataFormat(workbook.createDataFormat().getFormat(AMOUNT_FORMATTER));
         return style;
     }
 
-    public CellStyle getCellStyleTotal(Workbook workbook) {
+    private CellStyle getCellStyleTotal(Workbook workbook) {
         CellStyle styleTotal = workbook.createCellStyle();
         styleTotal.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
         styleTotal.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return styleTotal;
-    }
-
-    private CellStyle getCellStyleAlignmentLeft(CellStyle style) {
-        style.setAlignment(HorizontalAlignment.LEFT);
-        return style;
     }
 
     private CellStyle getCellStyleEntete(CellStyle style) {
@@ -762,38 +760,86 @@ public class OutilWrite {
 
         cell = row.createCell(ID_COMMENT_OF_LIST_OF_EXPENSES);
         String message = getMessageFindDocument(line.document(), link, pathDirectoryInvoice);
-        if (message.startsWith("Impossible de trouver la pièce")) {
+        if (message.startsWith(IMPOSSIBLE_DE_TROUVER_LA_PIECE)) {
             message = message + " avec ce libellé " + line.label();
         }
         cell.setCellValue(message);
         cell.setCellStyle(styleColor);
     }
 
-    public CellStyle getCellStyleWhite(Workbook workbook) {
+    private CellStyle getCellStyleWhite(Workbook workbook) {
         CellStyle styleWhite = workbook.createCellStyle();
         styleWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
         styleWhite.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return styleWhite;
     }
 
-    public CellStyle getCellStyleBlue(Workbook workbook) {
+    private CellStyle getCellStyleBlue(Workbook workbook) {
         CellStyle styleBlue = workbook.createCellStyle();
         styleBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
         styleBlue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return styleBlue;
     }
 
-    public CellStyle getCellStyleAmountWhite(Workbook workbook) {
+    private CellStyle getCellStyleAmountWhite(Workbook workbook) {
         CellStyle styleAmountWhite = getCellStyleAmount(workbook);
         styleAmountWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
         styleAmountWhite.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return styleAmountWhite;
     }
 
-    CellStyle getCellStyleAmountBlue(Workbook workbook) {
+    private CellStyle getCellStyleAmountBlue(Workbook workbook) {
         CellStyle styleAmountBlue = getCellStyleAmount(workbook);
         styleAmountBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
         styleAmountBlue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return styleAmountBlue;
+    }
+
+    public void autoSizeCollum(int numberOfColumns, Sheet sheet) {
+        for (int idCollum = 0; idCollum < numberOfColumns; idCollum++) {
+            sheet.autoSizeColumn(idCollum);
+        }
+        sheet.createFreezePane(0, 1);
+    }
+
+    private void writeListOfDocumentMissing(TreeMap<String, String> ligneOfDocumentMissing, Sheet sheetDocument) {
+        int index = 0;
+        for (Map.Entry<String, String> entry : ligneOfDocumentMissing.entrySet()) {
+            Row row = sheetDocument.createRow(index++);
+            Cell cellD = row.createCell(0);
+            cellD.setCellValue(Integer.parseInt(entry.getKey()));
+            Cell cellM = row.createCell(1);
+            cellM.setCellValue(entry.getValue());
+        }
+    }
+
+    private TreeMap<String, String> getListOfDocumentMissing(Sheet sheet, int idCellComment, int idCellDocumment) {
+        TreeMap<String, String> ligneOfDocumentMissing = new TreeMap<>();
+        for (Row row : sheet) {
+            boolean commentCellIsNotNull = row.getCell(idCellComment) != null;
+            if (commentCellIsNotNull) {
+                boolean commmentCellIsCellTypeString = row.getCell(idCellComment).getCellType() == CellType.STRING;
+                if (commmentCellIsCellTypeString) {
+                    boolean commentCellContainsDocumentMissing = row.getCell(idCellComment).getStringCellValue().contains(IMPOSSIBLE_DE_TROUVER_LA_PIECE);
+                    if (commentCellContainsDocumentMissing) {
+                        String document;
+                        if (row.getCell(idCellDocumment).getCellType() == CellType.NUMERIC) {
+                            document = String.valueOf(row.getCell(idCellDocumment).getNumericCellValue());
+                        } else {
+                            document = row.getCell(idCellDocumment).getStringCellValue();
+                        }
+                        String message = row.getCell(idCellComment).getStringCellValue();
+                        ligneOfDocumentMissing.put(document.replace(".0", ""), message);
+                    }
+                }
+            }
+        }
+        return ligneOfDocumentMissing;
+    }
+
+    public void writeDocumentMission(Workbook workbook, int idCellComment, int idCellDocumment) {
+        Sheet sheetDocument = workbook.createSheet("Pieces manquante");
+        TreeMap<String, String> ligneOfDocumentMissing = getListOfDocumentMissing(sheetDocument, idCellComment, idCellDocumment);
+        writeListOfDocumentMissing(ligneOfDocumentMissing, sheetDocument);
     }
 }
