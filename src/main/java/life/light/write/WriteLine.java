@@ -163,25 +163,14 @@ public class WriteLine {
         Cell soldeCell = writeCell.addSoldeCell(row, debitCell, creditCell, cellStyleAmount, ID_BALANCE_OF_LEDGER, false, true);
 
         Cell cellVerif = row.createCell(ID_VERIFFICATION_OF_LEDGER);
-        String amount = lineOfTotalAccountInLedger.label()
-                .replace("Total", " ")
-                .replace("compte", " ")
-                .replace("(Solde", " ")
-                .replace("créditeur", " ")
-                .replace("débiteur", " ")
-                .replace(" : ", "")
-                .replace(":", "")
-                .replace("€", "")
-                .replace(")", "")
-                .replace(" ", "")
-                .trim();
+        String amount = getAmountInLabelOfTotalLine(lineOfTotalAccountInLedger);
         String verif;
         row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
         FormulaEvaluator evaluator = row.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
-        double solde = (double) Math.round(evaluator.evaluate(soldeCell).getNumberValue() * 100) / 100;
-        double debitExcel = (double) Math.round(evaluator.evaluate(debitCell).getNumberValue() * 100) / 100;
+        double solde = getRound(evaluator, soldeCell);
+        double debitExcel = getRound(evaluator, debitCell);
         double debitGrandLivre = Double.parseDouble(lineOfTotalAccountInLedger.debit());
-        double creditExcel = (double) Math.round(evaluator.evaluate(creditCell).getNumberValue() * 100) / 100;
+        double creditExcel = getRound(evaluator, creditCell);
         double creditGrandLivre = Double.parseDouble(lineOfTotalAccountInLedger.credit());
         if (Double.parseDouble(amount) == solde) {
             if (debitExcel == debitGrandLivre) {
@@ -207,6 +196,29 @@ public class WriteLine {
         }
         cellVerif.setCellValue(verif);
 
+        addCellMessageInTotalaccount(row, soldeCell, amount, creditCell, creditGrandLivre, debitCell, debitGrandLivre, cellStyle);
+    }
+
+    private double getRound(FormulaEvaluator evaluator, Cell soldeCell) {
+        return (double) Math.round(evaluator.evaluate(soldeCell).getNumberValue() * 100) / 100;
+    }
+
+    private static String getAmountInLabelOfTotalLine(TotalAccount lineOfTotalAccountInLedger) {
+        return lineOfTotalAccountInLedger.label()
+                .replace("Total", " ")
+                .replace("compte", " ")
+                .replace("(Solde", " ")
+                .replace("créditeur", " ")
+                .replace("débiteur", " ")
+                .replace(" : ", "")
+                .replace(":", "")
+                .replace("€", "")
+                .replace(")", "")
+                .replace(" ", "")
+                .trim();
+    }
+
+    private static void addCellMessageInTotalaccount(Row row, Cell soldeCell, String amount, Cell creditCell, double creditGrandLivre, Cell debitCell, double debitGrandLivre, CellStyle cellStyle) {
         Cell cellMessqage = row.createCell(ID_COMMENT_OF_LEDGER);
         String formuleIfSolde = "IF(ROUND(" + soldeCell.getAddress() + ",2)=" + Double.parseDouble(amount) + ", \" \", \"Le solde n'est pas égale \")";
         String formuleIfCredit = "IF(" + creditCell.getAddress() + "=" + creditGrandLivre + ", " + formuleIfSolde + ", \"Le total credit n'est pas égale " + creditGrandLivre + " \")";
