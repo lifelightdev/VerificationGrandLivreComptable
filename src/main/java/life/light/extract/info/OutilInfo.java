@@ -17,6 +17,7 @@ public class OutilInfo {
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String EURO = "€";
     public static final String REGEX_PHONE_NUMBER = "^0[1-9]([-. ]?\\d{2}){4}$";
+    public static final String ACCOUNT_CO_OWNER = "450";
 
     public int getIndexOfNextWords(String[] words, int indexOfLastWords) {
         if (words[indexOfLastWords].trim().isEmpty()) {
@@ -44,13 +45,13 @@ public class OutilInfo {
             account = accounts.get(key);
         } else if (words[indexOfWords].contains("-")) {
             key = words[indexOfWords].substring(0, words[indexOfWords].indexOf("-"));
-            if (key.startsWith("450")) {
-                key = "45000-" + words[indexOfWords].substring(words[indexOfWords].indexOf("-") + 1);
+            if (key.startsWith(ACCOUNT_CO_OWNER)) {
+                key = ACCOUNT_CO_OWNER + "00-" + words[indexOfWords].substring(words[indexOfWords].indexOf("-") + 1);
                 account = accounts.get(key);
             } else {
                 account = accounts.get(key);
             }
-        } else if (key.startsWith("450")) {
+        } else if (key.startsWith(ACCOUNT_CO_OWNER)) {
             if (accounts.containsKey(key)) {
                 account = accounts.get(key);
             } else {

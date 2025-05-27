@@ -14,6 +14,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
+import static life.light.extract.info.OutilInfo.ACCOUNT_CO_OWNER;
 import static life.light.write.WriteOutil.*;
 
 public class WriteFile {
@@ -193,7 +194,46 @@ public class WriteFile {
         }
     }
 
-    public void writeFileExcelListeDesDepenses(Object[] listeDesDepenses, String pathNameFile, String pathDirectoryInvoice) {
+    public void writeFilesExcelCoOwner(Object[] grandLivres, String pathFile, Map<String, TypeAccount> accounts, String pathDirectoryInvoice) {
+
+        for (TypeAccount typeAccount : accounts.values()) {
+            if (typeAccount.account().startsWith(ACCOUNT_CO_OWNER)) {
+                String fileName = pathFile + typeAccount.label().trim().replace(" ", "_")+".xlsx";
+                try {
+                    // Créer un nouveau classeur Excel
+                    Workbook workbook = new XSSFWorkbook();
+                    // Créer une nouvelle feuille dans le classeur pour le grand livre
+                    Sheet sheet = workbook.createSheet(typeAccount.account().replace(ACCOUNT_CO_OWNER, "").replace("00-", ""));
+                    writeLine.getCellsEnteteGrandLivre(sheet);
+                    int rowNum = 1;
+                    for (Object grandLivre : grandLivres) {
+                        if (grandLivre instanceof Line line) {
+                            if (line.account().account().equals(typeAccount.account())) {
+                                Row row = sheet.createRow(rowNum);
+                                writeLine.getLineGrandLivre(line, row, true, pathDirectoryInvoice);
+                                rowNum++;
+                            }
+                        }
+                    }
+                    // Ajout d'une ligne de total manuel
+                    Row row = sheet.createRow(rowNum);
+                    WriteCell writeCell = new WriteCell();
+                    WriteCellStyle writeCellStyle = new WriteCellStyle();
+                    writeCell.addCellEmpty(ID_ACOUNT_NUMBER_OF_LEDGER, ID_LABEL_OF_LEDGER, row, writeCellStyle.getCellStyleTotal(workbook));
+                    writeOutil.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheet);
+                    // Écrire le contenu du classeur dans un fichier
+                    writeOutil.writeWorkbook(fileName, workbook);
+                    // Fermer le classeur
+                    workbook.close();
+                } catch (IOException e) {
+                    LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", fileName, e.getMessage());
+                }
+            }
+        }
+    }
+
+    public void writeFileExcelListeDesDepenses(Object[] listeDesDepenses, String pathNameFile, String
+            pathDirectoryInvoice) {
         try {
             // Créer un nouveau classeur Excel
             Workbook workbook = new XSSFWorkbook();
@@ -231,7 +271,8 @@ public class WriteFile {
         }
     }
 
-    public void writeFileExcelEtatRaprochement(List<Line> grandLivres, String exitFile, List<BankLine> bankLines) {
+    public void writeFileExcelEtatRaprochement(List<Line> grandLivres, String
+            exitFile, List<BankLine> bankLines) {
         try {
             // Créer un nouveau classeur Excel
             Workbook workbook = new XSSFWorkbook();

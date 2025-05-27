@@ -507,12 +507,15 @@ public class Ledger {
         }
 
         WriteFile writeFile = new WriteFile();
-        String exitFile = ".\\resultat\\GrandLivre.csv";
+        String pathFile = "." + File.separator + "resultat" + File.separator ;
+        String exitFile = pathFile+ "GrandLivre.csv";
         writeFile.writeFileCSVGrandLivre(grandLivres, exitFile);
         String nameFile = infoGrandLivre.printDate() + " Grand livre " + infoGrandLivre.syndicName()
                 + " au " + infoGrandLivre.stopDate() + ".xlsx";
-        String path = "." + File.separator + "resultat" + File.separator + nameFile;
+        String path = pathFile + nameFile;
         writeFile.writeFileExcelGrandLivre(grandLivres, path, journals, pathDirectoryInvoice);
+
+        writeFile.writeFilesExcelCoOwner(grandLivres, pathFile + "Copropriétaire" + File.separator, accounts, pathDirectoryInvoice);
         return lineBankInGrandLivre;
     }
 }

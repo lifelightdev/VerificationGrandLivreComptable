@@ -35,7 +35,7 @@ public class WriteCellStyle {
         return styleTotal;
     }
 
-    CellStyle getCellStyleEntete(CellStyle style) {
+    CellStyle getCellStyleHeader(CellStyle style) {
         style.setAlignment(HorizontalAlignment.CENTER);
         style.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);

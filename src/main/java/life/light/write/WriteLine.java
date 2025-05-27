@@ -283,7 +283,7 @@ public class WriteLine {
     public void getCellsEnteteGrandLivre(Sheet sheet) {
         int index = 0;
         Row headerRow = sheet.createRow(index);
-        CellStyle styleHeader = sheet.getWorkbook().createCellStyle();
+        CellStyle styleHeader = writeCellStyle.getCellStyleHeader(sheet.getWorkbook().createCellStyle());
         for (String label : NOM_ENTETE_COLONNE_GRAND_LIVRE) {
             writeCell.addCell(headerRow, index++, label, styleHeader, "", null, null);
         }
@@ -292,7 +292,7 @@ public class WriteLine {
     public void getCellsEnteteListeDesDepenses(Sheet sheet) {
         int index = 0;
         Row headerRow = sheet.createRow(index);
-        CellStyle cellStyleHeader = writeCellStyle.getCellStyleEntete(sheet.getWorkbook().createCellStyle());
+        CellStyle cellStyleHeader = writeCellStyle.getCellStyleHeader(sheet.getWorkbook().createCellStyle());
         for (String label : NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES) {
             writeCell.addCell(headerRow, index++, label, cellStyleHeader, "", null, null);
         }
@@ -301,9 +301,9 @@ public class WriteLine {
     public void getCellsEnteteEtatRapprochement(Sheet sheet) {
         int index = 0;
         Row headerRow = sheet.createRow(index);
-        CellStyle styleHeader = sheet.getWorkbook().createCellStyle();
         for (String label : NOM_ENTETE_COLONNE_ETAT_RAPPROCHEMENT) {
-            writeCell.addCell(headerRow, index++, label, writeCellStyle.getCellStyleEntete(styleHeader), "",
+            writeCell.addCell(headerRow, index++, label,
+                    writeCellStyle.getCellStyleHeader(sheet.getWorkbook().createCellStyle()), "",
                     null, null);
         }
     }
