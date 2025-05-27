@@ -59,7 +59,8 @@ public class WriteLine {
 
         Cell debitCell = writeCell.addDebitCell(lineOfLedger, row, cellStyleAmount);
         Cell creditCell = writeCell.addCreditCell(lineOfLedger, row, cellStyleAmount);
-        writeCell.addSoldeCell(lineOfLedger, row, cellStyleAmount, creditCell, debitCell);
+        writeCell.addSoldeCell(row, debitCell, creditCell, cellStyleAmount,
+                ID_BALANCE_OF_LEDGER, lineOfLedger.label().contains(REPORT_DE), false);
 
         if (verif) {
             writeOutil.addVerifCells(lineOfLedger, row, cellStyle, pathDirectoryInvoice);
@@ -137,7 +138,7 @@ public class WriteLine {
         Cell debitCell = writeCell.addCellAmountOfTotalBuildingInLedger(row, ID_DEBIT_OF_LEDGER, lineTotals, styleTotalAmount);
         Cell creditCell = writeCell.addCellAmountOfTotalBuildingInLedger(row, ID_CREDIT_OF_LEDGER, lineTotals, styleTotalAmount);
 
-        writeCell.addCellBalanceOfTotalInLedger(row, debitCell, creditCell, styleTotalAmount);
+        writeCell.addSoldeCell(row, debitCell, creditCell, styleTotalAmount, ID_BALANCE_OF_LEDGER, false, true);
     }
 
     public void getTotalAccount(TotalAccount lineOfTotalAccountInLedger, Row row, int lastRowNumTotal) {
@@ -155,7 +156,7 @@ public class WriteLine {
 
         Cell debitCell = writeCell.addCellDebitOfTotalAccountInLedger(row, lastRowNumTotal, cellStyleAmount);
         Cell creditCell = writeCell.addCellCreditOfTotalAccountInLedger(row, lastRowNumTotal, cellStyleAmount);
-        Cell soldeCell = writeCell.addCellBalanceOfTotalInLedger(row, debitCell, creditCell, cellStyleAmount);
+        Cell soldeCell = writeCell.addSoldeCell(row, debitCell, creditCell, cellStyleAmount, ID_BALANCE_OF_LEDGER, false, true);
 
         Cell cellVerif = row.createCell(ID_VERIFFICATION_OF_LEDGER);
         String amount = lineOfTotalAccountInLedger.label()
