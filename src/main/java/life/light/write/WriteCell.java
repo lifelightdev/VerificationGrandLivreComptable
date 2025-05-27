@@ -123,4 +123,14 @@ public class WriteCell {
         debitCell.setCellStyle(styleTotalAmount);
         return debitCell;
     }
+
+    public Cell addCellAmount(Row row, int idColum, CellStyle style) {
+        Cell cell = row.createCell(idColum);
+        CellAddress cellAddressFirst = new CellAddress( 1, cell.getAddress().getColumn());
+        CellAddress cellAddressEnd = new CellAddress(cell.getAddress().getRow() - 1, cell.getAddress().getColumn());
+        cell.setCellFormula("SUM(" + cellAddressFirst + ":" + cellAddressEnd + ")");
+        row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
+        cell.setCellStyle(style);
+        return cell;
+    }
 }

@@ -221,6 +221,12 @@ public class WriteFile {
                     WriteCellStyle writeCellStyle = new WriteCellStyle();
                     writeCell.addCellEmpty(ID_ACOUNT_NUMBER_OF_LEDGER, ID_LABEL_OF_LEDGER, row, writeCellStyle.getCellStyleTotal(workbook));
                     writeOutil.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheet);
+                    writeCell.addCell(row, ID_LABEL_OF_LEDGER, "Total",  writeCellStyle.getCellStyleTotal(workbook),"", null, "");
+                    Cell debitCell = writeCell.addCellAmount(row, ID_DEBIT_OF_LEDGER, writeCellStyle.getCellStyleTotalAmount(workbook));
+                    Cell creditCell = writeCell.addCellAmount(row, ID_CREDIT_OF_LEDGER, writeCellStyle.getCellStyleTotalAmount(workbook));
+                    writeCell.addSoldeCell(row, debitCell, creditCell, writeCellStyle.getCellStyleTotalAmount(workbook),
+                            ID_BALANCE_OF_LEDGER, true, false);
+                    writeCell.addCellEmpty(ID_VERIFFICATION_OF_LEDGER, ID_COMMENT_OF_LEDGER + 1, row, writeCellStyle.getCellStyleTotal(workbook));
                     // Écrire le contenu du classeur dans un fichier
                     writeOutil.writeWorkbook(fileName, workbook);
                     // Fermer le classeur
