@@ -23,6 +23,7 @@ public class WriteFile {
     public static final String POINTAGE_GL_OK = "Pointage GL OK";
 
     private WriteOutil outilWrite = new WriteOutil();
+    private WriteLine writeLine = new WriteLine();
 
     // TODO faire la gestion des fichiers (existe, n'existe pas, pas de dossier ...)
 
@@ -152,7 +153,7 @@ public class WriteFile {
 
             // Créer une nouvelle feuille dans le classeur pour le grand livre
             Sheet sheet = workbook.createSheet("Grand Livre");
-            outilWrite.getCellsEnteteGrandLivre(sheet);
+            writeLine.getCellsEnteteGrandLivre(sheet);
             int rowNum = 1;
             int lastRowNumTotal = 0;
             List<Integer> lineTotals = new ArrayList<>();
@@ -160,15 +161,15 @@ public class WriteFile {
                 if (grandLivre != null) {
                     Row row = sheet.createRow(rowNum);
                     if (grandLivre instanceof Line) {
-                        outilWrite.getLineGrandLivre((Line) grandLivre, row, true, pathDirectoryInvoice);
+                        writeLine.getLineGrandLivre((Line) grandLivre, row, true, pathDirectoryInvoice);
                     }
                     if (grandLivre instanceof TotalAccount) {
-                        outilWrite.getTotalAccount((TotalAccount) grandLivre, row, lastRowNumTotal);
+                        writeLine.getTotalAccount((TotalAccount) grandLivre, row, lastRowNumTotal);
                         lastRowNumTotal = rowNum;
                         lineTotals.add(rowNum + 1);
                     }
                     if (grandLivre instanceof TotalBuilding) {
-                        outilWrite.getTotalBuilding((TotalBuilding) grandLivre, row, lineTotals);
+                        writeLine.getTotalBuilding((TotalBuilding) grandLivre, row, lineTotals);
                     }
                     rowNum++;
                 }
@@ -187,12 +188,12 @@ public class WriteFile {
                         }
                     }
                 }
-                outilWrite.getCellsEnteteGrandLivre(sheetJournal);
+                writeLine.getCellsEnteteGrandLivre(sheetJournal);
                 rowNum = 1;
-                outilWrite.getCellsEnteteGrandLivre(sheetJournal);
+                writeLine.getCellsEnteteGrandLivre(sheetJournal);
                 for (Map.Entry<String, Line> line : ligneOfJournal.entrySet()) {
                     Row row = sheetJournal.createRow(rowNum);
-                    outilWrite.getLineGrandLivre(line.getValue(), row, false, pathDirectoryInvoice);
+                    writeLine.getLineGrandLivre(line.getValue(), row, false, pathDirectoryInvoice);
                     rowNum++;
                 }
                 outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetJournal);
@@ -217,19 +218,19 @@ public class WriteFile {
 
             // Créer une nouvelle feuille dans le classeur pour le grand livre
             Sheet sheet = workbook.createSheet("Liste des dépenses");
-            outilWrite.getCellsEnteteListeDesDepenses(sheet);
+            writeLine.getCellsEnteteListeDesDepenses(sheet);
             int rowNum = 1;
             for (Object line : listeDesDepenses) {
                 if (line != null) {
                     Row row = sheet.createRow(rowNum);
                     if (line instanceof LineOfExpenseKey) {
-                        outilWrite.getLineOfExpenseKey((LineOfExpenseKey) line, row);
+                        writeLine.getLineOfExpenseKey((LineOfExpenseKey) line, row);
                     }
                     if (line instanceof LineOfExpenseTotal) {
-                        outilWrite.getLineOfExpenseTotal((LineOfExpenseTotal) line, row);
+                        writeLine.getLineOfExpenseTotal((LineOfExpenseTotal) line, row);
                     }
                     if (line instanceof LineOfExpense) {
-                        outilWrite.getLineOfExpense((LineOfExpense) line, row, pathDirectoryInvoice);
+                        writeLine.getLineOfExpense((LineOfExpense) line, row, pathDirectoryInvoice);
                     }
                     rowNum++;
                 }
@@ -273,7 +274,7 @@ public class WriteFile {
         Sheet sheetPointage = workbook.createSheet(POINTAGE_RELEVE_OK);
         List<Line> grandLivresKO = new ArrayList<>();
         List<BankLine> bankLinesKO = new ArrayList<>();
-        outilWrite.getCellsEnteteEtatRapprochement(sheetPointage);
+        writeLine.getCellsEnteteEtatRapprochement(sheetPointage);
         int rowNumPointage = 1;
         for (Line grandLivre : grandLivres) {
             Row row = sheetPointage.createRow(rowNumPointage);
@@ -299,7 +300,7 @@ public class WriteFile {
                 grandLivresKO.add(grandLivre);
             } else {
                 message = "Correspondante entre le grand livre et les relevés de banque";
-                outilWrite.getLineEtatRapprochement(grandLivre, row, bankLineFound, message);
+                writeLine.getLineEtatRapprochement(grandLivre, row, bankLineFound, message);
                 bankLines.remove(bankLineFound);
                 rowNumPointage++;
             }
@@ -307,7 +308,7 @@ public class WriteFile {
         outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetPointage);
 
         Sheet sheetPointage1 = workbook.createSheet("Pointage Relevé KO");
-        outilWrite.getCellsEnteteEtatRapprochement(sheetPointage1);
+        writeLine.getCellsEnteteEtatRapprochement(sheetPointage1);
         rowNumPointage = 1;
         for (Line grandLivre : grandLivresKO) {
             Row row = sheetPointage1.createRow(rowNumPointage);
@@ -328,7 +329,7 @@ public class WriteFile {
             }
             if (message.equals(KO)) {
                 message = "Aucune correspondance du grand livre dans les relevés de banque";
-                outilWrite.getLineEtatRapprochement(grandLivre, row, bankLineFound, message);
+                writeLine.getLineEtatRapprochement(grandLivre, row, bankLineFound, message);
                 bankLines.remove(bankLineFound);
                 rowNumPointage++;
             }
@@ -340,7 +341,7 @@ public class WriteFile {
         Sheet sheetPointage = workbook.createSheet(POINTAGE_GL_OK);
         List<Line> grandLivresKO = new ArrayList<>();
         List<BankLine> bankLinesKO = new ArrayList<>();
-        outilWrite.getCellsEnteteEtatRapprochement(sheetPointage);
+        writeLine.getCellsEnteteEtatRapprochement(sheetPointage);
         int rowNumPointage = 1;
         for (BankLine bankLine : bankLines) {
             Row row = sheetPointage.createRow(rowNumPointage);
@@ -366,7 +367,7 @@ public class WriteFile {
                 bankLinesKO.add(bankLine);
             } else {
                 message = "Correspondante entre le grand livre et les relevés de banque";
-                outilWrite.getLineEtatRapprochement(lineGLFound, row, bankLine, message);
+                writeLine.getLineEtatRapprochement(lineGLFound, row, bankLine, message);
                 grandLivres.remove(lineGLFound);
                 rowNumPointage++;
             }
@@ -374,7 +375,7 @@ public class WriteFile {
         outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetPointage);
 
         Sheet sheetPointage1 = workbook.createSheet("Pointage GL KO");
-        outilWrite.getCellsEnteteEtatRapprochement(sheetPointage1);
+        writeLine.getCellsEnteteEtatRapprochement(sheetPointage1);
         rowNumPointage = 1;
         for (BankLine bankLine : bankLinesKO) {
             Row row = sheetPointage1.createRow(rowNumPointage);
@@ -395,7 +396,7 @@ public class WriteFile {
             }
             if (message.equals(KO)) {
                 message = "Aucune correspondance du relevé de banque dans le grand livre";
-                outilWrite.getLineEtatRapprochement(lineGrandLivreFound, row, bankLine, message);
+                writeLine.getLineEtatRapprochement(lineGrandLivreFound, row, bankLine, message);
                 grandLivres.remove(lineGrandLivreFound);
                 rowNumPointage++;
             }

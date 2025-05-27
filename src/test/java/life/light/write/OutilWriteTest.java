@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class OutilWriteTest {
 
-    private WriteOutil outilWrite = new WriteOutil();
+    private WriteLine writeLine = new WriteLine();
 
     @Test
     void getTotalBuilding() {
@@ -33,28 +33,28 @@ class OutilWriteTest {
                 new TypeAccount("401", "Fournisseur"), "Journal",
                 new TypeAccount("512", "Banque"), "VIRT",
                 "Label", "0.00", "0.00");
-        outilWrite.getLineGrandLivre(line, row, false, null);
+        writeLine.getLineGrandLivre(line, row, false, null);
         row = sheet.createRow(rowNum++);
         TotalAccount totalAccount = new TotalAccount("Total 0.00",
                 new TypeAccount("401", "Fournisseur"), "0.00", "0.00");
         int lastRowNumTotal = 0;
-        outilWrite.getTotalAccount(totalAccount, row, lastRowNumTotal);
+        writeLine.getTotalAccount(totalAccount, row, lastRowNumTotal);
         row = sheet.createRow(rowNum++);
 
         line = new Line("000002", "01/01/2024",
                 new TypeAccount("512", "Banque"), "Journal",
                 new TypeAccount("401", "Fournisseur"), "VIRT",
                 "Label", "0.00", "0.00");
-        outilWrite.getLineGrandLivre(line, row, false, null);
+        writeLine.getLineGrandLivre(line, row, false, null);
         row = sheet.createRow(rowNum++);
         totalAccount = new TotalAccount("Total 0.00",
                 new TypeAccount("512", "Banque"), "0.00", "0.00");
         lastRowNumTotal = rowNum;
         lineTotals.add(rowNum);
-        outilWrite.getTotalAccount(totalAccount, row, lastRowNumTotal);
+        writeLine.getTotalAccount(totalAccount, row, lastRowNumTotal);
         row = sheet.createRow(rowNum);
         TotalBuilding totalBuilding = new TotalBuilding("Total 0.00", "0.00", "0.00");
-        outilWrite.getTotalBuilding(totalBuilding, row, lineTotals);
+        writeLine.getTotalBuilding(totalBuilding, row, lineTotals);
         assertEquals("Total 0.00", workbook.getSheetAt(0).getRow(5).getCell(8).getStringCellValue());
         assertEquals("J1+J5", workbook.getSheetAt(0).getRow(5).getCell(9).getCellFormula());
         assertEquals("K1+K5", workbook.getSheetAt(0).getRow(5).getCell(10).getCellFormula());
@@ -71,12 +71,12 @@ class OutilWriteTest {
                 new TypeAccount("401", "Fournisseur"), "Journal",
                 new TypeAccount("512", "Banque"), "VIRT",
                 "Label", "0.00", "0.00");
-        outilWrite.getLineGrandLivre(line, row, false, null);
+        writeLine.getLineGrandLivre(line, row, false, null);
         row = sheet.createRow(rowNum);
         TotalAccount totalAccount = new TotalAccount("Total 0.00",
                 new TypeAccount("401", "Fournisseur"), "0.00", "0.00");
         int lastRowNumTotal = 0;
-        outilWrite.getTotalAccount(totalAccount, row, lastRowNumTotal);
+        writeLine.getTotalAccount(totalAccount, row, lastRowNumTotal);
         assertEquals(401.0, workbook.getSheetAt(0).getRow(2).getCell(0).getNumericCellValue());
         assertEquals("Fournisseur", workbook.getSheetAt(0).getRow(2).getCell(1).getStringCellValue());
         assertEquals("Total 0.00", workbook.getSheetAt(0).getRow(2).getCell(8).getStringCellValue());
@@ -106,7 +106,7 @@ class OutilWriteTest {
                 new TypeAccount(Double.toString(codeAccount), labelAccount), journal,
                 new TypeAccount(Double.toString(codeAccount2), labelAccount2), type,
                 label, Double.toString(amountDebit), Double.toString(amountCredit));
-        outilWrite.getLineGrandLivre(line, row, false, null);
+        writeLine.getLineGrandLivre(line, row, false, null);
 
         assertEquals(codeAccount, workbook.getSheetAt(0).getRow(1).getCell(0).getNumericCellValue());
         assertEquals(labelAccount, workbook.getSheetAt(0).getRow(1).getCell(1).getStringCellValue());
@@ -143,7 +143,7 @@ class OutilWriteTest {
                 new TypeAccount(Double.toString(codeAccount), labelAccount), journal,
                 new TypeAccount(codeAccount2.toString(), labelAccount2), type,
                 label, amountDebit.toString(), amountCredit.toString());
-        outilWrite.getLineGrandLivre(line, row, false, null);
+        writeLine.getLineGrandLivre(line, row, false, null);
 
         assertEquals(codeAccount, workbook.getSheetAt(0).getRow(1).getCell(0).getNumericCellValue());
         assertEquals(labelAccount, workbook.getSheetAt(0).getRow(1).getCell(1).getStringCellValue());
@@ -187,7 +187,7 @@ class OutilWriteTest {
         bankLineFound = new BankLine(year, month, operationDate, valueDate,
                 new TypeAccount(Double.toString(codeAccount), labelAccount), label, amountCredit, amountDebit);
         String message = "Message";
-        outilWrite.getLineEtatRapprochement(line, row, bankLineFound, message);
+        writeLine.getLineEtatRapprochement(line, row, bankLineFound, message);
 
         assertEquals(codeAccount, workbook.getSheetAt(0).getRow(1).getCell(0).getNumericCellValue());
         assertEquals(labelAccount, workbook.getSheetAt(0).getRow(1).getCell(1).getStringCellValue());
@@ -216,7 +216,7 @@ class OutilWriteTest {
     void getCellsEnteteGrandLivre() {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Grand Livre");
-        outilWrite.getCellsEnteteGrandLivre(sheet);
+        writeLine.getCellsEnteteGrandLivre(sheet);
         assertEquals("Compte", workbook.getSheetAt(0).getRow(0).getCell(0).getStringCellValue());
         assertEquals("Intitulé du compte", workbook.getSheetAt(0).getRow(0).getCell(1).getStringCellValue());
         assertEquals("Pièce", workbook.getSheetAt(0).getRow(0).getCell(2).getStringCellValue());
@@ -237,7 +237,7 @@ class OutilWriteTest {
     void getCellsEnteteEtatRapprochement() {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Grand Livre");
-        outilWrite.getCellsEnteteEtatRapprochement(sheet);
+        writeLine.getCellsEnteteEtatRapprochement(sheet);
         assertEquals("Compte", workbook.getSheetAt(0).getRow(0).getCell(0).getStringCellValue());
         assertEquals("Intitulé du compte", workbook.getSheetAt(0).getRow(0).getCell(1).getStringCellValue());
         assertEquals("Pièce", workbook.getSheetAt(0).getRow(0).getCell(2).getStringCellValue());
@@ -289,15 +289,15 @@ class OutilWriteTest {
         String pathDirectoryInvoice = tempTestDir + File.separator + "invoice" + File.separator;
 
 
-        outilWrite.getLineOfExpense(line, row, pathDirectoryInvoice);
+        writeLine.getLineOfExpense(line, row, pathDirectoryInvoice);
 
         row = sheet.createRow(2);
         LineOfExpense line2 = new LineOfExpense("Invoice234", date, label, amount, deduction, recovery);
-        outilWrite.getLineOfExpense(line2, row, pathDirectoryInvoice);
+        writeLine.getLineOfExpense(line2, row, pathDirectoryInvoice);
 
         row = sheet.createRow(3);
         LineOfExpense line3 = new LineOfExpense("Invoice345", date, label, amount, deduction, recovery);
-        outilWrite.getLineOfExpense(line3, row, pathDirectoryInvoice);
+        writeLine.getLineOfExpense(line3, row, pathDirectoryInvoice);
 
         // Verify the cells
         assertEquals(document, workbook.getSheetAt(0).getRow(1).getCell(0).getStringCellValue());
