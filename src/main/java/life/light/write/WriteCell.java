@@ -1,6 +1,7 @@
 package life.light.write;
 
 import life.light.type.Line;
+import life.light.type.CellValues;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
@@ -17,7 +18,7 @@ public class WriteCell {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private WriteOutil writeOutil = new WriteOutil();
+    private final WriteOutil writeOutil = new WriteOutil();
 
     public void addCell(Row row, int idColum, String value, CellStyle style, String line, String name, String place) {
         Cell cell = row.createCell(idColum);
@@ -34,6 +35,12 @@ public class WriteCell {
         cell.setCellStyle(style);
     }
 
+    public void addCells(Row row, List<CellValues> values, String place) {
+        for (CellValues value: values) {
+            addCell(row, value.idColum(), value.value(), value.style(), value.line(), value.name(), place);
+        }
+    }
+
     public void addCellEmpty(int idFirstColum, int idLastColum, Row row, CellStyle style) {
         for (int idCell = idFirstColum; idCell < idLastColum; idCell++) {
             Cell cell = row.createCell(idCell);
@@ -41,7 +48,8 @@ public class WriteCell {
         }
     }
 
-    public Cell addSoldeCell(Row row, Cell debitCell, Cell creditCell, CellStyle style, int IdColum, boolean isLineReport, boolean isTotal) {
+    public Cell addSoldeCell(Row row, Cell debitCell, Cell creditCell, CellStyle style, int IdColum,
+                             boolean isLineReport, boolean isTotal) {
         Cell soldeCell = row.createCell(IdColum);
         String formule;
         if (isTotal) {
@@ -103,7 +111,8 @@ public class WriteCell {
         return debitCell;
     }
 
-    public Cell addCellAmountOfTotalBuildingInLedger(Row row, int idDebitOfLedger, List<Integer> lineTotals, CellStyle styleTotalAmount) {
+    public Cell addCellAmountOfTotalBuildingInLedger(Row row, int idDebitOfLedger, List<Integer> lineTotals,
+                                                     CellStyle styleTotalAmount) {
         Cell debitCell = row.createCell(idDebitOfLedger);
         StringBuilder sumDebit = new StringBuilder();
         for (Integer numRow : lineTotals) {
