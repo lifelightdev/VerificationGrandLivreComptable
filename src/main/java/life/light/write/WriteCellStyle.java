@@ -42,32 +42,26 @@ public class WriteCellStyle {
         return style;
     }
 
-    CellStyle getCellStyleWhite(Workbook workbook) {
-        CellStyle styleWhite = workbook.createCellStyle();
-        styleWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
-        styleWhite.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        return styleWhite;
+    CellStyle getCellStyle(Workbook workbook, boolean isWhite) {
+        CellStyle style = workbook.createCellStyle();
+        if (isWhite) {
+            style.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
+        } else {
+            style.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
+        }
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        return style;
     }
 
-    CellStyle getCellStyleBlue(Workbook workbook) {
-        CellStyle styleBlue = workbook.createCellStyle();
-        styleBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
-        styleBlue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        return styleBlue;
-    }
-
-    CellStyle getCellStyleAmountWhite(Workbook workbook) {
-        CellStyle styleAmountWhite = getCellStyleAmount(workbook);
-        styleAmountWhite.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
-        styleAmountWhite.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        return styleAmountWhite;
-    }
-
-    CellStyle getCellStyleAmountBlue(Workbook workbook) {
-        CellStyle styleAmountBlue = getCellStyleAmount(workbook);
-        styleAmountBlue.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
-        styleAmountBlue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        return styleAmountBlue;
+    CellStyle getCellStyleAmount(Workbook workbook, boolean isWhite) {
+        CellStyle styleAmount = getCellStyleAmount(workbook);
+        if (isWhite) {
+            styleAmount.setFillForegroundColor(BACKGROUND_COLOR_WHITE);
+        } else {
+            styleAmount.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
+        }
+        styleAmount.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        return styleAmount;
     }
 
     CellStyle getCellStyleVerifRed(CellStyle style) {

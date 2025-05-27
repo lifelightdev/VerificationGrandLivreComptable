@@ -19,15 +19,9 @@ public class WriteLine {
     WriteOutil writeOutil = new WriteOutil();
 
     public void getLineGrandLivre(Line lineOfLedger, Row row, boolean verif, String pathDirectoryInvoice) {
-        CellStyle cellStyle;
-        CellStyle cellStyleAmount;
-        if (row.getRowNum() % 2 == 0) {
-            cellStyle = writeCellStyle.getCellStyleWhite(row.getSheet().getWorkbook());
-            cellStyleAmount = writeCellStyle.getCellStyleAmountWhite(row.getSheet().getWorkbook());
-        } else {
-            cellStyle = writeCellStyle.getCellStyleBlue(row.getSheet().getWorkbook());
-            cellStyleAmount = writeCellStyle.getCellStyleAmountBlue(row.getSheet().getWorkbook());
-        }
+        boolean isWhite = row.getRowNum() % 2 == 0;
+        CellStyle cellStyle = writeCellStyle.getCellStyle(row.getSheet().getWorkbook(), isWhite);
+        CellStyle cellStyleAmount = writeCellStyle.getCellStyleAmount(row.getSheet().getWorkbook(), isWhite);
 
         writeCell.addCell(row, ID_ACOUNT_NUMBER_OF_LEDGER, lineOfLedger.account().account(), cellStyle, lineOfLedger.toString(),
                 "le numéro de compte", "legrand livre");
@@ -68,15 +62,10 @@ public class WriteLine {
     }
 
     public void getLineEtatRapprochement(Line lineOfLedger, Row row, BankLine bankLine, String message) {
-        CellStyle cellStyle;
-        CellStyle cellStyleAmount;
-        if (row.getRowNum() % 2 == 0) {
-            cellStyle = writeCellStyle.getCellStyleWhite(row.getSheet().getWorkbook());
-            cellStyleAmount = writeCellStyle.getCellStyleAmountWhite(row.getSheet().getWorkbook());
-        } else {
-            cellStyle = writeCellStyle.getCellStyleBlue(row.getSheet().getWorkbook());
-            cellStyleAmount = writeCellStyle.getCellStyleAmountBlue(row.getSheet().getWorkbook());
-        }
+        boolean isWhite = row.getRowNum() % 2 == 0;
+        CellStyle cellStyle = writeCellStyle.getCellStyle(row.getSheet().getWorkbook(), isWhite);
+        CellStyle cellStyleAmount = writeCellStyle.getCellStyleAmount(row.getSheet().getWorkbook(), isWhite);
+
         if (lineOfLedger != null) {
             String place = "le grand livre de l'état de rapprochement";
             writeCell.addCell(row, ID_ACOUNT_NUMBER_OF_LEDGER, lineOfLedger.account().account(), cellStyle,
@@ -292,15 +281,9 @@ public class WriteLine {
         CreationHelper createHelper = row.getSheet().getWorkbook().getCreationHelper();
         Hyperlink link = createHelper.createHyperlink(HyperlinkType.FILE);
 
-        CellStyle styleColor;
-        CellStyle styleAmountColor;
-        if (row.getRowNum() % 2 == 0) {
-            styleColor = writeCellStyle.getCellStyleWhite(row.getSheet().getWorkbook());
-            styleAmountColor = writeCellStyle.getCellStyleAmountWhite(row.getSheet().getWorkbook());
-        } else {
-            styleColor = writeCellStyle.getCellStyleBlue(row.getSheet().getWorkbook());
-            styleAmountColor = writeCellStyle.getCellStyleAmountBlue(row.getSheet().getWorkbook());
-        }
+        boolean isWhite = row.getRowNum() % 2 == 0;
+        CellStyle cellStyle = writeCellStyle.getCellStyle(row.getSheet().getWorkbook(), isWhite);
+        CellStyle cellStyleAmount = writeCellStyle.getCellStyleAmount(row.getSheet().getWorkbook(), isWhite);
 
         Cell cell = row.createCell(ID_DOCUMENT_OF_LIST_OF_EXPENSES);
         if (writeOutil.isDouble(line.document())) {
@@ -308,36 +291,36 @@ public class WriteLine {
         } else {
             cell.setCellValue(line.document());
         }
-        cell.setCellStyle(styleColor);
+        cell.setCellStyle(cellStyle);
 
         cell = row.createCell(ID_DATE_OF_LIST_OF_EXPENSES);
         cell.setCellValue(line.date().format(DATE_FORMATTER));
-        cell.setCellStyle(styleColor);
+        cell.setCellStyle(cellStyle);
 
         cell = row.createCell(ID_LABEL_OF_LIST_OF_EXPENSES);
         cell.setCellValue(line.label());
-        cell.setCellStyle(styleColor);
+        cell.setCellStyle(cellStyle);
 
         cell = row.createCell(ID_AMOUNT_OF_LIST_OF_EXPENSES);
         cell.setCellValue(Double.parseDouble(line.amount()));
-        cell.setCellStyle(styleAmountColor);
+        cell.setCellStyle(cellStyleAmount);
 
         if (!line.deduction().isEmpty()) {
             cell = row.createCell(ID_DEDUCTION_OF_LIST_OF_EXPENSES);
             cell.setCellValue(Double.parseDouble(line.deduction()));
-            cell.setCellStyle(styleAmountColor);
+            cell.setCellStyle(cellStyleAmount);
         } else {
             cell = row.createCell(ID_DEDUCTION_OF_LIST_OF_EXPENSES);
-            cell.setCellStyle(styleAmountColor);
+            cell.setCellStyle(cellStyleAmount);
         }
 
         if (!line.recovery().isEmpty()) {
             cell = row.createCell(ID_RECOVERY_OF_LIST_OF_EXPENSES);
             cell.setCellValue(Double.parseDouble(line.recovery()));
-            cell.setCellStyle(styleAmountColor);
+            cell.setCellStyle(cellStyleAmount);
         } else {
             cell = row.createCell(ID_RECOVERY_OF_LIST_OF_EXPENSES);
-            cell.setCellStyle(styleAmountColor);
+            cell.setCellStyle(cellStyleAmount);
         }
 
         cell = row.createCell(ID_COMMENT_OF_LIST_OF_EXPENSES);
@@ -347,8 +330,6 @@ public class WriteLine {
             message = message + " avec ce libellé " + line.label();
         }
         cell.setCellValue(message);
-        cell.setCellStyle(styleColor);
+        cell.setCellStyle(cellStyle);
     }
-
-
 }
