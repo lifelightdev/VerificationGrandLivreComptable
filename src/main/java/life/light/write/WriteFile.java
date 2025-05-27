@@ -195,10 +195,9 @@ public class WriteFile {
     }
 
     public void writeFilesExcelCoOwner(Object[] grandLivres, String pathFile, Map<String, TypeAccount> accounts, String pathDirectoryInvoice) {
-
         for (TypeAccount typeAccount : accounts.values()) {
             if (typeAccount.account().startsWith(ACCOUNT_CO_OWNER)) {
-                String fileName = pathFile + typeAccount.label().trim().replace(" ", "_")+".xlsx";
+                String fileName = pathFile + typeAccount.label().trim().replace(" ", "_") + ".xlsx";
                 try {
                     // Créer un nouveau classeur Excel
                     Workbook workbook = new XSSFWorkbook();
@@ -221,9 +220,9 @@ public class WriteFile {
                     WriteCellStyle writeCellStyle = new WriteCellStyle();
                     writeCell.addCellEmpty(ID_ACOUNT_NUMBER_OF_LEDGER, ID_LABEL_OF_LEDGER, row, writeCellStyle.getCellStyleTotal(workbook));
                     writeOutil.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheet);
-                    writeCell.addCell(row, ID_LABEL_OF_LEDGER, "Total",  writeCellStyle.getCellStyleTotal(workbook),"", null, "");
-                    Cell debitCell = writeCell.addCellAmount(row, ID_DEBIT_OF_LEDGER, writeCellStyle.getCellStyleTotalAmount(workbook));
-                    Cell creditCell = writeCell.addCellAmount(row, ID_CREDIT_OF_LEDGER, writeCellStyle.getCellStyleTotalAmount(workbook));
+                    writeCell.addCell(row, ID_LABEL_OF_LEDGER, "Total", writeCellStyle.getCellStyleTotal(workbook), "", null, "");
+                    Cell debitCell = writeCell.addCellTotalAmount(row, ID_DEBIT_OF_LEDGER, 1, writeCellStyle.getCellStyleTotalAmount(workbook));
+                    Cell creditCell = writeCell.addCellTotalAmount(row, ID_CREDIT_OF_LEDGER, 1, writeCellStyle.getCellStyleTotalAmount(workbook));
                     writeCell.addSoldeCell(row, debitCell, creditCell, writeCellStyle.getCellStyleTotalAmount(workbook),
                             ID_BALANCE_OF_LEDGER, true, false);
                     writeCell.addCellEmpty(ID_VERIFFICATION_OF_LEDGER, ID_COMMENT_OF_LEDGER + 1, row, writeCellStyle.getCellStyleTotal(workbook));
@@ -248,6 +247,9 @@ public class WriteFile {
             Sheet sheet = workbook.createSheet("Liste des dépenses");
             writeLine.getCellsEnteteListeDesDepenses(sheet);
             int rowNum = 1;
+            int lastRowNumTotalNature = 2;
+            List<Integer> listIdLineTotalNature = new ArrayList<>();
+            List<Integer> listIdLineTotalKey = new ArrayList<>();
             for (Object line : listeDesDepenses) {
                 if (line != null) {
                     Row row = sheet.createRow(rowNum);
@@ -255,7 +257,18 @@ public class WriteFile {
                         writeLine.getLineOfExpenseKey((LineOfExpenseKey) line, row);
                     }
                     if (line instanceof LineOfExpenseTotal) {
-                        writeLine.getLineOfExpenseTotal((LineOfExpenseTotal) line, row);
+                        if (((LineOfExpenseTotal) line).type().equals(TypeOfExpense.Nature)) {
+                            writeLine.getLineOfExpenseTotal((LineOfExpenseTotal) line, row, lastRowNumTotalNature);
+                            lastRowNumTotalNature = rowNum;
+                            listIdLineTotalNature.add(rowNum);
+                        } else if (((LineOfExpenseTotal) line).type().equals(TypeOfExpense.Key)) {
+                            writeLine.getLineOfExpenseTotal((LineOfExpenseTotal) line, row, listIdLineTotalNature);
+                            listIdLineTotalNature.clear();
+                            listIdLineTotalKey.add(rowNum + 2);
+                            lastRowNumTotalNature += 4;
+                        } else if (((LineOfExpenseTotal) line).type().equals(TypeOfExpense.Building)) {
+                            writeLine.getLineOfExpenseTotal((LineOfExpenseTotal) line, row, listIdLineTotalKey);
+                        }
                     }
                     if (line instanceof LineOfExpense) {
                         writeLine.getLineOfExpense((LineOfExpense) line, row, pathDirectoryInvoice);

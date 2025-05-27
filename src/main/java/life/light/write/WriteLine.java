@@ -5,6 +5,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellAddress;
+import org.apache.poi.ss.util.CellReference;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -241,45 +243,6 @@ public class WriteLine {
         return values;
     }
 
-
-    public void getLineOfExpenseTotal(LineOfExpenseTotal line, Row row) {
-        Cell cell;
-        cell = row.createCell(ID_DOCUMENT_OF_LIST_OF_EXPENSES);
-        cell.setCellStyle(writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook()));
-        cell = row.createCell(ID_DATE_OF_LIST_OF_EXPENSES);
-        cell.setCellStyle(writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook()));
-        if (!line.key().isEmpty()) {
-            cell = row.createCell(ID_LABEL_OF_LIST_OF_EXPENSES);
-            if (line.type().equals(TypeOfExpense.Key)) {
-                cell.setCellValue("Total de la clé : " + line.key());
-            }
-            if (line.type().equals(TypeOfExpense.Nature)) {
-                cell.setCellValue("Total de la nature : " + line.key());
-            }
-            if (line.type().equals(TypeOfExpense.Building)) {
-                cell.setCellValue("Total de l'immeuble : " + line.key());
-            }
-            cell.setCellStyle(writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook()));
-        }
-        if (!line.amount().isEmpty()) {
-            cell = row.createCell(ID_AMOUNT_OF_LIST_OF_EXPENSES);
-            cell.setCellValue(Double.parseDouble(line.amount()));
-            cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
-        }
-        if (!line.deduction().isEmpty()) {
-            cell = row.createCell(ID_DEDUCTION_OF_LIST_OF_EXPENSES);
-            cell.setCellValue(Double.parseDouble(line.deduction()));
-            cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
-        }
-        if (!line.recovery().isEmpty()) {
-            cell = row.createCell(ID_RECOVERY_OF_LIST_OF_EXPENSES);
-            cell.setCellValue(Double.parseDouble(line.recovery()));
-            cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
-        }
-        cell = row.createCell(ID_COMMENT_OF_LIST_OF_EXPENSES);
-        cell.setCellStyle(writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook()));
-    }
-
     public void getCellsEnteteGrandLivre(Sheet sheet) {
         int index = 0;
         Row headerRow = sheet.createRow(index);
@@ -305,6 +268,173 @@ public class WriteLine {
             writeCell.addCell(headerRow, index++, label,
                     writeCellStyle.getCellStyleHeader(sheet.getWorkbook().createCellStyle()), "",
                     null, null);
+        }
+    }
+
+    private void getLineOfExpenseTotal(LineOfExpenseTotal line, Row row, int lastRowNumTotal, List<Integer> listId) {
+        Cell cell;
+        String message = "";
+        cell = row.createCell(ID_DOCUMENT_OF_LIST_OF_EXPENSES);
+        cell.setCellStyle(writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook()));
+        cell = row.createCell(ID_DATE_OF_LIST_OF_EXPENSES);
+        cell.setCellStyle(writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook()));
+        FormulaEvaluator evaluator = row.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
+        if (!line.key().isEmpty()) {
+            cell = row.createCell(ID_LABEL_OF_LIST_OF_EXPENSES);
+            if (line.type().equals(TypeOfExpense.Key)) {
+                cell.setCellValue("Total de la clé : " + line.key());
+                cell.setCellStyle(writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook()));
+                cell = row.createCell(ID_AMOUNT_OF_LIST_OF_EXPENSES);
+                StringBuilder sum = new StringBuilder();
+                for (Integer numRow : listId) {
+                    sum.append(CellReference.convertNumToColString(cell.getColumnIndex())).append(numRow).append("+");
+                }
+                cell.setCellFormula(sum.substring(0, sum.lastIndexOf("+")));
+                cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
+                double cellvalue = getRound(evaluator, cell);
+                double amount = Double.parseDouble(line.amount());
+                if (Double.toString(amount).equals(Double.toString(cellvalue))) {
+                    cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
+                    message += "Le montant est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
+                    LOGGER.info(message);
+                }
+                cell = row.createCell(ID_DEDUCTION_OF_LIST_OF_EXPENSES);
+                sum = new StringBuilder();
+                for (Integer numRow : listId) {
+                    sum.append(CellReference.convertNumToColString(cell.getColumnIndex())).append(numRow).append("+");
+                }
+                cell.setCellFormula(sum.substring(0, sum.lastIndexOf("+")));
+                cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
+                cellvalue = getRound(evaluator, cell);
+                amount = Double.parseDouble(line.deduction());
+                if (Double.toString(amount).equals(Double.toString(cellvalue))) {
+                    cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
+                    message += "La déduction est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
+                    LOGGER.info(message);
+                }
+                cell = row.createCell(ID_RECOVERY_OF_LIST_OF_EXPENSES);
+                sum = new StringBuilder();
+                for (Integer numRow : listId) {
+                    sum.append(CellReference.convertNumToColString(cell.getColumnIndex())).append(numRow).append("+");
+                }
+                cell.setCellFormula(sum.substring(0, sum.lastIndexOf("+")));
+                cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
+                cellvalue = getRound(evaluator, cell);
+                amount = Double.parseDouble(line.recovery());
+                if (Double.toString(amount).equals(Double.toString(cellvalue))) {
+                    cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
+                    message += "La récupération est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
+                    LOGGER.info(message);
+                }
+            }
+            if (line.type().equals(TypeOfExpense.Nature)) {
+                cell.setCellValue("Total de la nature : " + line.key());
+                cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
+                if (!line.amount().isEmpty()) {
+                    message += getAddAmount(ID_AMOUNT_OF_LIST_OF_EXPENSES, row, lastRowNumTotal, evaluator, line.amount(), "Le montant");
+                }
+                if (!line.deduction().isEmpty()) {
+                    message += getAddAmount(ID_DEDUCTION_OF_LIST_OF_EXPENSES, row, lastRowNumTotal, evaluator, line.deduction(), "La déduction");
+                }
+                if (!line.recovery().isEmpty()) {
+                    message += getAddAmount(ID_RECOVERY_OF_LIST_OF_EXPENSES, row, lastRowNumTotal, evaluator, line.recovery(), "La récupération");
+                }
+            }
+            if (line.type().equals(TypeOfExpense.Building)) {
+                cell.setCellValue("Total de l'immeuble : " + line.key());
+                cell.setCellStyle(writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook()));
+                cell = row.createCell(ID_AMOUNT_OF_LIST_OF_EXPENSES);
+                StringBuilder sum = new StringBuilder();
+                for (Integer numRow : listId) {
+                    sum.append(CellReference.convertNumToColString(cell.getColumnIndex())).append(numRow).append("+");
+                }
+                cell.setCellFormula(sum.substring(0, sum.lastIndexOf("+")));
+                cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
+                double cellvalue = getRound(evaluator, cell);
+                double amount = Double.parseDouble(line.amount());
+                if (Double.toString(amount).equals(Double.toString(cellvalue))) {
+                    cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
+                    message += "Le montant est de " + Double.parseDouble(line.amount()) + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
+                    LOGGER.info(message);
+                }
+                cell = row.createCell(ID_DEDUCTION_OF_LIST_OF_EXPENSES);
+                sum = new StringBuilder();
+                for (Integer numRow : listId) {
+                    sum.append(CellReference.convertNumToColString(cell.getColumnIndex())).append(numRow).append("+");
+                }
+                cell.setCellFormula(sum.substring(0, sum.lastIndexOf("+")));
+                cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
+                cellvalue = getRound(evaluator, cell);
+                amount = Double.parseDouble(line.deduction());
+                if (Double.toString(amount).equals(Double.toString(cellvalue))) {
+                    cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
+                    message += "La déduction est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
+                    LOGGER.info(message);
+                }
+                cell = row.createCell(ID_RECOVERY_OF_LIST_OF_EXPENSES);
+                sum = new StringBuilder();
+                for (Integer numRow : listId) {
+                    sum.append(CellReference.convertNumToColString(cell.getColumnIndex())).append(numRow).append("+");
+                }
+                cell.setCellFormula(sum.substring(0, sum.lastIndexOf("+")));
+                cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
+                cellvalue = getRound(evaluator, cell);
+                amount = Double.parseDouble(line.recovery());
+                if (Double.toString(amount).equals(Double.toString(cellvalue))) {
+                    cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
+                    message += "La récupération est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
+                    LOGGER.info(message);
+                }
+            }
+        }
+        cell = row.createCell(ID_COMMENT_OF_LIST_OF_EXPENSES);
+        cell.setCellValue(message);
+        cell.setCellStyle(writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook()));
+    }
+
+    private String getAddAmount(int Id_colum, Row row, int lastRowNumTotal, FormulaEvaluator evaluator, String value, String name) {
+        Cell cell;
+        double amount = Double.parseDouble(value);
+        cell = row.createCell(Id_colum);
+        CellAddress cellAddressFirst = new CellAddress(lastRowNumTotal + 1, cell.getAddress().getColumn());
+        CellAddress cellAddressEnd = new CellAddress(cell.getAddress().getRow() - 1, cell.getAddress().getColumn());
+        cell.setCellFormula("SUM(" + cellAddressFirst + ":" + cellAddressEnd + ")");
+        cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
+        row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
+        double cellvalue = getRound(evaluator, cell);
+        String message = "";
+        if (!Double.toString(amount).equals(Double.toString(cellvalue))) {
+            cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
+            message = name + " est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
+            LOGGER.info(message);
+        }
+        return message;
+    }
+
+    public void getLineOfExpenseTotal(LineOfExpenseTotal line, Row row, int lastRowNumTotalNature) {
+        if (line.type().equals(TypeOfExpense.Nature)) {
+            if (lastRowNumTotalNature > 0) {
+                getLineOfExpenseTotal(line, row, lastRowNumTotalNature, null);
+            } else {
+                LOGGER.error("Il manque l'ID de la ligne du total de la nature précédente.");
+            }
+        }
+    }
+
+    public void getLineOfExpenseTotal(LineOfExpenseTotal line, Row row, List<Integer> listIdLineTotal) {
+        if (line.type().equals(TypeOfExpense.Key)) {
+            if (!listIdLineTotal.isEmpty()) {
+                getLineOfExpenseTotal(line, row, 0, listIdLineTotal);
+            } else {
+                LOGGER.error("Il manque la liste des ID des lignes total Nature.");
+            }
+        }
+        if (line.type().equals(TypeOfExpense.Building)) {
+            if (!listIdLineTotal.isEmpty()) {
+                getLineOfExpenseTotal(line, row, 0, listIdLineTotal);
+            } else {
+                LOGGER.error("Il manque la liste des ID des lignes total clé.");
+            }
         }
     }
 

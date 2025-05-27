@@ -124,9 +124,9 @@ public class WriteCell {
         return debitCell;
     }
 
-    public Cell addCellAmount(Row row, int idColum, CellStyle style) {
+    public Cell addCellTotalAmount(Row row, int idColum, int lastRowNumTotal, CellStyle style) {
         Cell cell = row.createCell(idColum);
-        CellAddress cellAddressFirst = new CellAddress( 1, cell.getAddress().getColumn());
+        CellAddress cellAddressFirst = new CellAddress( lastRowNumTotal + 1, cell.getAddress().getColumn());
         CellAddress cellAddressEnd = new CellAddress(cell.getAddress().getRow() - 1, cell.getAddress().getColumn());
         cell.setCellFormula("SUM(" + cellAddressFirst + ":" + cellAddressEnd + ")");
         row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
