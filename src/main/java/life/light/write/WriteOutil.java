@@ -11,12 +11,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import java.util.TreeMap;
 
 public class WriteOutil {
 
-    private WriteCellStyle writeCellStyle = new WriteCellStyle();
+    private final WriteCellStyle  writeCellStyle = new WriteCellStyle();
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -222,44 +220,5 @@ public class WriteOutil {
         sheet.createFreezePane(0, 1);
     }
 
-    private void writeListOfDocumentMissing(TreeMap<String, String> ligneOfDocumentMissing, Sheet sheetDocument) {
-        int index = 0;
-        for (Map.Entry<String, String> entry : ligneOfDocumentMissing.entrySet()) {
-            Row row = sheetDocument.createRow(index++);
-            Cell cellD = row.createCell(0);
-            cellD.setCellValue(Integer.parseInt(entry.getKey()));
-            Cell cellM = row.createCell(1);
-            cellM.setCellValue(entry.getValue());
-        }
-    }
 
-    private TreeMap<String, String> getListOfDocumentMissing(Sheet sheet, int idCellComment, int idCellDocumment) {
-        TreeMap<String, String> ligneOfDocumentMissing = new TreeMap<>();
-        for (Row row : sheet) {
-            boolean commentCellIsNotNull = row.getCell(idCellComment) != null;
-            if (commentCellIsNotNull) {
-                boolean commmentCellIsCellTypeString = row.getCell(idCellComment).getCellType() == CellType.STRING;
-                if (commmentCellIsCellTypeString) {
-                    boolean commentCellContainsDocumentMissing = row.getCell(idCellComment).getStringCellValue().contains(IMPOSSIBLE_DE_TROUVER_LA_PIECE);
-                    if (commentCellContainsDocumentMissing) {
-                        String document;
-                        if (row.getCell(idCellDocumment).getCellType() == CellType.NUMERIC) {
-                            document = String.valueOf(row.getCell(idCellDocumment).getNumericCellValue());
-                        } else {
-                            document = row.getCell(idCellDocumment).getStringCellValue();
-                        }
-                        String message = row.getCell(idCellComment).getStringCellValue();
-                        ligneOfDocumentMissing.put(document.replace(".0", ""), message);
-                    }
-                }
-            }
-        }
-        return ligneOfDocumentMissing;
-    }
-
-    public void writeDocumentMission(Workbook workbook, Sheet sheet, int idCellComment, int idCellDocumment) {
-        Sheet sheetDocument = workbook.createSheet("Pieces manquante");
-        TreeMap<String, String> ligneOfDocumentMissing = getListOfDocumentMissing(sheet, idCellComment, idCellDocumment);
-        writeListOfDocumentMissing(ligneOfDocumentMissing, sheetDocument);
-    }
 }

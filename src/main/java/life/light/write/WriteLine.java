@@ -8,6 +8,8 @@ import org.apache.poi.ss.usermodel.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import static life.light.write.WriteOutil.*;
 
@@ -371,5 +373,16 @@ public class WriteLine {
         }
         cell.setCellValue(message);
         cell.setCellStyle(cellStyle);
+    }
+
+    public void getListOfDocumentMissing(TreeMap<String, String> ligneOfDocumentMissing, Sheet sheetDocument) {
+        int index = 0;
+        for (Map.Entry<String, String> entry : ligneOfDocumentMissing.entrySet()) {
+            Row row = sheetDocument.createRow(index++);
+            Cell cellD = row.createCell(0);
+            cellD.setCellValue(Integer.parseInt(entry.getKey()));
+            Cell cellM = row.createCell(1);
+            cellM.setCellValue(entry.getValue());
+        }
     }
 }

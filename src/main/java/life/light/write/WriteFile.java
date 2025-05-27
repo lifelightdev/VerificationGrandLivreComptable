@@ -22,8 +22,9 @@ public class WriteFile {
     public static final String POINTAGE_RELEVE_OK = "Pointage Relevé OK";
     public static final String POINTAGE_GL_OK = "Pointage GL OK";
 
-    private WriteOutil outilWrite = new WriteOutil();
-    private WriteLine writeLine = new WriteLine();
+    private final WriteOutil writeOutil = new WriteOutil();
+    private final WriteLine writeLine = new WriteLine();
+    private final WriteSheet writeSheet = new WriteSheet();
 
     // TODO faire la gestion des fichiers (existe, n'existe pas, pas de dossier ...)
 
@@ -62,7 +63,7 @@ public class WriteFile {
             for (Map.Entry<String, TypeAccount> entry : accounts.entrySet()) {
                 Row row = sheet.createRow(rowNum);
                 Cell cellAccountNumber = row.createCell(0);
-                if (outilWrite.isDouble(entry.getKey())) {
+                if (writeOutil.isDouble(entry.getKey())) {
                     cellAccountNumber.setCellValue(Double.parseDouble(entry.getKey()));
                 } else {
                     cellAccountNumber.setCellValue(entry.getKey());
@@ -75,7 +76,7 @@ public class WriteFile {
             sheet.autoSizeColumn(0);
             sheet.autoSizeColumn(1);
             // Écrire le contenu du classeur dans un fichier
-            outilWrite.writeWorkbook(fileName, workbook);
+            writeOutil.writeWorkbook(fileName, workbook);
             // Fermer le classeur
             workbook.close();
         } catch (IOException e) {
@@ -175,35 +176,16 @@ public class WriteFile {
                 }
             }
 
-            outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheet);
+            writeOutil.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheet);
 
             // Créer une nouvelle feuille par journal
-            for (String journal : journals) {
-                Sheet sheetJournal = workbook.createSheet(journal);
-                TreeMap<String, Line> ligneOfJournal = new TreeMap<>();
-                for (Object grandLivre : grandLivres) {
-                    if (grandLivre instanceof Line) {
-                        if (journal.equals(((Line) grandLivre).journal())) {
-                            ligneOfJournal.put(((Line) grandLivre).document(), (Line) grandLivre);
-                        }
-                    }
-                }
-                writeLine.getCellsEnteteGrandLivre(sheetJournal);
-                rowNum = 1;
-                writeLine.getCellsEnteteGrandLivre(sheetJournal);
-                for (Map.Entry<String, Line> line : ligneOfJournal.entrySet()) {
-                    Row row = sheetJournal.createRow(rowNum);
-                    writeLine.getLineGrandLivre(line.getValue(), row, false, pathDirectoryInvoice);
-                    rowNum++;
-                }
-                outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetJournal);
-            }
+            writeSheet.writeJournals(grandLivres, journals, pathDirectoryInvoice, workbook);
 
             // Créer une nouvelle feuille pour les pieces manquantes
-            outilWrite.writeDocumentMission(workbook, sheet, ID_COMMENT_OF_LEDGER, ID_DOCUMENT_OF_LEDGER);
+            writeSheet.writeDocumentMission(workbook, sheet, ID_COMMENT_OF_LEDGER, ID_DOCUMENT_OF_LEDGER);
 
             // Écrire le contenu du classeur dans un fichier
-            outilWrite.writeWorkbook(pathNameFile, workbook);
+            writeOutil.writeWorkbook(pathNameFile, workbook);
             // Fermer le classeur
             workbook.close();
         } catch (IOException e) {
@@ -235,13 +217,13 @@ public class WriteFile {
                     rowNum++;
                 }
             }
-            outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES.length, sheet);
+            writeOutil.autoSizeCollum(NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES.length, sheet);
 
             // Créer une nouvelle feuille pour les pieces manquantes
-            outilWrite.writeDocumentMission(workbook, sheet, ID_COMMENT_OF_LIST_OF_EXPENSES, ID_DOCUMENT_OF_LIST_OF_EXPENSES);
+            writeSheet.writeDocumentMission(workbook, sheet, ID_COMMENT_OF_LIST_OF_EXPENSES, ID_DOCUMENT_OF_LIST_OF_EXPENSES);
 
             // Écrire le contenu du classeur dans un fichier
-            outilWrite.writeWorkbook(pathNameFile, workbook);
+            writeOutil.writeWorkbook(pathNameFile, workbook);
             // Fermer le classeur
             workbook.close();
         } catch (IOException e) {
@@ -262,7 +244,7 @@ public class WriteFile {
             }
 
             // Écrire le contenu du classeur dans un fichier
-            outilWrite.writeWorkbook(exitFile, workbook);
+            writeOutil.writeWorkbook(exitFile, workbook);
             // Fermer le classeur
             workbook.close();
         } catch (IOException e) {
@@ -305,7 +287,7 @@ public class WriteFile {
                 rowNumPointage++;
             }
         }
-        outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetPointage);
+        writeOutil.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetPointage);
 
         Sheet sheetPointage1 = workbook.createSheet("Pointage Relevé KO");
         writeLine.getCellsEnteteEtatRapprochement(sheetPointage1);
@@ -334,7 +316,7 @@ public class WriteFile {
                 rowNumPointage++;
             }
         }
-        outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetPointage1);
+        writeOutil.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetPointage1);
     }
 
     private void pointageGL(List<Line> grandLivres, List<BankLine> bankLines, Workbook workbook) {
@@ -372,7 +354,7 @@ public class WriteFile {
                 rowNumPointage++;
             }
         }
-        outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetPointage);
+        writeOutil.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetPointage);
 
         Sheet sheetPointage1 = workbook.createSheet("Pointage GL KO");
         writeLine.getCellsEnteteEtatRapprochement(sheetPointage1);
@@ -401,6 +383,6 @@ public class WriteFile {
                 rowNumPointage++;
             }
         }
-        outilWrite.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetPointage1);
+        writeOutil.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetPointage1);
     }
 }

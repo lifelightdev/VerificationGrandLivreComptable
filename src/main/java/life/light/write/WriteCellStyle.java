@@ -49,6 +49,7 @@ public class WriteCellStyle {
         } else {
             style.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
         }
+        style.setAlignment(HorizontalAlignment.LEFT);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         return style;
     }
