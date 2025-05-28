@@ -243,21 +243,12 @@ public class WriteLine {
         return values;
     }
 
-    public void getCellsEnteteGrandLivre(Sheet sheet) {
+    public void getCellsEntete(Sheet sheet, String[] header) {
         int index = 0;
         Row headerRow = sheet.createRow(index);
         CellStyle styleHeader = writeCellStyle.getCellStyleHeader(sheet.getWorkbook().createCellStyle());
-        for (String label : NOM_ENTETE_COLONNE_GRAND_LIVRE) {
+        for (String label : header) {
             writeCell.addCell(headerRow, index++, label, styleHeader, "", null, null);
-        }
-    }
-
-    public void getCellsEnteteListeDesDepenses(Sheet sheet) {
-        int index = 0;
-        Row headerRow = sheet.createRow(index);
-        CellStyle cellStyleHeader = writeCellStyle.getCellStyleHeader(sheet.getWorkbook().createCellStyle());
-        for (String label : NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES) {
-            writeCell.addCell(headerRow, index++, label, cellStyleHeader, "", null, null);
         }
     }
 
@@ -293,10 +284,10 @@ public class WriteLine {
                 cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
                 double cellvalue = getRound(evaluator, cell);
                 double amount = Double.parseDouble(line.amount());
-                if (Double.toString(amount).equals(Double.toString(cellvalue))) {
+                row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
+                if (!Double.toString(amount).equals(Double.toString(cellvalue))) {
                     cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
-                    message += "Le montant est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
-                    LOGGER.info(message);
+                    message += "Le montant est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier.";
                 }
                 cell = row.createCell(ID_DEDUCTION_OF_LIST_OF_EXPENSES);
                 sum = new StringBuilder();
@@ -307,10 +298,9 @@ public class WriteLine {
                 cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
                 cellvalue = getRound(evaluator, cell);
                 amount = Double.parseDouble(line.deduction());
-                if (Double.toString(amount).equals(Double.toString(cellvalue))) {
+                if (!Double.toString(amount).equals(Double.toString(cellvalue))) {
                     cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
                     message += "La déduction est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
-                    LOGGER.info(message);
                 }
                 cell = row.createCell(ID_RECOVERY_OF_LIST_OF_EXPENSES);
                 sum = new StringBuilder();
@@ -321,10 +311,9 @@ public class WriteLine {
                 cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
                 cellvalue = getRound(evaluator, cell);
                 amount = Double.parseDouble(line.recovery());
-                if (Double.toString(amount).equals(Double.toString(cellvalue))) {
+                if (!Double.toString(amount).equals(Double.toString(cellvalue))) {
                     cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
                     message += "La récupération est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
-                    LOGGER.info(message);
                 }
             }
             if (line.type().equals(TypeOfExpense.Nature)) {
@@ -355,7 +344,6 @@ public class WriteLine {
                 if (Double.toString(amount).equals(Double.toString(cellvalue))) {
                     cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
                     message += "Le montant est de " + Double.parseDouble(line.amount()) + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
-                    LOGGER.info(message);
                 }
                 cell = row.createCell(ID_DEDUCTION_OF_LIST_OF_EXPENSES);
                 sum = new StringBuilder();
@@ -369,7 +357,6 @@ public class WriteLine {
                 if (Double.toString(amount).equals(Double.toString(cellvalue))) {
                     cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
                     message += "La déduction est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
-                    LOGGER.info(message);
                 }
                 cell = row.createCell(ID_RECOVERY_OF_LIST_OF_EXPENSES);
                 sum = new StringBuilder();
@@ -383,7 +370,6 @@ public class WriteLine {
                 if (Double.toString(amount).equals(Double.toString(cellvalue))) {
                     cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
                     message += "La récupération est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
-                    LOGGER.info(message);
                 }
             }
         }
@@ -396,7 +382,7 @@ public class WriteLine {
         Cell cell;
         double amount = Double.parseDouble(value);
         cell = row.createCell(Id_colum);
-        CellAddress cellAddressFirst = new CellAddress(lastRowNumTotal + 1, cell.getAddress().getColumn());
+        CellAddress cellAddressFirst = new CellAddress(lastRowNumTotal - 1, cell.getAddress().getColumn());
         CellAddress cellAddressEnd = new CellAddress(cell.getAddress().getRow() - 1, cell.getAddress().getColumn());
         cell.setCellFormula("SUM(" + cellAddressFirst + ":" + cellAddressEnd + ")");
         cell.setCellStyle(writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook()));
@@ -406,7 +392,6 @@ public class WriteLine {
         if (!Double.toString(amount).equals(Double.toString(cellvalue))) {
             cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
             message = name + " est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
-            LOGGER.info(message);
         }
         return message;
     }

@@ -155,7 +155,7 @@ public class WriteFile {
 
             // Créer une nouvelle feuille dans le classeur pour le grand livre
             Sheet sheet = workbook.createSheet("Grand Livre");
-            writeLine.getCellsEnteteGrandLivre(sheet);
+            writeLine.getCellsEntete(sheet, NOM_ENTETE_COLONNE_GRAND_LIVRE);
             int rowNum = 1;
             int lastRowNumTotal = 0;
             List<Integer> lineTotals = new ArrayList<>();
@@ -203,7 +203,7 @@ public class WriteFile {
                     Workbook workbook = new XSSFWorkbook();
                     // Créer une nouvelle feuille dans le classeur pour le grand livre
                     Sheet sheet = workbook.createSheet(typeAccount.account().replace(ACCOUNT_CO_OWNER, "").replace("00-", ""));
-                    writeLine.getCellsEnteteGrandLivre(sheet);
+                    writeLine.getCellsEntete(sheet, NOM_ENTETE_COLONNE_GRAND_LIVRE);
                     int rowNum = 1;
                     for (Object grandLivre : grandLivres) {
                         if (grandLivre instanceof Line line) {
@@ -245,9 +245,9 @@ public class WriteFile {
 
             // Créer une nouvelle feuille dans le classeur pour le grand livre
             Sheet sheet = workbook.createSheet("Liste des dépenses");
-            writeLine.getCellsEnteteListeDesDepenses(sheet);
+            writeLine.getCellsEntete(sheet, NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES);
             int rowNum = 1;
-            int lastRowNumTotalNature = 2;
+            int lastRowNumTotalNature = 4;
             List<Integer> listIdLineTotalNature = new ArrayList<>();
             List<Integer> listIdLineTotalKey = new ArrayList<>();
             for (Object line : listeDesDepenses) {
@@ -260,12 +260,12 @@ public class WriteFile {
                         if (((LineOfExpenseTotal) line).type().equals(TypeOfExpense.Nature)) {
                             writeLine.getLineOfExpenseTotal((LineOfExpenseTotal) line, row, lastRowNumTotalNature);
                             lastRowNumTotalNature = rowNum;
-                            listIdLineTotalNature.add(rowNum);
+                            listIdLineTotalNature.add(rowNum + 1);
                         } else if (((LineOfExpenseTotal) line).type().equals(TypeOfExpense.Key)) {
                             writeLine.getLineOfExpenseTotal((LineOfExpenseTotal) line, row, listIdLineTotalNature);
                             listIdLineTotalNature.clear();
-                            listIdLineTotalKey.add(rowNum + 2);
-                            lastRowNumTotalNature += 4;
+                            listIdLineTotalKey.add(rowNum + 1);
+                            lastRowNumTotalNature += 5;
                         } else if (((LineOfExpenseTotal) line).type().equals(TypeOfExpense.Building)) {
                             writeLine.getLineOfExpenseTotal((LineOfExpenseTotal) line, row, listIdLineTotalKey);
                         }

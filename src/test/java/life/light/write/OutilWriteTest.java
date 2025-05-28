@@ -15,11 +15,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static life.light.FileOfTest.tempTestDir;
+import static life.light.write.WriteOutil.NOM_ENTETE_COLONNE_GRAND_LIVRE;
 import static org.junit.jupiter.api.Assertions.*;
 
 class OutilWriteTest {
 
-    private WriteLine writeLine = new WriteLine();
+    private final WriteLine writeLine = new WriteLine();
 
     @Test
     void getTotalBuilding() {
@@ -216,7 +217,7 @@ class OutilWriteTest {
     void getCellsEnteteGrandLivre() {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Grand Livre");
-        writeLine.getCellsEnteteGrandLivre(sheet);
+        writeLine.getCellsEntete(sheet, NOM_ENTETE_COLONNE_GRAND_LIVRE);
         assertEquals("Compte", workbook.getSheetAt(0).getRow(0).getCell(0).getStringCellValue());
         assertEquals("Intitulé du compte", workbook.getSheetAt(0).getRow(0).getCell(1).getStringCellValue());
         assertEquals("Pièce", workbook.getSheetAt(0).getRow(0).getCell(2).getStringCellValue());

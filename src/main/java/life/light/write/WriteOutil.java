@@ -219,6 +219,4 @@ public class WriteOutil {
         }
         sheet.createFreezePane(0, 1);
     }
-
-
 }

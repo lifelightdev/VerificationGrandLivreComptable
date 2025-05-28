@@ -29,9 +29,9 @@ public class WriteSheet {
                     }
                 }
             }
-            writeLine.getCellsEnteteGrandLivre(sheetJournal);
+            writeLine.getCellsEntete(sheetJournal,NOM_ENTETE_COLONNE_GRAND_LIVRE);
             rowNum = 1;
-            writeLine.getCellsEnteteGrandLivre(sheetJournal);
+            writeLine.getCellsEntete(sheetJournal, NOM_ENTETE_COLONNE_GRAND_LIVRE);
             for (Map.Entry<String, Line> line : ligneOfJournal.entrySet()) {
                 Row row = sheetJournal.createRow(rowNum);
                 writeLine.getLineGrandLivre(line.getValue(), row, false, pathDirectoryInvoice);
