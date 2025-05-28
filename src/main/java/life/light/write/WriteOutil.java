@@ -97,12 +97,12 @@ public class WriteOutil {
             if (grandLivre.accountCounterpart() == null) {
                 verifCell.setCellValue(KO);
                 message = "Il n'y a pas de Contrepartie";
-                LOGGER.info("{} sur cette ligne : {}", message, grandLivre);
+                logError(grandLivre, message);
             }
             if (grandLivre.debit().isEmpty() && grandLivre.credit().isEmpty()) {
                 verifCell.setCellValue(KO);
                 message = "Il n'y a aucun montant";
-                LOGGER.info("{} sur cette ligne : {}", message, grandLivre.toString());
+                logError(grandLivre, message);
             }
         }
         if (verifCell.getStringCellValue().equals(KO)) {
@@ -117,6 +117,10 @@ public class WriteOutil {
         }
         messageCell.setCellValue(message.trim());
         messageCell.setCellStyle(style);
+    }
+
+    private static void logError(Line grandLivre, String message) {
+        LOGGER.error("{} sur cette ligne : {}", message, grandLivre);
     }
 
     public String getMessageFindDocument(String document, Hyperlink link, String thePathDirectoryInvoice) {

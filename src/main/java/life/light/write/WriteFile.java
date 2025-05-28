@@ -40,8 +40,12 @@ public class WriteFile {
                 writer.write(line);
             }
         } catch (IOException e) {
-            LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", fileName, e.getMessage());
+            logError(fileName, e);
         }
+    }
+
+    private static void logError(String fileName, IOException e) {
+        LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", fileName, e.getMessage());
     }
 
     public void writeFileExcelAccounts(Map<String, TypeAccount> map, String fileName) {
@@ -81,7 +85,7 @@ public class WriteFile {
             // Fermer le classeur
             workbook.close();
         } catch (IOException e) {
-            LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", fileName, e.getMessage());
+            logError(fileName, e);
         }
     }
 
@@ -144,7 +148,7 @@ public class WriteFile {
                 writer.write(line.toString());
             }
         } catch (IOException e) {
-            LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", exitFile, e.getMessage());
+            logError(exitFile, e);
         }
     }
 
@@ -190,7 +194,7 @@ public class WriteFile {
             // Fermer le classeur
             workbook.close();
         } catch (IOException e) {
-            LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", pathNameFile, e.getMessage());
+            logError(pathNameFile, e);
         }
     }
 
@@ -231,7 +235,7 @@ public class WriteFile {
                     // Fermer le classeur
                     workbook.close();
                 } catch (IOException e) {
-                    LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", fileName, e.getMessage());
+                    logError(fileName, e);
                 }
             }
         }
@@ -286,7 +290,7 @@ public class WriteFile {
             // Fermer le classeur
             workbook.close();
         } catch (IOException e) {
-            LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", pathNameFile, e.getMessage());
+            logError(pathNameFile, e);
         }
     }
 
@@ -308,7 +312,7 @@ public class WriteFile {
             // Fermer le classeur
             workbook.close();
         } catch (IOException e) {
-            LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", exitFile, e.getMessage());
+            logError(exitFile, e);
         }
     }
 

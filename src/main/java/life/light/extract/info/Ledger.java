@@ -25,7 +25,7 @@ public class Ledger {
     private static final String REGEX_NUMBER = "^-?[0-9]+$";
     private static String codeCondominium;
     private static String postalCode;
-    private OutilInfo outilInfo = new OutilInfo();
+    private final OutilInfo outilInfo = new OutilInfo();
 
     public Ledger(String codeCondominium) {
         this.codeCondominium = codeCondominium;

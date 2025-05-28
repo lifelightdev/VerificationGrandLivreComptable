@@ -24,7 +24,7 @@ public class Bank {
     public static final String ACCOUNT_BANK = "512";
     private static final String BANK_1_ACCOUNT = "";
     private static final String BANK_2_ACCOUNT = "";
-    private OutilInfo outilInfo = new OutilInfo();
+    private final OutilInfo outilInfo = new OutilInfo();
 
     public List<BankLine> getBankLines(Map<String, TypeAccount> accounts, String pathDirectoryBank, List<String> accountsbank, int year) {
         List<BankLine> bankLines = new ArrayList<>();
@@ -92,7 +92,7 @@ public class Bank {
                                 } else {
                                     label.append(" ").append(line);
                                 }
-                            } else if (line.contains(nouveauSoldeAu)) {
+                            } else if (line.contains(nouveauSoldeAu) && operationDate != null) {
                                 BankLine bankLine = new BankLine(year, operationDate.getMonthValue(), operationDate, valueDate, account, label.toString().trim(), debit, credit);
                                 bankLines.add(bankLine);
                             }
