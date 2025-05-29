@@ -51,12 +51,6 @@ class LedgerTest {
         assertEquals("75000", infoGrandLivre.postalCode());
     }
 
-    @Test
-    void getNumberOfLineInFile() {
-        int result = ledger.getNumberOfLineInFile(nameFileTestLedger);
-        assertEquals(11, result);
-    }
-
     @ParameterizedTest
     @CsvSource({
             "10240 TRAVAUX PARKING,                                         10240, TRAVAUX PARKING",
@@ -97,7 +91,7 @@ class LedgerTest {
     })
     void isAccount(String line, boolean is) {
         ledger.getInfoGrandLivre(nameFileTestLedger);
-        boolean result = ledger.isAcccount(line);
+        boolean result = ledger.isAccount(line);
         if (is) {
             Assertions.assertTrue(result);
         } else {

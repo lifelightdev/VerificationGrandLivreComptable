@@ -23,7 +23,7 @@ public class Account {
         Ledger ledger = new Ledger(codeCondominium);
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             accounts = reader.lines()
-                    .filter(ledger::isAcccount)
+                    .filter(ledger::isAccount)
                     .map(ledger::account)
                     .collect(HashMap::new,
                             (map, account) -> map.put(account.account(), account),

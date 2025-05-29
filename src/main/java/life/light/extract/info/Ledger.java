@@ -53,21 +53,6 @@ public class Ledger {
         return null;
     }
 
-    public int getNumberOfLineInFile(String pathLedger) {
-        int numberOfLineInFile = 0;
-        try (BufferedReader reader = new BufferedReader(new FileReader(pathLedger))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (!line.trim().isEmpty()) {
-                    numberOfLineInFile++;
-                }
-            }
-        } catch (IOException e) {
-            constant.logError(Constant.LECTURE_FICHIER, e.getMessage());
-        }
-        return numberOfLineInFile;
-    }
-
     private LocalDate date(String line) {
         String date = outilInfo.findDateIn(line);
         if (date.isEmpty()) {
@@ -107,7 +92,7 @@ public class Ledger {
         return line;
     }
 
-    boolean isAcccount(String line) {
+    boolean isAccount(String line) {
         line = getLine(line);
         line = line.replace("  ", " ");
         if (line.contains(Character.toString(EURO))) {
@@ -232,29 +217,15 @@ public class Ledger {
         StringBuilder debit = new StringBuilder();
         StringBuilder credit = new StringBuilder();
         if (numberOfAmounts == 3) {
-            // S'il y a trois montants, c'est un report donc
-            // le premier montant est dans le libellé
-            // le second montant est le débit
-            // le troisème montant est le crédit
-            while (outilInfo.isAmount(words[indexOfWords])) {
-                label.append(" ").append(words[indexOfWords]);
-                indexOfWords++;
-            }
+            indexOfWords = getIndexOfWords(words, indexOfWords, label);
             label.append(" ").append(words[indexOfWords]);
             indexOfWords++;
-            while (outilInfo.isAmount(words[indexOfWords])) {
-                debit.append(" ").append(words[indexOfWords]);
-                indexOfWords++;
-            }
+            indexOfWords = getIndexOfWords(words, indexOfWords, debit);
             debit.append(" ").append(words[indexOfWords]);
             indexOfWords++;
-            while (outilInfo.isAmount(words[indexOfWords])) {
-                credit.append(" ").append(words[indexOfWords]);
-                indexOfWords++;
-            }
+            indexOfWords = getIndexOfWords(words, indexOfWords, credit);
             credit.append(" ").append(words[indexOfWords]);
         } else if (numberOfAmounts == 2 && words[indexOfWords].contains("Report")) {
-            // S'il y a deux montants et que c'est un report
             int indexOfWordsStartEnd = words.length - 1;
             StringBuilder amount = new StringBuilder(words[indexOfWordsStartEnd]);
             indexOfWordsStartEnd--;
@@ -317,6 +288,14 @@ public class Ledger {
                 label.toString().trim(), debit.toString().trim(), credit.toString().trim());
     }
 
+    private int getIndexOfWords(String[] words, int indexOfWords, StringBuilder label) {
+        while (outilInfo.isAmount(words[indexOfWords])) {
+            label.append(" ").append(words[indexOfWords]);
+            indexOfWords++;
+        }
+        return indexOfWords;
+    }
+
     public boolean isLigne(String line) {
         line = outilInfo.removesStrayCharactersInLine(line);
         // Découpage de la ligne en un tableau de mot
@@ -356,22 +335,13 @@ public class Ledger {
         StringBuilder debit = new StringBuilder();
         StringBuilder credit = new StringBuilder();
         if (numberOfAmounts == 3) {
-            while (outilInfo.isAmount(words[indexOfWords])) {
-                debit.append(" ").append(words[indexOfWords]);
-                indexOfWords++;
-            }
+            indexOfWords = getIndexOfWords(words, indexOfWords, debit);
             debit.append(" ").append(words[indexOfWords]);
             indexOfWords++;
-            while (outilInfo.isAmount(words[indexOfWords])) {
-                credit.append(" ").append(words[indexOfWords]);
-                indexOfWords++;
-            }
+            indexOfWords = getIndexOfWords(words, indexOfWords, credit);
             credit.append(" ").append(words[indexOfWords]);
         } else if (numberOfAmounts >= 2) {
-            while (outilInfo.isAmount(words[indexOfWords])) {
-                debit.append(" ").append(words[indexOfWords]);
-                indexOfWords++;
-            }
+            indexOfWords = getIndexOfWords(words, indexOfWords, debit);
             debit.append(" ").append(words[indexOfWords]);
             credit = debit;
         } else {
@@ -444,26 +414,17 @@ public class Ledger {
         StringBuilder debit = new StringBuilder();
         StringBuilder credit = new StringBuilder();
         if (numberOfAmounts == 3) {
-            while (outilInfo.isAmount(words[indexOfWords])) {
-                label.append(" ").append(words[indexOfWords]);
-                indexOfWords++;
-            }
+            indexOfWords = getIndexOfWords(words, indexOfWords, label);
             label.append(" ").append(words[indexOfWords]);
             indexOfWords++;
             label.append(" ").append(words[indexOfWords]);
             indexOfWords++;
             label.append(" ").append(words[indexOfWords]);
             debit.append(" ").append(words[indexOfWords]);
-            while (outilInfo.isAmount(words[indexOfWords])) {
-                debit.append(" ").append(words[indexOfWords]);
-                indexOfWords++;
-            }
+            indexOfWords = getIndexOfWords(words, indexOfWords, debit);
             debit.append(" ").append(words[indexOfWords]);
             indexOfWords++;
-            while (outilInfo.isAmount(words[indexOfWords])) {
-                credit.append(" ").append(words[indexOfWords]);
-                indexOfWords++;
-            }
+            indexOfWords = getIndexOfWords(words, indexOfWords, credit);
             credit.append(" ").append(words[indexOfWords]);
         }
         return new TotalBuilding(label.toString().trim().replace(" )", ")"), debit.toString().trim().replace(" ", "").replace(Character.toString(EURO), ""), credit.toString().trim().replace(" ", "").replace(Character.toString(EURO), ""));
@@ -473,7 +434,7 @@ public class Ledger {
                                             String pathDirectoryLeger, String pathDirectoryInvoice,
                                             List<String> accountsbank) {
         // Géneration du grand livre
-        Object[] grandLivres = new Object[getNumberOfLineInFile(pathDirectoryLeger)];
+        Object[] grandLivres = new Object[outilInfo.getNumberOfLineInFile(pathDirectoryLeger)];
         TreeSet<String> journals = new TreeSet<>();
         List<Line> lineBankInGrandLivre = new ArrayList<>();
         int indexInGrandLivres = 0;

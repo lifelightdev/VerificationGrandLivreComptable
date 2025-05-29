@@ -65,11 +65,9 @@ public class Expense {
                     if (numberOfAmount == 3) {
                         WordInWords wordInWords = getAmoutInWords(words, i);
                         recovery = wordInWords.word();
-                        i = wordInWords.index();
-                        wordInWords = getAmoutInWords(words, i);
+                        wordInWords = getAmoutInWords(words, wordInWords.index());
                         deduction = wordInWords.word();
                         i = wordInWords.index();
-
                         while (outilWrite.isDouble(words[i])) {
                             amount.insert(0, words[i]);
                             i--;

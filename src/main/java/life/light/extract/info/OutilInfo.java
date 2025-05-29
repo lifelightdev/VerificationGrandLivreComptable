@@ -167,7 +167,7 @@ public class OutilInfo {
                 }
             }
         } catch (IOException e) {
-            constant.logError(Constant.LECTURE_FICHIER, e.getMessage());
+            constant.logError(LECTURE_FICHIER, e.getMessage());
         }
         return numberOfLineInFile;
     }
