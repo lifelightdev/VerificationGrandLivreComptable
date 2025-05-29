@@ -23,6 +23,7 @@ public class WriteLine {
     public static final String LE_GRAND_LIVRE = "le grand livre";
     public static final String LE_GRAND_LIVRE_DE_L_ETAT_DE_RAPPROCHEMENT = "le grand livre de l'état de rapprochement";
     public static final String LE_RELEVE_DE_COMPTE_BANQUE = "le relevé de compte banque";
+    public static final String TOTAL_DE_LA_CLE = "Total de la clé : ";
 
     WriteCellStyle writeCellStyle = new WriteCellStyle();
     WriteCell writeCell = new WriteCell();
@@ -275,7 +276,7 @@ public class WriteLine {
         if (!line.key().isEmpty()) {
             cell = row.createCell(ID_LABEL_OF_LIST_OF_EXPENSES);
             if (line.type().equals(TypeOfExpense.Key)) {
-                cell.setCellValue("Total de la clé : " + line.key());
+                cell.setCellValue(TOTAL_DE_LA_CLE + line.key());
                 cell.setCellStyle(writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook()));
                 cell = row.createCell(ID_AMOUNT_OF_LIST_OF_EXPENSES);
                 StringBuilder sum = new StringBuilder();

@@ -21,10 +21,11 @@ public class Ledger {
     private static final int NAME_JOURNAL_SIZE = 2;
     private static final String REGEX_NUMBER = "^-?[0-9]+$";
     private static final String VIRT = "Virt";
-    private static final String TOTAL_COMPTE = "Total compte ";
     private static final String TOTAL_IMMEUBLE = "Total immeuble";
     private static final String GRAND_LIVRE = "GrandLivre";
     private static final String DIRECTORY_NAME_COPROPRIETAIRE = "Copropriétaire";
+    public static final String TOTAL_COMPTE = "Total compte";
+    public static final String SOLDE = "Solde";
     private static String codeCondominium;
     private static String postalCode;
     private final OutilInfo outilInfo = new OutilInfo();
@@ -378,7 +379,7 @@ public class Ledger {
         }
 
         // Extraction du numéro de compte
-        String[] labels = outilInfo.splittingLineIntoWordTable(label.toString().replace("Total compte ", "").trim());
+        String[] labels = outilInfo.splittingLineIntoWordTable(label.toString().replace(Ledger.TOTAL_COMPTE, "").trim());
         TypeAccount account = null;
         for (int indexOfLabel = 0; indexOfLabel < labels.length; indexOfLabel++) {
             account = outilInfo.getAccount(accounts, labels, indexOfLabel);
@@ -391,7 +392,7 @@ public class Ledger {
             StringBuilder numAccount = new StringBuilder();
             StringBuilder accountInLabel = new StringBuilder();
             for (String word : labels) {
-                if (word.contains("Solde")) {
+                if (word.contains(SOLDE)) {
                     break;
                 }
                 numAccount.append(word);

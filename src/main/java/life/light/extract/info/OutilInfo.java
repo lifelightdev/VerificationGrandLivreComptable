@@ -75,7 +75,7 @@ public class OutilInfo {
     }
 
     public String fixedSpacesBeforeEuroSign(String line) {
-        line = line.replace(" €", "€");
+        line = line.replace(" " + EURO, Character.toString(EURO));
         return line;
     }
 

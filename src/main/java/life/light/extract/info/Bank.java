@@ -25,6 +25,7 @@ public class Bank {
     public static final String ACCOUNT_BANK = "512";
     private static final String BANK_1_ACCOUNT = "";
     private static final String BANK_2_ACCOUNT = "";
+    public static final String NOUVEAU_SOLDE_AU = "Nouveau solde au";
     private final OutilInfo outilInfo = new OutilInfo();
     private final Constant constant = new Constant();
 
@@ -54,8 +55,7 @@ public class Bank {
                         double debit = 0D;
                         double credit = 0D;
                         while ((line = reader.readLine()) != null) {
-                            String nouveauSoldeAu = "Nouveau solde au";
-                            if (!outilInfo.findDateIn(line).isEmpty() && (!line.contains(nouveauSoldeAu))) {
+                            if (!outilInfo.findDateIn(line).isEmpty() && (!line.contains(NOUVEAU_SOLDE_AU))) {
                                 if (operationDate != null && !label.toString().isEmpty() && valueDate != null) {
                                     bankLines.add(new BankLine(year, operationDate.getMonthValue(), operationDate, valueDate, account, label.toString().trim(), debit, credit));
                                 } else {
@@ -63,6 +63,7 @@ public class Bank {
                                     int index = 0;
                                     operationDate = getOperationDate(accountBank, ligne, index, year);
                                     index = getIndexNotWord(index, ligne);
+                                    // TODO a améliorer
                                     if (BANK_1_ACCOUNT.equals(accountBank)) {
                                         while (!ligne[index].isEmpty()) {
                                             label.append(" ").append(ligne[index]);
@@ -80,18 +81,18 @@ public class Bank {
                                         }
                                     }
                                     if (line.endsWith(" ")) {
-                                        debit = Double.parseDouble(ligne[ligne.length - 1].replace(".", "").replace(",", "."));
+                                        debit = getAmount(ligne);
                                     } else if (!ligne[ligne.length - 1].isEmpty()) {
-                                        credit = Double.parseDouble(ligne[ligne.length - 1].replace(".", "").replace(",", "."));
+                                        credit = getAmount(ligne);
                                     }
                                 }
-                            } else if (!line.contains(nouveauSoldeAu) && (!line.contains(TOTAL_DES_OPERATIONS))) {
+                            } else if (!line.contains(NOUVEAU_SOLDE_AU) && (!line.contains(TOTAL_DES_OPERATIONS))) {
                                 if (label.toString().endsWith(" ")) {
                                     label.append(line);
                                 } else {
                                     label.append(" ").append(line);
                                 }
-                            } else if (line.contains(nouveauSoldeAu) && operationDate != null) {
+                            } else if (line.contains(NOUVEAU_SOLDE_AU) && operationDate != null) {
                                 BankLine bankLine = new BankLine(year, operationDate.getMonthValue(), operationDate, valueDate, account, label.toString().trim(), debit, credit);
                                 bankLines.add(bankLine);
                             }
@@ -105,6 +106,11 @@ public class Bank {
         return bankLines;
     }
 
+    private static double getAmount(String[] ligne) {
+        return Double.parseDouble(ligne[ligne.length - 1].replace(".", "").replace(",", "."));
+    }
+
+    // TODO a améliorer
     private LocalDate getOperationDate(String theAccount, String[] ligne, int index, int year) {
         LocalDate operationDate = null;
         if (BANK_1_ACCOUNT.equals(theAccount)) {
@@ -117,6 +123,7 @@ public class Bank {
         return operationDate;
     }
 
+    // TODO a améliorer
     private LocalDate getValueDate(String theAccount, String[] ligne, int index) {
         LocalDate operationDate = null;
         if (BANK_1_ACCOUNT.equals(theAccount)) {
