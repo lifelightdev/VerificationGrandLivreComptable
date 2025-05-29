@@ -249,7 +249,7 @@ public class WriteLine {
     public void getCellsEntete(Sheet sheet, String[] header) {
         int index = 0;
         Row headerRow = sheet.createRow(index);
-        CellStyle styleHeader = writeCellStyle.getCellStyleHeader(sheet.getWorkbook().createCellStyle());
+        CellStyle styleHeader = writeCellStyle.getCellStyleHeader(sheet.getWorkbook());
         for (String label : header) {
             writeCell.addCell(headerRow, index++, label, styleHeader, "", null, null);
         }
@@ -260,7 +260,7 @@ public class WriteLine {
         Row headerRow = sheet.createRow(index);
         for (String label : NOM_ENTETE_COLONNE_ETAT_RAPPROCHEMENT) {
             writeCell.addCell(headerRow, index++, label,
-                    writeCellStyle.getCellStyleHeader(sheet.getWorkbook().createCellStyle()), "",
+                    writeCellStyle.getCellStyleHeader(sheet.getWorkbook()), "",
                     null, null);
         }
     }

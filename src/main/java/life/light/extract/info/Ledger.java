@@ -475,7 +475,7 @@ public class Ledger {
         String pathFile = "." + File.separator + DIRECTORY_NAME_RESULTAT + File.separator;
         String exitFile = pathFile + GRAND_LIVRE + CSV;
         writeFile.writeFileCSVGrandLivre(grandLivres, exitFile);
-        String nameFile = infoGrandLivre.printDate() + GRAND_LIVRE + infoGrandLivre.syndicName()
+        String nameFile = infoGrandLivre.printDate() + " " + GRAND_LIVRE + " " + infoGrandLivre.syndicName()
                 + " au " + infoGrandLivre.stopDate() + XLSX;
         String path = pathFile + nameFile;
         writeFile.writeFileExcelGrandLivre(grandLivres, path, journals, pathDirectoryInvoice);

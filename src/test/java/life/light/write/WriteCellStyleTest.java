@@ -42,8 +42,7 @@ class WriteCellStyleTest {
 
     @Test
     void getCellStyleHeader() {
-        CellStyle baseStyle = workbook.createCellStyle();
-        CellStyle style = writeCellStyle.getCellStyleHeader(baseStyle);
+        CellStyle style = writeCellStyle.getCellStyleHeader(workbook);
         // Check that the style has center alignment
         assertEquals(HorizontalAlignment.CENTER, style.getAlignment());
         // Check that the style has the correct background color (gray)
