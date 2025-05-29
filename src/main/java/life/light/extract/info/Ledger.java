@@ -21,7 +21,6 @@ public class Ledger {
     private static final int NAME_JOURNAL_SIZE = 2;
     private static final String REGEX_NUMBER = "^-?[0-9]+$";
     private static final String VIRT = "Virt";
-    private static final String TOTAL_IMMEUBLE = "Total immeuble";
     private static final String GRAND_LIVRE = "GrandLivre";
     private static final String DIRECTORY_NAME_COPROPRIETAIRE = "Copropriétaire";
     public static final String TOTAL_COMPTE = "Total compte";

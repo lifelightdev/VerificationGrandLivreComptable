@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 
 import static life.light.Constant.DATE_FORMATTER;
+import static life.light.Constant.TOTAL_IMMEUBLE;
 
 public class Expense {
 
@@ -20,7 +21,6 @@ public class Expense {
     private static final String CODE_NATURE = "Code Nature ";
     private static final String TOTAL_NATURE = "Total Nature ";
     private static final String TOTAL_CLE = "Total clé : ";
-    private static final String TOTAL_IMMEUBLE = "Total immeuble : ";
 
     private final OutilInfo outilInfo = new OutilInfo();
     private final WriteOutil outilWrite = new WriteOutil();

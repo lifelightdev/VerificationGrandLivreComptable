@@ -24,6 +24,7 @@ public class Constant {
     public static final String DIRECTORY_NAME_RESULTAT = "resultat";
     public static final String ACCOUNTING_PLAN = "Plan comptable ";
     public static final String TOTAL_DES_OPERATIONS = "Total des opérations";
+    public static final String TOTAL_IMMEUBLE = "Total immeuble";
 
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
