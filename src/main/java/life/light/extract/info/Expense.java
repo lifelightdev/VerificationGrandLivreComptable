@@ -1,26 +1,30 @@
 package life.light.extract.info;
 
+import life.light.Constant;
 import life.light.type.LineOfExpense;
 import life.light.type.LineOfExpenseKey;
 import life.light.type.LineOfExpenseTotal;
 import life.light.type.TypeOfExpense;
 import life.light.write.WriteOutil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
 
-import static life.light.write.WriteOutil.DATE_FORMATTER;
+import static life.light.Constant.DATE_FORMATTER;
 
 public class Expense {
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final String CLE = "Clé";
+    private static final String CODE_NATURE = "Code Nature ";
+    private static final String TOTAL_NATURE = "Total Nature ";
+    private static final String TOTAL_CLE = "Total clé : ";
+    private static final String TOTAL_IMMEUBLE = "Total immeuble : ";
 
-    OutilInfo outilInfo = new OutilInfo();
-    WriteOutil outilWrite = new WriteOutil();
+    private final OutilInfo outilInfo = new OutilInfo();
+    private final WriteOutil outilWrite = new WriteOutil();
+    private final Constant constant = new Constant();
 
     public Object[] getList(String fileName) {
         Object[] listOfExpense = new Object[outilInfo.getNumberOfLineInFile(fileName)];
@@ -32,15 +36,15 @@ public class Expense {
                 reader.readLine();
             }
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith("Clé")) {
+                if (line.startsWith(CLE)) {
                     listOfExpense[indexLine++] = getLineOfExpenseKey(outilInfo, line, TypeOfExpense.Key);
-                } else if (line.startsWith("Code Nature ")) {
+                } else if (line.startsWith(CODE_NATURE)) {
                     listOfExpense[indexLine++] = getLineOfExpenseKey(outilInfo, line, TypeOfExpense.Nature);
-                } else if (line.startsWith("Total Nature ")) {
+                } else if (line.startsWith(TOTAL_NATURE)) {
                     listOfExpense[indexLine++] = getLineOfExpenseTotal(outilInfo, line, TypeOfExpense.Nature);
-                } else if (line.startsWith("Total clé : ")) {
+                } else if (line.startsWith(TOTAL_CLE)) {
                     listOfExpense[indexLine++] = getLineOfExpenseTotal(outilInfo, line, TypeOfExpense.Key);
-                } else if (line.startsWith("Total immeuble : ")) {
+                } else if (line.startsWith(TOTAL_IMMEUBLE)) {
                     listOfExpense[indexLine++] = getLineOfExpenseTotal(outilInfo, line, TypeOfExpense.Building);
                 } else if (!outilInfo.findDateIn(line).isEmpty() && !line.contains("ste des dépense")) {
                     String[] words = outilInfo.getWords(line);
@@ -50,16 +54,15 @@ public class Expense {
                     LocalDate date = LocalDate.parse(words[index++], DATE_FORMATTER);
                     index = outilInfo.getIndexOfNextWords(words, index);
 
-                    long numberOfAmout = line.chars()
-                            .filter(c -> c == '€')
-                            .count();
+                    // Calcule de nombre de montants sur la ligne grâce au signe €
+                    long numberOfAmount = outilInfo.getNumberOfAmountsOn(line);
 
                     StringBuilder label = new StringBuilder(words[index]);
                     StringBuilder amount = new StringBuilder();
                     String recovery = "";
                     String deduction = "";
                     int i = words.length - 2;
-                    if (numberOfAmout == 3) {
+                    if (numberOfAmount == 3) {
                         WordInWords wordInWords = getAmoutInWords(words, i);
                         recovery = wordInWords.word();
                         i = wordInWords.index();
@@ -75,7 +78,7 @@ public class Expense {
                             label.append(" ").append(words[index++]);
                         }
                     }
-                    if (numberOfAmout == 2) {
+                    if (numberOfAmount == 2) {
                         if (line.endsWith(" ")) {
                             WordInWords wordInWords = getAmoutInWords(words, i);
                             deduction = wordInWords.word();
@@ -100,7 +103,7 @@ public class Expense {
 
             }
         } catch (IOException e) {
-            LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
+            constant.logError(Constant.LECTURE_FICHIER, e.getMessage());
         }
         return listOfExpense;
     }
@@ -146,7 +149,19 @@ public class Expense {
         return new LineOfExpenseTotal(key, label.trim(), value.toString().trim(), amount.toString(), deduction, recovery, type);
     }
 
-    record WordInWords(String word, int index) {
+    public int getAccountingYear(String pathFileListOfExpenses) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(pathFileListOfExpenses))) {
+            outilInfo.readNextLineInFile(reader, 4);
+            String line = reader.readLine();
+            String[] words = outilInfo.getWords(line.trim());
+            return Integer.parseInt(words[words.length - 1]);
+        } catch (IOException e) {
+            constant.logError(Constant.LECTURE_FICHIER, e.getMessage());
+        }
+        return 0;
+    }
+
+    private record WordInWords(String word, int index) {
     }
 
     private WordInWords getWordInWords(String[] words, int index) {

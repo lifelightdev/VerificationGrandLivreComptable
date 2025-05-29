@@ -1,8 +1,7 @@
 package life.light.extract.info;
 
+import life.light.Constant;
 import life.light.type.TypeAccount;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -12,12 +11,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Map;
 
+import static life.light.Constant.*;
+
 public class OutilInfo {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-    public static final String EURO = "€";
     public static final String REGEX_PHONE_NUMBER = "^0[1-9]([-. ]?\\d{2}){4}$";
     public static final String ACCOUNT_CO_OWNER = "450";
+    private final Constant constant = new Constant();
 
     public int getIndexOfNextWords(String[] words, int indexOfLastWords) {
         if (words[indexOfLastWords].trim().isEmpty()) {
@@ -31,11 +31,13 @@ public class OutilInfo {
     }
 
     public boolean isAmount(String words) {
-        return !words.endsWith(EURO);
+        return !words.endsWith(Character.toString(EURO));
     }
 
-    public int getNumberOfAmountsOn(String line) {
-        return line.split(EURO, -1).length - 1;
+    public long getNumberOfAmountsOn(String line) {
+        return line.chars()
+                .filter(c -> c == EURO)
+                .count();
     }
 
     public TypeAccount getAccount(Map<String, TypeAccount> accounts, String[] words, int indexOfWords) {
@@ -120,7 +122,7 @@ public class OutilInfo {
         line = line.replace("| ", " ");
         line = line.replace("|", "");
         line = line.replace(" / ", " ");
-        line = line.replace("Reportde", "Report de");
+        line = line.replace("Reportde", REPORT_DE);
         line = line.replace(" ‘", "");
         line = line.replace(" — ", " ");
         line = line.replace(" . ", " ");
@@ -138,14 +140,13 @@ public class OutilInfo {
         String[] words = splittingLineIntoWordTable(line);
         String date = "";
         for (String word : words) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.FRANCE);
             try {
-                LocalDate.parse(word, formatter);
+                LocalDate.parse(word, DATE_FORMATTER);
                 date = word;
             } catch (Exception _) {
             }
             if (date.isEmpty()) {
-                formatter = DateTimeFormatter.ofPattern("dd.MM.yy", Locale.FRANCE);
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yy", Locale.FRANCE);
                 try {
                     LocalDate.parse(word, formatter);
                     date = word;
@@ -166,8 +167,14 @@ public class OutilInfo {
                 }
             }
         } catch (IOException e) {
-            LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
+            constant.logError(Constant.LECTURE_FICHIER, e.getMessage());
         }
         return numberOfLineInFile;
+    }
+
+    public void readNextLineInFile(BufferedReader reader, int endLine) throws IOException {
+        for (int i = 0; i < endLine; i++) {
+            reader.readLine();
+        }
     }
 }

@@ -16,13 +16,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class ExpenseTest {
 
     private Expense expense;
-    private FileOfTest fileOfTest;
     private String testFilePath;
 
     @BeforeEach
     void setUp() {
         expense = new Expense();
-        fileOfTest = new FileOfTest();
+        FileOfTest fileOfTest = new FileOfTest();
         testFilePath = fileOfTest.createExpenseListFile();
     }
 
@@ -84,5 +83,11 @@ class ExpenseTest {
         assertEquals("0.00", totalBuilding.deduction());
         assertEquals("0.00", totalBuilding.recovery());
         assertEquals(TypeOfExpense.Building, totalBuilding.type());
+    }
+
+    @Test
+    void getAccountingYear() {
+        int year = expense.getAccountingYear(testFilePath);
+        assertEquals(2024, year);
     }
 }

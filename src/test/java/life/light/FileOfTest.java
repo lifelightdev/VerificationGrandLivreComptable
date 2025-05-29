@@ -183,9 +183,9 @@ public class FileOfTest {
             List<String> lines = Arrays.asList(
                     "C'est le nom du Syndic",
                     "8 AVENUE DES CHAMPS ELYSE 11/04/2025 Page : 1",
-                    "",
-                    "75000 PARIS Liste des dépenses arrêtée au 31/12/2024",
-                    "",
+                    "75000 PARIS ",
+                    "Liste des dépenses arrêtée au 31/12/2024",
+                    "Immeuble :0 IMMEUBLE                         Apurement :120  APUREMENT CHARGES 2024",
                     "Pièce Date              Libellé                                     Montant      Déduction    Récuperation",
                     "",
                     "",

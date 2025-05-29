@@ -1,9 +1,8 @@
 package life.light.extract.info;
 
+import life.light.Constant;
 import life.light.type.BankLine;
 import life.light.type.TypeAccount;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -16,15 +15,18 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static life.light.Constant.CENTURY;
+import static life.light.Constant.TOTAL_DES_OPERATIONS;
+
 public class Bank {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     public static final String BANK_1_DATA_FORMAT = "dd.MM.yy";
     public static final String BANK_2_DATA_FORMAT = "dd/MM/yyyy";
     public static final String ACCOUNT_BANK = "512";
     private static final String BANK_1_ACCOUNT = "";
     private static final String BANK_2_ACCOUNT = "";
     private final OutilInfo outilInfo = new OutilInfo();
+    private final Constant constant = new Constant();
 
     public List<BankLine> getBankLines(Map<String, TypeAccount> accounts, String pathDirectoryBank, List<String> accountsbank, int year) {
         List<BankLine> bankLines = new ArrayList<>();
@@ -44,9 +46,7 @@ public class Bank {
                 if (fichier.isFile()) {
                     try (BufferedReader reader = new BufferedReader(new FileReader(fichier))) {
                         String line;
-                        for (int i = 0; i < 6; i++) {
-                            reader.readLine();
-                        }
+                        outilInfo.readNextLineInFile(reader, 6);
                         TypeAccount account = accounts.get(accountBank);
                         LocalDate operationDate = null;
                         StringBuilder label = new StringBuilder();
@@ -57,12 +57,11 @@ public class Bank {
                             String nouveauSoldeAu = "Nouveau solde au";
                             if (!outilInfo.findDateIn(line).isEmpty() && (!line.contains(nouveauSoldeAu))) {
                                 if (operationDate != null && !label.toString().isEmpty() && valueDate != null) {
-                                    BankLine bankLine = new BankLine(year, operationDate.getMonthValue(), operationDate, valueDate, account, label.toString().trim(), debit, credit);
-                                    bankLines.add(bankLine);
+                                    bankLines.add(new BankLine(year, operationDate.getMonthValue(), operationDate, valueDate, account, label.toString().trim(), debit, credit));
                                 } else {
                                     String[] ligne = line.split(" ");
                                     int index = 0;
-                                    operationDate = getOperationDate(accountBank, ligne, index);
+                                    operationDate = getOperationDate(accountBank, ligne, index, year);
                                     index = getIndexNotWord(index, ligne);
                                     if (BANK_1_ACCOUNT.equals(accountBank)) {
                                         while (!ligne[index].isEmpty()) {
@@ -86,7 +85,7 @@ public class Bank {
                                         credit = Double.parseDouble(ligne[ligne.length - 1].replace(".", "").replace(",", "."));
                                     }
                                 }
-                            } else if (!line.contains(nouveauSoldeAu) && (!line.contains("Total des opérations"))) {
+                            } else if (!line.contains(nouveauSoldeAu) && (!line.contains(TOTAL_DES_OPERATIONS))) {
                                 if (label.toString().endsWith(" ")) {
                                     label.append(line);
                                 } else {
@@ -98,7 +97,7 @@ public class Bank {
                             }
                         }
                     } catch (IOException e) {
-                        LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
+                        constant.logError(Constant.LECTURE_FICHIER, e.getMessage());
                     }
                 }
             }
@@ -106,11 +105,11 @@ public class Bank {
         return bankLines;
     }
 
-    private LocalDate getOperationDate(String theAccount, String[] ligne, int index) {
+    private LocalDate getOperationDate(String theAccount, String[] ligne, int index, int year) {
         LocalDate operationDate = null;
         if (BANK_1_ACCOUNT.equals(theAccount)) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BANK_1_DATA_FORMAT, Locale.FRANCE);
-            operationDate = LocalDate.parse(ligne[index] + ".24", formatter);
+            operationDate = LocalDate.parse(ligne[index] + "." + (year - CENTURY), formatter);
         } else if (BANK_2_ACCOUNT.equals(theAccount)) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BANK_2_DATA_FORMAT, Locale.FRANCE);
             operationDate = LocalDate.parse(ligne[index], formatter);

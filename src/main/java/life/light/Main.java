@@ -21,46 +21,55 @@ import java.util.Map;
 public class Main {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    static List<String> accountsbank = List.of();
-    static String pathDirectoryInvoice = "";
-    static String pathDirectoryBank = "";
-    static String pathDirectoryLeger = "";
-    static String pathDirectoryListOfExpenses = "";
+    static List<String> accountsbank = List.of("51220", "51221");
+    static String pathDirectoryInvoice = "D:\\Le Nidor\\2024\\FACTURES";
+    static String pathDirectoryBank = "D:\\Le Nidor\\2024\\BANQUE";
+    static String pathFileLeger = "";
+    static String pathFileListOfExpenses = "";
     static String codeCondominium = "";
+    static int accountingYear = 2024;
 
     public static void main(String[] args) {
         LocalDateTime debut = LocalDateTime.now();
         LOGGER.info("Début à {}:{}:{}", debut.getHour(), debut.getMinute(), debut.getSecond());
 
-        if (args.length == 6) {
+        if (args.length == 7) {
             codeCondominium = args[0];
-            pathDirectoryLeger = args[1];
+            pathFileLeger = args[1];
             pathDirectoryBank = args[2];
             pathDirectoryInvoice = args[3];
             accountsbank = List.of(args[4]);
-            pathDirectoryListOfExpenses = args[5];
+            pathFileListOfExpenses = args[5];
+            accountingYear = Integer.parseInt(args[6]);
         }
 
         Expense expense = new Expense();
-        Object[] listOfExpense = expense.getList(pathDirectoryListOfExpenses);
+        int accountingYearOfListOfExpenses = expense.getAccountingYear(pathFileListOfExpenses);
+        if (accountingYearOfListOfExpenses != accountingYear) {
+            LOGGER.error("L'année comptable n'est pas cohérante ({},{})", accountingYearOfListOfExpenses, accountingYear);
+        }
+        Object[] listOfExpense = expense.getList(pathFileListOfExpenses);
         String path = "." + File.separator + "resultat" + File.separator + "Liste des dépenses.xlsx";
         WriteFile writeFile = new WriteFile();
         writeFile.writeFileExcelListeDesDepenses(listOfExpense, path, pathDirectoryInvoice);
 
         Ledger ledger = new Ledger(codeCondominium);
-        InfoGrandLivre infoGrandLivre = ledger.getInfoGrandLivre(pathDirectoryLeger);
+        InfoGrandLivre infoGrandLivre = ledger.getInfoGrandLivre(pathFileLeger);
+        if (infoGrandLivre.stopDate().getYear() != accountingYear) {
+            LOGGER.error("L'année comptable n'est pas cohérante ({},{})", infoGrandLivre.stopDate(), accountingYear);
+        }
 
         Account account = new Account();
-        Map<String, TypeAccount> accounts = account.getAccounts(pathDirectoryLeger, codeCondominium);
+        Map<String, TypeAccount> accounts = account.getAccounts(pathFileLeger, codeCondominium);
         account.writeFilesAccounts(accounts, infoGrandLivre, "resultat");
 
-        List<Line> lineBankInGrandLivre = ledger.getInfoBankGrandLivre(infoGrandLivre, accounts, pathDirectoryLeger,
+        List<Line> lineBankInGrandLivre = ledger.getInfoBankGrandLivre(infoGrandLivre, accounts, pathFileLeger,
                 pathDirectoryInvoice, accountsbank);
 
         // Récupération des relevés bancaire
         Bank bank = new Bank();
         List<BankLine> bankLines = bank.getBankLines(accounts, pathDirectoryBank, accountsbank,
-                infoGrandLivre.stopDate().getYear());
+                accountingYear);
 
         String nameFile = "." + File.separator + "resultat" + File.separator + "Etat de rapprochement.xlsx";
         writeFile.writeFileExcelEtatRaprochement(lineBankInGrandLivre, nameFile, bankLines);

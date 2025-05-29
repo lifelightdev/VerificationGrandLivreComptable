@@ -10,15 +10,15 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.time.format.DateTimeFormatter;
+
+import static life.light.Constant.REPORT_DE;
 
 public class WriteOutil {
 
-    private final WriteCellStyle  writeCellStyle = new WriteCellStyle();
+    private final WriteCellStyle writeCellStyle = new WriteCellStyle();
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public static final String[] NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES = {"Pièce", "Date", "Libellé", "Montant",
             "Déduction", "Récuperation", "Commentaire"};
@@ -63,7 +63,6 @@ public class WriteOutil {
     public static final int ID_CREDIT_OF_RECONCILIATION = 19;
     public static final int ID_COMMENT_OF_RECONCILIATION = 20;
 
-    public static final String REPORT_DE = "Report de";
     public static final String IMPOSSIBLE_DE_TROUVER_LA_PIECE = "Impossible de trouver la pièce ";
 
     private static final String CLASSE_6 = "6";

@@ -1,9 +1,8 @@
 package life.light.extract.info;
 
+import life.light.Constant;
 import life.light.type.*;
 import life.light.write.WriteFile;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,20 +14,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
-import static life.light.extract.info.OutilInfo.EURO;
-import static life.light.write.WriteOutil.DATE_FORMATTER;
+import static life.light.Constant.*;
 
 public class Ledger {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final int NAME_JOURNAL_SIZE = 2;
     private static final String REGEX_NUMBER = "^-?[0-9]+$";
+    private static final String VIRT = "Virt";
+    private static final String TOTAL_COMPTE = "Total compte ";
+    private static final String TOTAL_IMMEUBLE = "Total immeuble";
+    private static final String GRAND_LIVRE = "GrandLivre";
+    private static final String DIRECTORY_NAME_COPROPRIETAIRE = "Copropriétaire";
     private static String codeCondominium;
     private static String postalCode;
     private final OutilInfo outilInfo = new OutilInfo();
+    private final Constant constant = new Constant();
 
     public Ledger(String codeCondominium) {
-        this.codeCondominium = codeCondominium;
+        Ledger.codeCondominium = codeCondominium;
     }
 
     public InfoGrandLivre getInfoGrandLivre(String pathLedger) {
@@ -41,10 +44,10 @@ public class Ledger {
             line = reader.readLine();
             LocalDate stopDate = date(line);
             String postalCode = postalCode(line);
-            this.postalCode = postalCode;
+            Ledger.postalCode = postalCode;
             return new InfoGrandLivre(syndicName, printDate, stopDate, postalCode);
         } catch (IOException e) {
-            LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
+            constant.logError(Constant.LECTURE_FICHIER, e.getMessage());
         }
         return null;
     }
@@ -59,7 +62,7 @@ public class Ledger {
                 }
             }
         } catch (IOException e) {
-            LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
+            constant.logError(Constant.LECTURE_FICHIER, e.getMessage());
         }
         return numberOfLineInFile;
     }
@@ -106,7 +109,7 @@ public class Ledger {
     boolean isAcccount(String line) {
         line = getLine(line);
         line = line.replace("  ", " ");
-        if (line.contains(EURO)) {
+        if (line.contains(Character.toString(EURO))) {
             return false;
         }
         if ((line.contains("Page")) && (!outilInfo.findDateIn(line).isEmpty())) {
@@ -117,7 +120,7 @@ public class Ledger {
         }
         String[] words = outilInfo.splittingLineIntoWordTable(line);
         String firstWord = words[0];
-        if (firstWord.equals(this.postalCode)) {
+        if (firstWord.equals(postalCode)) {
             return false;
         }
         if (firstWord.equals(codeCondominium)) {
@@ -140,7 +143,7 @@ public class Ledger {
         line = outilInfo.fixedSpacesBeforeEuroSign(line);
 
         // Calcule de nombre de montants sur la ligne grâce au signe €
-        int numberOfAmounts = outilInfo.getNumberOfAmountsOn(line);
+        long numberOfAmounts = outilInfo.getNumberOfAmountsOn(line);
 
         // Découpage de la ligne en un tableau de mot
         String[] words = outilInfo.splittingLineIntoWordTable(line);
@@ -171,7 +174,7 @@ public class Ledger {
                 account = outilInfo.getAccount(accounts, numAccount, 0);
             }
             if (account == null) {
-                LOGGER.error("Erreur lors de la recherche du compte {} sur la ligne {}", words[indexOfWords], line);
+                constant.logError(line, words[indexOfWords]);
                 return null;
             }
             indexOfWords++;
@@ -183,7 +186,7 @@ public class Ledger {
                 indexOfWords++;
             }
             if (account == null) {
-                LOGGER.error("Erreur lors de la recherche du compte {} sur la ligne {}", words[indexOfWords], line);
+                constant.logError(ERREUR_LORS_DE_LA_RECHERCHE_DU_COMPTE_SUR_LA_LIGNE, line, words[indexOfWords]);
                 return null;
             }
             indexOfWords++;
@@ -203,7 +206,7 @@ public class Ledger {
 
         // Extraction du compte de contrepartie
         TypeAccount accountCounterpart = null;
-        if (!line.contains("Report de") && words[indexOfWords].replace("-", "").matches(REGEX_NUMBER)) {
+        if (!line.contains(REPORT_DE) && words[indexOfWords].replace("-", "").matches(REGEX_NUMBER)) {
             accountCounterpart = outilInfo.getAccount(accounts, words, indexOfWords);
             indexOfWords++;
         }
@@ -214,7 +217,7 @@ public class Ledger {
 
         // Extraction du numéro de chéque
         String checkNumber = "";
-        if ("Virt".equals(words[indexOfWords])) {
+        if (VIRT.equals(words[indexOfWords])) {
             checkNumber = words[indexOfWords];
             indexOfWords++;
         }
@@ -306,8 +309,8 @@ public class Ledger {
             debit = new StringBuilder(debit.substring(0, debit.toString().length() - 3) + "." + debit.substring(debit.toString().length() - 3));
         }
 
-        debit = new StringBuilder(debit.toString().replace(" ", "").replace("€", "").trim());
-        credit = new StringBuilder(credit.toString().replace(" ", "").replace("€", "").trim());
+        debit = new StringBuilder(debit.toString().replace(" ", "").replace(Character.toString(EURO), "").trim());
+        credit = new StringBuilder(credit.toString().replace(" ", "").replace(Character.toString(EURO), "").trim());
 
         return new Line(document, date, account, journal, accountCounterpart, checkNumber,
                 label.toString().trim(), debit.toString().trim(), credit.toString().trim());
@@ -336,7 +339,7 @@ public class Ledger {
         line = outilInfo.fixedSpacesBeforeEuroSign(line);
 
         // Calcule de nombre de montants sur la ligne grâce au signe €
-        int numberOfAmounts = outilInfo.getNumberOfAmountsOn(line);
+        long numberOfAmounts = outilInfo.getNumberOfAmountsOn(line);
 
         // Découpage de la ligne en un tableau de mot
         String[] words = outilInfo.splittingLineIntoWordTable(line);
@@ -371,7 +374,7 @@ public class Ledger {
             debit.append(" ").append(words[indexOfWords]);
             credit = debit;
         } else {
-            LOGGER.error("Erreur, il manque des montants sur la ligne de total {}", line);
+            constant.logError(ERREUR_IL_MANQUE_DES_MONTANTS_SUR_LA_LIGNE_DE_TOTAL, line);
         }
 
         // Extraction du numéro de compte
@@ -404,18 +407,18 @@ public class Ledger {
             }
         }
         if (account == null) {
-            LOGGER.error("Erreur lors de la recherche du compte sur le total du compte {} de la ligne {}", label, line);
+            constant.logError(ERREUR_LORS_DE_LA_RECHERCHE_DU_COMPTE_SUR_LE_TOTAL_DU_COMPTE_DE_LA_LIGNE, label.toString(), line);
             return null;
         }
 
-        debit = new StringBuilder(debit.toString().replace(" ", "").replace("€", "").trim());
-        credit = new StringBuilder(credit.toString().replace(" ", "").replace("€", "").trim());
+        debit = new StringBuilder(debit.toString().replace(" ", "").replace(Character.toString(EURO), "").trim());
+        credit = new StringBuilder(credit.toString().replace(" ", "").replace(Character.toString(EURO), "").trim());
 
         return new TotalAccount(label.toString().trim(), account, debit.toString(), credit.toString().replace("—", "").trim());
     }
 
     public boolean isTotalAccount(String line) {
-        return line.startsWith("Total compte ");
+        return line.startsWith(TOTAL_COMPTE);
     }
 
     private String postalCode(String line) {
@@ -423,7 +426,7 @@ public class Ledger {
     }
 
     public boolean isTotalBuilding(String line) {
-        return line.startsWith("Total immeuble");
+        return line.startsWith(TOTAL_IMMEUBLE);
     }
 
     public TotalBuilding totalBuilding(String line) {
@@ -431,7 +434,7 @@ public class Ledger {
         line = outilInfo.fixedSpacesBeforeEuroSign(line).replace(")", " ) ");
 
         // Calcule de nombre de montants sur la ligne grâce au signe €
-        int numberOfAmounts = outilInfo.getNumberOfAmountsOn(line);
+        long numberOfAmounts = outilInfo.getNumberOfAmountsOn(line);
 
         // Découpage de la ligne en un tableau de mot
         String[] words = outilInfo.splittingLineIntoWordTable(line);
@@ -462,7 +465,7 @@ public class Ledger {
             }
             credit.append(" ").append(words[indexOfWords]);
         }
-        return new TotalBuilding(label.toString().trim().replace(" )", ")"), debit.toString().trim().replace(" ", "").replace(EURO, ""), credit.toString().trim().replace(" ", "").replace(EURO, ""));
+        return new TotalBuilding(label.toString().trim().replace(" )", ")"), debit.toString().trim().replace(" ", "").replace(Character.toString(EURO), ""), credit.toString().trim().replace(" ", "").replace(Character.toString(EURO), ""));
     }
 
     public List<Line> getInfoBankGrandLivre(InfoGrandLivre infoGrandLivre, Map<String, TypeAccount> accounts,
@@ -489,7 +492,7 @@ public class Ledger {
                         journals.add(lineOfGrandLivre.journal());
                     }
                     String accountNumber = lineOfGrandLivre.account().account();
-                    if (accountsbank.contains(accountNumber) && !lineOfGrandLivre.label().contains("Report de ")) {
+                    if (accountsbank.contains(accountNumber) && !lineOfGrandLivre.label().contains(REPORT_DE)) {
                         lineBankInGrandLivre.add(lineOfGrandLivre);
                     }
                 } else if (isTotalAccount(line)) {
@@ -503,19 +506,19 @@ public class Ledger {
                 }
             }
         } catch (IOException e) {
-            LOGGER.error("Erreur lors de la lecture du fichier avec cette erreur {}", e.getMessage());
+            constant.logError(Constant.LECTURE_FICHIER, e.getMessage());
         }
 
         WriteFile writeFile = new WriteFile();
-        String pathFile = "." + File.separator + "resultat" + File.separator ;
-        String exitFile = pathFile+ "GrandLivre.csv";
+        String pathFile = "." + File.separator + DIRECTORY_NAME_RESULTAT + File.separator;
+        String exitFile = pathFile + GRAND_LIVRE + CSV;
         writeFile.writeFileCSVGrandLivre(grandLivres, exitFile);
-        String nameFile = infoGrandLivre.printDate() + " Grand livre " + infoGrandLivre.syndicName()
-                + " au " + infoGrandLivre.stopDate() + ".xlsx";
+        String nameFile = infoGrandLivre.printDate() + GRAND_LIVRE + infoGrandLivre.syndicName()
+                + " au " + infoGrandLivre.stopDate() + XLSX;
         String path = pathFile + nameFile;
         writeFile.writeFileExcelGrandLivre(grandLivres, path, journals, pathDirectoryInvoice);
 
-        writeFile.writeFilesExcelCoOwner(grandLivres, pathFile + "Copropriétaire" + File.separator, accounts, pathDirectoryInvoice);
+        writeFile.writeFilesExcelCoOwner(grandLivres, pathFile + DIRECTORY_NAME_COPROPRIETAIRE + File.separator, accounts, pathDirectoryInvoice);
         return lineBankInGrandLivre;
     }
 }

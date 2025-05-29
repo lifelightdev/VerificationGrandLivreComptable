@@ -1,9 +1,8 @@
 package life.light.write;
 
-import life.light.type.Line;
+import life.light.Constant;
 import life.light.type.CellValues;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import life.light.type.Line;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
@@ -12,13 +11,14 @@ import org.apache.poi.ss.util.CellReference;
 
 import java.util.List;
 
-import static life.light.write.WriteOutil.*;
+import static life.light.Constant.IL_MANQUE_X_DANS_X_A_LA_LIGNE_X;
+import static life.light.write.WriteOutil.ID_CREDIT_OF_LEDGER;
+import static life.light.write.WriteOutil.ID_DEBIT_OF_LEDGER;
 
 public class WriteCell {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-
     private final WriteOutil writeOutil = new WriteOutil();
+    private final Constant constant = new Constant();
 
     public void addCell(Row row, int idColum, String value, CellStyle style, String line, String name, String place) {
         Cell cell = row.createCell(idColum);
@@ -29,14 +29,14 @@ public class WriteCell {
             cell.setCellValue(value);
         } else {
             if (name != null && !name.isEmpty()) {
-                LOGGER.error("Il manque {} dans {} à la ligne {}", name, place, line);
+                constant.logError(IL_MANQUE_X_DANS_X_A_LA_LIGNE_X, name, place, line);
             }
         }
         cell.setCellStyle(style);
     }
 
     public void addCells(Row row, List<CellValues> values, String place) {
-        for (CellValues value: values) {
+        for (CellValues value : values) {
             addCell(row, value.idColum(), value.value(), value.style(), value.line(), value.name(), place);
         }
     }
@@ -126,7 +126,7 @@ public class WriteCell {
 
     public Cell addCellTotalAmount(Row row, int idColum, int lastRowNumTotal, CellStyle style) {
         Cell cell = row.createCell(idColum);
-        CellAddress cellAddressFirst = new CellAddress( lastRowNumTotal + 1, cell.getAddress().getColumn());
+        CellAddress cellAddressFirst = new CellAddress(lastRowNumTotal + 1, cell.getAddress().getColumn());
         CellAddress cellAddressEnd = new CellAddress(cell.getAddress().getRow() - 1, cell.getAddress().getColumn());
         cell.setCellFormula("SUM(" + cellAddressFirst + ":" + cellAddressEnd + ")");
         row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
