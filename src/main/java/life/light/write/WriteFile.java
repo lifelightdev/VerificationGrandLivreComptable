@@ -1,8 +1,7 @@
 package life.light.write;
 
+import life.light.Constant;
 import life.light.type.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -14,18 +13,21 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
+import static life.light.Constant.ERREUR_LORS_DE_L_ECRITURE_DANS_LE_FICHIER_DE_SORTIE;
+import static life.light.Constant.IL_N_Y_A_PAS_LE_MEME_NOMBRE_D_OPERATION_POINTEES_OK_DANS_LE_GRAND_LIVRE_ET_SUR_LES_RELEVES_DE_COMPTE;
 import static life.light.extract.info.OutilInfo.ACCOUNT_CO_OWNER;
 import static life.light.write.WriteOutil.*;
 
 public class WriteFile {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     public static final String POINTAGE_RELEVE_OK = "Pointage Relevé OK";
     public static final String POINTAGE_GL_OK = "Pointage GL OK";
+    public static final String COLUMN_SEPARATOR = " ; ";
 
     private final WriteOutil writeOutil = new WriteOutil();
     private final WriteLine writeLine = new WriteLine();
     private final WriteSheet writeSheet = new WriteSheet();
+    private final Constant constant = new Constant();
 
     // TODO faire la gestion des fichiers (existe, n'existe pas, pas de dossier ...)
 
@@ -34,18 +36,14 @@ public class WriteFile {
             TreeMap<String, TypeAccount> map = new TreeMap<>(accounts);
             writer.write("Compte;Intitulé du compte;" + System.lineSeparator());
             for (Map.Entry<String, TypeAccount> accountEntry : map.entrySet()) {
-                String line = accountEntry.getValue().account() + " ; " +
-                        accountEntry.getValue().label() + " ; " +
+                String line = accountEntry.getValue().account() + COLUMN_SEPARATOR +
+                        accountEntry.getValue().label() + COLUMN_SEPARATOR +
                         System.lineSeparator();
                 writer.write(line);
             }
         } catch (IOException e) {
-            logError(fileName, e);
+            constant.logError(ERREUR_LORS_DE_L_ECRITURE_DANS_LE_FICHIER_DE_SORTIE, fileName, e.getMessage());
         }
-    }
-
-    private static void logError(String fileName, IOException e) {
-        LOGGER.error("Erreur lors de l'écriture dans le fichier de sortie '{}': {}", fileName, e.getMessage());
     }
 
     public void writeFileExcelAccounts(Map<String, TypeAccount> map, String fileName) {
@@ -85,7 +83,7 @@ public class WriteFile {
             // Fermer le classeur
             workbook.close();
         } catch (IOException e) {
-            logError(fileName, e);
+            constant.logError(ERREUR_LORS_DE_L_ECRITURE_DANS_LE_FICHIER_DE_SORTIE, fileName, e.getMessage());
         }
     }
 
@@ -98,57 +96,57 @@ public class WriteFile {
             for (Object grandLivre : grandLivres) {
                 line = new StringBuilder();
                 if (grandLivre instanceof Line) {
-                    line.append(((Line) grandLivre).document()).append(" ; ");
-                    line.append(((Line) grandLivre).date()).append(" ; ");
+                    line.append(((Line) grandLivre).document()).append(COLUMN_SEPARATOR);
+                    line.append(((Line) grandLivre).date()).append(COLUMN_SEPARATOR);
                     if (((Line) grandLivre).account() != null) {
-                        line.append(((Line) grandLivre).account().account()).append(" ; ");
+                        line.append(((Line) grandLivre).account().account()).append(COLUMN_SEPARATOR);
                     } else {
-                        line.append(" ; ");
+                        line.append(COLUMN_SEPARATOR);
                     }
-                    line.append(((Line) grandLivre).journal()).append(" ; ");
+                    line.append(((Line) grandLivre).journal()).append(COLUMN_SEPARATOR);
                     if (((Line) grandLivre).accountCounterpart() != null) {
-                        line.append(((Line) grandLivre).accountCounterpart().account()).append(" ; ");
+                        line.append(((Line) grandLivre).accountCounterpart().account()).append(COLUMN_SEPARATOR);
                     } else {
-                        line.append(" ; ");
+                        line.append(COLUMN_SEPARATOR);
                     }
-                    line.append(((Line) grandLivre).checkNumber()).append(" ; ");
-                    line.append(((Line) grandLivre).label()).append(" ; ");
-                    line.append(((Line) grandLivre).debit()).append(" ; ");
-                    line.append(((Line) grandLivre).credit()).append(" ; ");
+                    line.append(((Line) grandLivre).checkNumber()).append(COLUMN_SEPARATOR);
+                    line.append(((Line) grandLivre).label()).append(COLUMN_SEPARATOR);
+                    line.append(((Line) grandLivre).debit()).append(COLUMN_SEPARATOR);
+                    line.append(((Line) grandLivre).credit()).append(COLUMN_SEPARATOR);
                     line.append(System.lineSeparator());
                 }
                 if (grandLivre instanceof TotalAccount) {
-                    line.append(" ; ");
-                    line.append(" ; ");
+                    line.append(COLUMN_SEPARATOR);
+                    line.append(COLUMN_SEPARATOR);
                     if (((TotalAccount) grandLivre).account() != null) {
-                        line.append(((TotalAccount) grandLivre).account().account()).append(" ; ");
+                        line.append(((TotalAccount) grandLivre).account().account()).append(COLUMN_SEPARATOR);
                     } else {
-                        line.append(" ; ");
+                        line.append(COLUMN_SEPARATOR);
                     }
-                    line.append(" ; ");
-                    line.append(" ; ");
-                    line.append(" ; ");
-                    line.append(((TotalAccount) grandLivre).label()).append(" ; ");
-                    line.append(((TotalAccount) grandLivre).debit()).append(" ; ");
-                    line.append(((TotalAccount) grandLivre).credit()).append(" ; ");
+                    line.append(COLUMN_SEPARATOR);
+                    line.append(COLUMN_SEPARATOR);
+                    line.append(COLUMN_SEPARATOR);
+                    line.append(((TotalAccount) grandLivre).label()).append(COLUMN_SEPARATOR);
+                    line.append(((TotalAccount) grandLivre).debit()).append(COLUMN_SEPARATOR);
+                    line.append(((TotalAccount) grandLivre).credit()).append(COLUMN_SEPARATOR);
                     line.append(System.lineSeparator());
                 }
                 if (grandLivre instanceof TotalBuilding) {
-                    line.append(" ; ");
-                    line.append(" ; ");
-                    line.append(" ; ");
-                    line.append(" ; ");
-                    line.append(" ; ");
-                    line.append(" ; ");
-                    line.append(((TotalBuilding) grandLivre).label()).append(" ; ");
-                    line.append(((TotalBuilding) grandLivre).debit()).append(" ; ");
-                    line.append(((TotalBuilding) grandLivre).credit()).append(" ; ");
+                    line.append(COLUMN_SEPARATOR);
+                    line.append(COLUMN_SEPARATOR);
+                    line.append(COLUMN_SEPARATOR);
+                    line.append(COLUMN_SEPARATOR);
+                    line.append(COLUMN_SEPARATOR);
+                    line.append(COLUMN_SEPARATOR);
+                    line.append(((TotalBuilding) grandLivre).label()).append(COLUMN_SEPARATOR);
+                    line.append(((TotalBuilding) grandLivre).debit()).append(COLUMN_SEPARATOR);
+                    line.append(((TotalBuilding) grandLivre).credit()).append(COLUMN_SEPARATOR);
                     line.append(System.lineSeparator());
                 }
                 writer.write(line.toString());
             }
         } catch (IOException e) {
-            logError(exitFile, e);
+            constant.logError(ERREUR_LORS_DE_L_ECRITURE_DANS_LE_FICHIER_DE_SORTIE, exitFile, e.getMessage());
         }
     }
 
@@ -194,7 +192,7 @@ public class WriteFile {
             // Fermer le classeur
             workbook.close();
         } catch (IOException e) {
-            logError(pathNameFile, e);
+            constant.logError(ERREUR_LORS_DE_L_ECRITURE_DANS_LE_FICHIER_DE_SORTIE, pathNameFile, e.getMessage());
         }
     }
 
@@ -235,7 +233,7 @@ public class WriteFile {
                     // Fermer le classeur
                     workbook.close();
                 } catch (IOException e) {
-                    logError(fileName, e);
+                    constant.logError(ERREUR_LORS_DE_L_ECRITURE_DANS_LE_FICHIER_DE_SORTIE, fileName, e.getMessage());
                 }
             }
         }
@@ -290,12 +288,11 @@ public class WriteFile {
             // Fermer le classeur
             workbook.close();
         } catch (IOException e) {
-            logError(pathNameFile, e);
+            constant.logError(ERREUR_LORS_DE_L_ECRITURE_DANS_LE_FICHIER_DE_SORTIE, pathNameFile, e.getMessage());
         }
     }
 
-    public void writeFileExcelEtatRaprochement(List<Line> grandLivres, String
-            exitFile, List<BankLine> bankLines) {
+    public void writeFileExcelEtatRaprochement(List<Line> grandLivres, String exitFile, List<BankLine> bankLines) {
         try {
             // Créer un nouveau classeur Excel
             Workbook workbook = new XSSFWorkbook();
@@ -304,7 +301,7 @@ public class WriteFile {
             pointageGL(new ArrayList<>(grandLivres), new ArrayList<>(bankLines), workbook);
 
             if (workbook.getSheet(POINTAGE_RELEVE_OK).getLastRowNum() != workbook.getSheet(POINTAGE_GL_OK).getLastRowNum()) {
-                LOGGER.error(("Il n'y a pas le même nombre d'opération pointées OK dans le grand livre et sur les relevés de compte"));
+                constant.logError(IL_N_Y_A_PAS_LE_MEME_NOMBRE_D_OPERATION_POINTEES_OK_DANS_LE_GRAND_LIVRE_ET_SUR_LES_RELEVES_DE_COMPTE);
             }
 
             // Écrire le contenu du classeur dans un fichier
@@ -312,7 +309,7 @@ public class WriteFile {
             // Fermer le classeur
             workbook.close();
         } catch (IOException e) {
-            logError(exitFile, e);
+            constant.logError(ERREUR_LORS_DE_L_ECRITURE_DANS_LE_FICHIER_DE_SORTIE, exitFile, e.getMessage());
         }
     }
 
