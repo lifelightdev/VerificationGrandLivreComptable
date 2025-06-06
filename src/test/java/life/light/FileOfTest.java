@@ -10,10 +10,13 @@ import java.util.List;
 
 public class FileOfTest {
 
-    public final static Path tempTestDir = Paths.get("." + File.separator + "TEST_temp" + File.separator);
+    public final static Path TEMP_TEST_DIR = Paths.get("TEST_temp" + File.separator);
+    private final File invoice1 = new File(TEMP_TEST_DIR + File.separator + "invoice" + File.separator + "Invoice123 - supplier 1.txt");
+    private final File invoice2 = new File(TEMP_TEST_DIR + File.separator + "invoice" + File.separator + "Supplier 2" + File.separator + "Invoice234 - supplier 2.txt");
+    private final File invoice3 = new File(TEMP_TEST_DIR + File.separator + "invoice" + File.separator + "Supplier 2" + File.separator + "Directory" + File.separator + "Invoice345 - supplier 3.txt");
 
     public FileOfTest() {
-        File temp = new File(tempTestDir.toString());
+        File temp = new File(TEMP_TEST_DIR.toString());
         temp.mkdir();
     }
 
@@ -40,8 +43,8 @@ public class FileOfTest {
                     "                                                Total immeuble (Solde : 0.00 €)              6 000.00 € 3 000.00 €",
                     ""
             );
-            Files.write(tempTestDir.resolve("grand_livre_TEST.txt"), lines);
-            return tempTestDir + File.separator + "grand_livre_TEST.txt";
+            Files.write(TEMP_TEST_DIR.resolve("grand_livre_TEST.txt"), lines);
+            return TEMP_TEST_DIR + File.separator + "grand_livre_TEST.txt";
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -70,34 +73,27 @@ public class FileOfTest {
                     "                                                Total immeuble (Solde : 0.00 €)              6 000.00 € 3 000.00 €",
                     ""
             );
-            Files.write(tempTestDir.resolve("grand_livre_TEST.txt"), lines);
-            return tempTestDir + File.separator + "grand_livre_TEST.txt";
+            Files.write(TEMP_TEST_DIR.resolve("grand_livre_TEST.txt"), lines);
+            return TEMP_TEST_DIR + File.separator + "grand_livre_TEST.txt";
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    public void deleteInvoiceFiles() {
+        invoice1.delete();
+        invoice2.delete();
+        invoice3.delete();
+    }
+
     public void copyInvoiceFiles() {
         try {
-            List<String> lines = Arrays.asList();
-
-            File invoice1 = new File(tempTestDir + File.separator + "invoice" + File.separator);
-            invoice1.mkdir();
-
-            Files.write(tempTestDir.resolve(invoice1.getAbsoluteFile() + File.separator
-                    + "Invoice123 - supplier 1.txt"), lines);
-
-            File invoice2 = new File(tempTestDir + File.separator + "invoice" + File.separator
-                    + "Supplier 2" + File.separator);
-            invoice2.mkdir();
-            Files.write(tempTestDir.resolve(invoice2.getAbsoluteFile() + File.separator
-                    + "Invoice234 - supplier 2.txt"), lines);
-
-            File invoice3 = new File(tempTestDir + File.separator + "invoice" + File.separator
-                    + "Supplier 2" + File.separator + "Directory" + File.separator);
-            invoice3.mkdir();
-            Files.write(tempTestDir.resolve(invoice3.getAbsoluteFile() + File.separator
-                    + "Invoice345 - supplier 3.txt"), lines);
+            List<String> lines = List.of();
+            Files.write(invoice1.getAbsoluteFile().toPath(), lines);
+            invoice2.getParentFile().mkdirs();
+            Files.write(invoice2.getAbsoluteFile().toPath(), lines);
+            invoice3.getParentFile().mkdirs();
+            Files.write(invoice3.getAbsoluteFile().toPath(), lines);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -106,7 +102,7 @@ public class FileOfTest {
 
     public void copyBankFiles(String accountBank1, String accountBank2) {
         try {
-            File tempBank = new File(tempTestDir + File.separator + "bank" + File.separator);
+            File tempBank = new File(TEMP_TEST_DIR + File.separator + "bank" + File.separator);
             tempBank.mkdir();
             File tempBank1 = new File(tempBank.getAbsoluteFile() + File.separator + accountBank1 + File.separator);
             tempBank1.mkdir();
@@ -142,7 +138,7 @@ public class FileOfTest {
                     " ",
                     "02.12  SOLDE EN EUROS                                                                                   34502,55"
             );
-            Files.write(tempTestDir.resolve(tempBank1.getAbsoluteFile() + File.separator + accountBank1 + " - NOVEMBRE TEST.txt"), bank1Lines);
+            Files.write(TEMP_TEST_DIR.resolve(tempBank1.getAbsoluteFile() + File.separator + accountBank1 + " - NOVEMBRE TEST.txt"), bank1Lines);
 
             File tempBank2 = new File(tempBank.getAbsoluteFile() + File.separator + accountBank2 + File.separator);
             tempBank2.mkdir();
@@ -159,7 +155,7 @@ public class FileOfTest {
                     "                      Total des opérations             0,00    100,00",
                     "                      Nouveau solde au 30/05/2024              100,00"
             );
-            Files.write(tempTestDir.resolve(tempBank2.getAbsoluteFile() + File.separator + accountBank2 + " -  AOUT TEST.txt"), bank2Lines1);
+            Files.write(TEMP_TEST_DIR.resolve(tempBank2.getAbsoluteFile() + File.separator + accountBank2 + " -  AOUT TEST.txt"), bank2Lines1);
 
             List<String> bank2Lines2 = Arrays.asList(
                     "BANQUE                   RELEVÉ DE COMPTE (EN EUR)",
@@ -172,7 +168,7 @@ public class FileOfTest {
                     "                      Total des opérations             0,00    100,00",
                     "                      Nouveau solde au 31/07/2024              100,00"
             );
-            Files.write(tempTestDir.resolve(tempBank2.getAbsoluteFile() + File.separator + accountBank2 + " - JUILLET TEST.txt"), bank2Lines2);
+            Files.write(TEMP_TEST_DIR.resolve(tempBank2.getAbsoluteFile() + File.separator + accountBank2 + " - JUILLET TEST.txt"), bank2Lines2);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -205,8 +201,8 @@ public class FileOfTest {
                     "",
                     "Total immeuble :                                                    570.00 €     0.00 €        0.00 €"
             );
-            Files.write(tempTestDir.resolve("Liste_des_depenses.txt"), lines);
-            return tempTestDir + File.separator + "Liste_des_depenses.txt";
+            Files.write(TEMP_TEST_DIR.resolve("Liste_des_depenses.txt"), lines);
+            return TEMP_TEST_DIR + File.separator + "Liste_des_depenses.txt";
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

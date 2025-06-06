@@ -437,7 +437,7 @@ public class WriteLine {
         }
     }
 
-    public void getLineOfExpense(LineOfExpense line, Row row, String pathDirectoryInvoice) {
+    public void getLineOfExpense(LineOfExpenseValue line, Row row, TreeMap<String, String> listOfDocuments) {
         CreationHelper createHelper = row.getSheet().getWorkbook().getCreationHelper();
         Hyperlink link = createHelper.createHyperlink(HyperlinkType.FILE);
 
@@ -485,12 +485,14 @@ public class WriteLine {
 
         cell = row.createCell(ID_COMMENT_OF_LIST_OF_EXPENSES);
 
-        String message = writeOutil.getMessageFindDocument(line.document(), link, pathDirectoryInvoice);
-        if (message.startsWith(IMPOSSIBLE_DE_TROUVER_LA_PIECE)) {
-            message = message + " avec ce libellé " + line.label();
+        if (listOfDocuments.get(line.document()) != null) {
+            String message = listOfDocuments.get(line.document());
+            if (!message.startsWith(IMPOSSIBLE_DE_TROUVER_LA_PIECE)) {
+                link.setAddress(message.replace("F:", "D:"));
+            }
+            cell.setCellValue(message);
+            cell.setCellStyle(cellStyle);
         }
-        cell.setCellValue(message);
-        cell.setCellStyle(cellStyle);
     }
 
     public void getListOfDocumentMissing(TreeMap<String, String> ligneOfDocumentMissing, Sheet sheetDocument) {

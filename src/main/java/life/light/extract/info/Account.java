@@ -36,7 +36,7 @@ public class Account {
 
     public void writeFilesAccounts(Map<String, TypeAccount> accounts, InfoGrandLivre infoGrandLivre, String outputPath) {
         String nameFile = "." + File.separator + outputPath + File.separator + ACCOUNTING_PLAN + infoGrandLivre.syndicName();
-        WriteFile writeFile = new WriteFile();
+        WriteFile writeFile = new WriteFile(PATH);
         writeFile.writeFileCSVAccounts(accounts, nameFile + CSV);
         writeFile.writeFileExcelAccounts(accounts, nameFile + XLSX);
     }

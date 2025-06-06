@@ -28,6 +28,11 @@ public class WriteFile {
     private final WriteLine writeLine = new WriteLine();
     private final WriteSheet writeSheet = new WriteSheet();
     private final Constant constant = new Constant();
+    private final String path;
+
+    public WriteFile(String path) {
+        this.path = path;
+    }
 
     // TODO faire la gestion des fichiers (existe, n'existe pas, pas de dossier ...)
 
@@ -239,20 +244,17 @@ public class WriteFile {
         }
     }
 
-    public void writeFileExcelListeDesDepenses(Object[] listeDesDepenses, String pathNameFile, String
-            pathDirectoryInvoice) {
+    public void writeFileExcelListeDesDepenses(LineOfExpense[] listOfExpense, TreeMap<String, String> listOfDocuments) {
         try {
-            // Créer un nouveau classeur Excel
             Workbook workbook = new XSSFWorkbook();
 
-            // Créer une nouvelle feuille dans le classeur pour le grand livre
             Sheet sheet = workbook.createSheet("Liste des dépenses");
             writeLine.getCellsEntete(sheet, NOM_ENTETE_COLONNE_LISTE_DES_DEPENSES);
             int rowNum = 1;
             int lastRowNumTotalNature = 4;
             List<Integer> listIdLineTotalNature = new ArrayList<>();
             List<Integer> listIdLineTotalKey = new ArrayList<>();
-            for (Object line : listeDesDepenses) {
+            for (LineOfExpense line : listOfExpense) {
                 if (line != null) {
                     Row row = sheet.createRow(rowNum);
                     if (line instanceof LineOfExpenseKey) {
@@ -272,8 +274,8 @@ public class WriteFile {
                             writeLine.getLineOfExpenseTotal((LineOfExpenseTotal) line, row, listIdLineTotalKey);
                         }
                     }
-                    if (line instanceof LineOfExpense) {
-                        writeLine.getLineOfExpense((LineOfExpense) line, row, pathDirectoryInvoice);
+                    if (line instanceof LineOfExpenseValue) {
+                        writeLine.getLineOfExpense((LineOfExpenseValue) line, row, listOfDocuments);
                     }
                     rowNum++;
                 }
@@ -284,11 +286,11 @@ public class WriteFile {
             writeSheet.writeDocumentMission(workbook, sheet, ID_COMMENT_OF_LIST_OF_EXPENSES, ID_DOCUMENT_OF_LIST_OF_EXPENSES);
 
             // Écrire le contenu du classeur dans un fichier
-            writeOutil.writeWorkbook(pathNameFile, workbook);
+            writeOutil.writeWorkbook(path + "Liste des dépenses.xlsx", workbook);
             // Fermer le classeur
             workbook.close();
         } catch (IOException e) {
-            constant.logError(ERREUR_LORS_DE_L_ECRITURE_DANS_LE_FICHIER_DE_SORTIE, pathNameFile, e.getMessage());
+            constant.logError(ERREUR_LORS_DE_L_ECRITURE_DANS_LE_FICHIER_DE_SORTIE, path + "Liste des dépenses.xlsx", e.getMessage());
         }
     }
 

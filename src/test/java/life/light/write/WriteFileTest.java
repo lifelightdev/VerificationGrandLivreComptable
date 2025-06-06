@@ -17,7 +17,7 @@ class WriteFileTest {
 
     Map<String, TypeAccount> accounts = new HashMap<>();
     TreeSet<String> journals = new TreeSet<>();
-    WriteFile writeFile = new WriteFile();
+    WriteFile writeFile = new WriteFile("." + File.separator + "TEST_temp" + File.separator);
 
     @BeforeEach
     void setUp() {
@@ -44,7 +44,6 @@ class WriteFileTest {
             line = reader.readLine();
             Assertions.assertEquals("512 ; Banque ; ", line);
         } catch (IOException e) {
-            e.printStackTrace();
             System.err.println("Erreur lors de la lecture du fichier CSV : " + e.getMessage());
         }
     }
@@ -72,7 +71,6 @@ class WriteFileTest {
             Assertions.assertEquals(512, row.getCell(0).getNumericCellValue());
             Assertions.assertEquals("Banque", row.getCell(1).getStringCellValue());
         } catch (IOException e) {
-            e.printStackTrace();
             System.err.println("Erreur lors de la lecture du fichier Excel : " + e.getMessage());
         }
     }
@@ -110,7 +108,6 @@ class WriteFileTest {
             Assertions.assertEquals(" ;  ;  ;  ;  ;  ; Total général ; 1000.00 ; 500.00 ; ", line);
 
         } catch (IOException e) {
-            e.printStackTrace();
             Assertions.fail("Error reading the CSV file: " + e.getMessage());
         }
     }
@@ -164,7 +161,6 @@ class WriteFileTest {
             Assertions.assertEquals(2, jrSheet.getLastRowNum() + 1);
 
         } catch (IOException e) {
-            e.printStackTrace();
             Assertions.fail("Error reading the Excel file: " + e.getMessage());
         }
     }
@@ -223,7 +219,6 @@ class WriteFileTest {
             // Check number of rows (header + 1 data row for unmatched entry)
             Assertions.assertEquals(2, pointageGLKOSheet.getLastRowNum() + 1);
         } catch (IOException e) {
-            e.printStackTrace();
             Assertions.fail("Error reading the Excel file: " + e.getMessage());
         }
     }

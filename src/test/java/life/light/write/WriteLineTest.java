@@ -228,8 +228,9 @@ class WriteLineTest {
     void getLineOfExpense() {
         Row row = sheet.createRow(1);
         LocalDate date = LocalDate.of(2024, 1, 15);
-        LineOfExpense line = new LineOfExpense("Invoice123", date, "Label", "100.00", "20.00", "10.00");
-        writeLine.getLineOfExpense(line, row, "path/to/invoices");
+        LineOfExpenseValue line = new LineOfExpenseValue("Invoice123", date, "Label", "100.00", "20.00", "10.00", null, null);
+        TreeMap<String, String> listOfDocuments = new TreeMap<>();
+        writeLine.getLineOfExpense(line, row, listOfDocuments);
         assertEquals("Invoice123", row.getCell(0).getStringCellValue());
         assertEquals("15/01/2024", row.getCell(1).getStringCellValue());
         assertEquals("Label", row.getCell(2).getStringCellValue());

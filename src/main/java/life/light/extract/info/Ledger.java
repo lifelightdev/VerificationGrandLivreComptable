@@ -470,16 +470,15 @@ public class Ledger {
             constant.logError(Constant.LECTURE_FICHIER, e.getMessage());
         }
 
-        WriteFile writeFile = new WriteFile();
-        String pathFile = "." + File.separator + DIRECTORY_NAME_RESULTAT + File.separator;
-        String exitFile = pathFile + GRAND_LIVRE + CSV;
+        WriteFile writeFile = new WriteFile(PATH);
+        String exitFile = PATH + GRAND_LIVRE + CSV;
         writeFile.writeFileCSVGrandLivre(grandLivres, exitFile);
         String nameFile = infoGrandLivre.printDate() + " " + GRAND_LIVRE + " " + infoGrandLivre.syndicName()
                 + " au " + infoGrandLivre.stopDate() + XLSX;
-        String path = pathFile + nameFile;
+        String path = PATH + nameFile;
         writeFile.writeFileExcelGrandLivre(grandLivres, path, journals, pathDirectoryInvoice);
 
-        writeFile.writeFilesExcelCoOwner(grandLivres, pathFile + DIRECTORY_NAME_COPROPRIETAIRE + File.separator, accounts, pathDirectoryInvoice);
+        writeFile.writeFilesExcelCoOwner(grandLivres, PATH + DIRECTORY_NAME_COPROPRIETAIRE + File.separator, accounts, pathDirectoryInvoice);
         return lineBankInGrandLivre;
     }
 }

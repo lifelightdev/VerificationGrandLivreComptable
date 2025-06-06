@@ -23,7 +23,7 @@ import java.util.Map;
 class WriteFileEtatRaprochementTest {
 
     Map<String, TypeAccount> accounts = new HashMap<>();
-    WriteFile writeFile = new WriteFile();
+    WriteFile writeFile = new WriteFile("." + File.separator + "TEST_temp" + File.separator);
 
     @BeforeEach
     void setUp() {

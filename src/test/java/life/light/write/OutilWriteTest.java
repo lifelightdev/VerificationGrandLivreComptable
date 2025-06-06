@@ -8,13 +8,12 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 
-import static life.light.FileOfTest.tempTestDir;
 import static life.light.write.WriteOutil.NOM_ENTETE_COLONNE_GRAND_LIVRE;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -284,21 +283,20 @@ class OutilWriteTest {
         String amount = "150.50";
         String deduction = "20.00";
         String recovery = "10.00";
-        LineOfExpense line = new LineOfExpense(document, date, label, amount, deduction, recovery);
+        LineOfExpenseValue line = new LineOfExpenseValue(document, date, label, amount, deduction, recovery, null, null);
 
-        // Path to invoice directory
-        String pathDirectoryInvoice = tempTestDir + File.separator + "invoice" + File.separator;
+        TreeMap<String, String> listOfDocuments = new TreeMap<>();
+        listOfDocuments.put("Invoice345", "Invoice345");
 
-
-        writeLine.getLineOfExpense(line, row, pathDirectoryInvoice);
+        writeLine.getLineOfExpense(line, row, listOfDocuments);
 
         row = sheet.createRow(2);
-        LineOfExpense line2 = new LineOfExpense("Invoice234", date, label, amount, deduction, recovery);
-        writeLine.getLineOfExpense(line2, row, pathDirectoryInvoice);
+        LineOfExpenseValue line2 = new LineOfExpenseValue("Invoice234", date, label, amount, deduction, recovery, null, null);
+        writeLine.getLineOfExpense(line2, row, listOfDocuments);
 
         row = sheet.createRow(3);
-        LineOfExpense line3 = new LineOfExpense("Invoice345", date, label, amount, deduction, recovery);
-        writeLine.getLineOfExpense(line3, row, pathDirectoryInvoice);
+        LineOfExpenseValue line3 = new LineOfExpenseValue("Invoice345", date, label, amount, deduction, recovery, null, null);
+        writeLine.getLineOfExpense(line3, row, listOfDocuments);
 
         // Verify the cells
         assertEquals(document, workbook.getSheetAt(0).getRow(1).getCell(0).getStringCellValue());

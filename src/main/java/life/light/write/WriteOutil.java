@@ -1,5 +1,6 @@
 package life.light.write;
 
+import life.light.check.OutilChek;
 import life.light.type.Line;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,6 +17,7 @@ import static life.light.Constant.REPORT_DE;
 public class WriteOutil {
 
     private final WriteCellStyle writeCellStyle = new WriteCellStyle();
+    private final OutilChek outilChek = new OutilChek();
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -133,7 +135,7 @@ public class WriteOutil {
                     fileFound = fichier;
                     break;
                 } else if (fichier.isDirectory()) {
-                    fileFound = getFileInDirectory(document, fichier);
+                    fileFound = outilChek.getFileInDirectory(document, fichier);
                     if (fileFound != null) {
                         break;
                     }
@@ -148,28 +150,6 @@ public class WriteOutil {
             }
         }
         return message;
-    }
-
-    private static File getFileInDirectory(String document, File file) {
-        File fileFound = null;
-        File[] listOfFiles = file.listFiles();
-        if (null != listOfFiles) {
-            for (File fileOfDirectory : listOfFiles) {
-                if (fileOfDirectory.isFile()) {
-                    if (fileOfDirectory.getName().contains(document)) {
-                        fileFound = fileOfDirectory;
-                        break;
-                    }
-                } else if (fileOfDirectory.isDirectory()) {
-                    if (fileFound == null) {
-                        fileFound = getFileInDirectory(document, fileOfDirectory);
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
-        return fileFound;
     }
 
     private String getMessageVerifLineReport(Line grandLivre, Cell verifCell, CellStyle style, String message) {

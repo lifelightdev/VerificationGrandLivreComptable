@@ -1,22 +1,22 @@
 package life.light;
 
+import life.light.check.Expense;
 import life.light.extract.info.Account;
 import life.light.extract.info.Bank;
-import life.light.extract.info.Expense;
+import life.light.extract.info.ExpenseExtract;
 import life.light.extract.info.Ledger;
-import life.light.type.BankLine;
-import life.light.type.InfoGrandLivre;
-import life.light.type.Line;
-import life.light.type.TypeAccount;
+import life.light.type.*;
 import life.light.write.WriteFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+
+import static life.light.Constant.PATH;
 
 public class Main {
 
@@ -43,25 +43,26 @@ public class Main {
             accountingYear = Integer.parseInt(args[6]);
         }
 
-        Expense expense = new Expense();
+        ExpenseExtract expense = new ExpenseExtract();
         int accountingYearOfListOfExpenses = expense.getAccountingYear(pathFileListOfExpenses);
         if (accountingYearOfListOfExpenses != accountingYear) {
-            LOGGER.error("L'année comptable n'est pas cohérante ({},{})", accountingYearOfListOfExpenses, accountingYear);
+            LOGGER.error("L'année comptable n'est pas cohérente (dans la liste des dépense ; {}, passée en paramètre : {})", accountingYearOfListOfExpenses, accountingYear);
         }
-        Object[] listOfExpense = expense.getList(pathFileListOfExpenses);
-        String path = "." + File.separator + "resultat" + File.separator + "Liste des dépenses.xlsx";
-        WriteFile writeFile = new WriteFile();
-        writeFile.writeFileExcelListeDesDepenses(listOfExpense, path, pathDirectoryInvoice);
+        Expense expenseCheck = new Expense();
+        LineOfExpense[] listOfExpense = expenseCheck.getListOfExpense(pathFileListOfExpenses);
+        List<String> checkTotal = expenseCheck.checkTotal(listOfExpense);
+        TreeMap<String, String> checkDocument = expenseCheck.checkDocument(listOfExpense, pathDirectoryInvoice);
+        expenseCheck.writeFileListOfExpense(listOfExpense, checkDocument);
 
         Ledger ledger = new Ledger(codeCondominium);
         InfoGrandLivre infoGrandLivre = ledger.getInfoGrandLivre(pathFileLeger);
         if (infoGrandLivre.stopDate().getYear() != accountingYear) {
-            LOGGER.error("L'année comptable n'est pas cohérante ({},{})", infoGrandLivre.stopDate(), accountingYear);
+            LOGGER.error("L'année comptable n'est pas cohérente (dans le grand livre : {}, passée en paramètre : {})", infoGrandLivre.stopDate(), accountingYear);
         }
 
         Account account = new Account();
         Map<String, TypeAccount> accounts = account.getAccounts(pathFileLeger, codeCondominium);
-        account.writeFilesAccounts(accounts, infoGrandLivre, "resultat");
+        account.writeFilesAccounts(accounts, infoGrandLivre, PATH);
 
         List<Line> lineBankInGrandLivre = ledger.getInfoBankGrandLivre(infoGrandLivre, accounts, pathFileLeger,
                 pathDirectoryInvoice, accountsbank);
@@ -71,7 +72,8 @@ public class Main {
         List<BankLine> bankLines = bank.getBankLines(accounts, pathDirectoryBank, accountsbank,
                 accountingYear);
 
-        String nameFile = "." + File.separator + "resultat" + File.separator + "Etat de rapprochement.xlsx";
+        String nameFile = PATH + "Etat de rapprochement.xlsx";
+        WriteFile writeFile = new WriteFile(PATH);
         writeFile.writeFileExcelEtatRaprochement(lineBankInGrandLivre, nameFile, bankLines);
 
         LocalDateTime fin = LocalDateTime.now();

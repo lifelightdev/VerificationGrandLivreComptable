@@ -1,10 +1,7 @@
 package life.light.extract.info;
 
 import life.light.Constant;
-import life.light.type.LineOfExpense;
-import life.light.type.LineOfExpenseKey;
-import life.light.type.LineOfExpenseTotal;
-import life.light.type.TypeOfExpense;
+import life.light.type.*;
 import life.light.write.WriteOutil;
 
 import java.io.BufferedReader;
@@ -15,19 +12,19 @@ import java.time.LocalDate;
 import static life.light.Constant.DATE_FORMATTER;
 import static life.light.Constant.TOTAL_IMMEUBLE;
 
-public class Expense {
+public class ExpenseExtract {
 
     private static final String CLE = "Clé";
     private static final String CODE_NATURE = "Code Nature ";
     private static final String TOTAL_NATURE = "Total Nature ";
-    private static final String TOTAL_CLE = "Total clé : ";
+    private static final String TOTAL_CLE = "Total clé ";
 
     private final OutilInfo outilInfo = new OutilInfo();
     private final WriteOutil outilWrite = new WriteOutil();
     private final Constant constant = new Constant();
 
-    public Object[] getList(String fileName) {
-        Object[] listOfExpense = new Object[outilInfo.getNumberOfLineInFile(fileName)];
+    public LineOfExpense[] getList(String fileName) {
+        LineOfExpense[] listOfExpense = new LineOfExpense[outilInfo.getNumberOfLineInFile(fileName)];
         int indexLine = 0;
         OutilInfo outilInfo = new OutilInfo();
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
@@ -46,7 +43,7 @@ public class Expense {
                     listOfExpense[indexLine++] = getLineOfExpenseTotal(outilInfo, line, TypeOfExpense.Key);
                 } else if (line.startsWith(TOTAL_IMMEUBLE)) {
                     listOfExpense[indexLine++] = getLineOfExpenseTotal(outilInfo, line, TypeOfExpense.Building);
-                } else if (!outilInfo.findDateIn(line).isEmpty() && !line.contains("ste des dépense")) {
+                } else if (!outilInfo.findDateIn(line).isEmpty() && !line.contains("Liste des dépenses")) {
                     String[] words = outilInfo.getWords(line);
                     int index = outilInfo.getIndexOfNextWords(words, 0);
                     String document = words[index++];
@@ -95,7 +92,8 @@ public class Expense {
                         }
                     }
 
-                    LineOfExpense lineOfExpense = new LineOfExpense(document, date, label.toString().trim(), amount.toString(), deduction, recovery);
+                    LineOfExpenseValue lineOfExpense = new LineOfExpenseValue(document, date, label.toString().trim(),
+                            amount.toString(), deduction, recovery, null, null);
                     listOfExpense[indexLine++] = lineOfExpense;
                 }
 

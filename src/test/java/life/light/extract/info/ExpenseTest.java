@@ -1,7 +1,7 @@
 package life.light.extract.info;
 
 import life.light.FileOfTest;
-import life.light.type.LineOfExpense;
+import life.light.type.LineOfExpenseValue;
 import life.light.type.LineOfExpenseKey;
 import life.light.type.LineOfExpenseTotal;
 import life.light.type.TypeOfExpense;
@@ -15,12 +15,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ExpenseTest {
 
-    private Expense expense;
+    private ExpenseExtract expense;
     private String testFilePath;
 
     @BeforeEach
     void setUp() {
-        expense = new Expense();
+        expense = new ExpenseExtract();
         FileOfTest fileOfTest = new FileOfTest();
         testFilePath = fileOfTest.createExpenseListFile();
     }
@@ -46,7 +46,7 @@ class ExpenseTest {
         assertEquals(TypeOfExpense.Nature, nature.type());
 
         // Verify expense lines
-        LineOfExpense expenseLine = (LineOfExpense) result[2];
+        LineOfExpenseValue expenseLine = (LineOfExpenseValue) result[2];
         assertEquals("33333", expenseLine.document());
         assertEquals(LocalDate.parse("01/01/2024", DateTimeFormatter.ofPattern("dd/MM/yyyy")), expenseLine.date());
         assertEquals("Facture de nettoyage", expenseLine.label());
@@ -55,7 +55,7 @@ class ExpenseTest {
         assertEquals("0.00", expenseLine.recovery());
 
         // Verify expense lines
-        LineOfExpense expenseLine1 = (LineOfExpense) result[7];
+        LineOfExpenseValue expenseLine1 = (LineOfExpenseValue) result[7];
         assertEquals("38688", expenseLine1.document());
         assertEquals(LocalDate.parse("15/04/2024", DateTimeFormatter.ofPattern("dd/MM/yyyy")), expenseLine1.date());
         assertEquals("Remplacement", expenseLine1.label());
