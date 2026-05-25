@@ -55,11 +55,13 @@ public class WriteLine {
         } else {
             writeCell.addCell(row, ID_JOURNAL_OF_LEDGER, lineOfLedger.journal(), cellStyle, lineOfLedger.toString(),
                     null, LE_GRAND_LIVRE);
-            writeCell.addCell(row, ID_COUNTERPART_NUMBER_OF_LEDGER, lineOfLedger.accountCounterpart().account(),
-                    cellStyle, lineOfLedger.toString(), "le numéro de compte de la contrepartie",
-                    LE_GRAND_LIVRE);
-            writeCell.addCell(row, ID_COUNTERPART_LABEL_OF_LEDGER, lineOfLedger.accountCounterpart().label(), cellStyle,
-                    lineOfLedger.toString(), "le libellé de la contrepartie", LE_GRAND_LIVRE);
+            if (lineOfLedger.accountCounterpart() != null) {
+                writeCell.addCell(row, ID_COUNTERPART_NUMBER_OF_LEDGER, lineOfLedger.accountCounterpart().account(),
+                        cellStyle, lineOfLedger.toString(), "le numéro de compte de la contrepartie",
+                        LE_GRAND_LIVRE);
+                writeCell.addCell(row, ID_COUNTERPART_LABEL_OF_LEDGER, lineOfLedger.accountCounterpart().label(), cellStyle,
+                        lineOfLedger.toString(), "le libellé de la contrepartie", LE_GRAND_LIVRE);
+            }
         }
         writeCell.addCell(row, ID_CHECK_OF_LEDGER, lineOfLedger.checkNumber(), cellStyle, lineOfLedger.toString(),
                 null, LE_GRAND_LIVRE);
@@ -203,7 +205,7 @@ public class WriteLine {
         }
         cellVerif.setCellValue(verif);
 
-        addCellMessageInTotalaccount(row, soldeCell, amount, creditCell, creditGrandLivre, debitCell, debitGrandLivre, cellStyle);
+        addCellMessageInTotalaccount(row, cellStyle);
     }
 
     private double getRound(FormulaEvaluator evaluator, Cell soldeCell) {
@@ -225,13 +227,8 @@ public class WriteLine {
                 .trim();
     }
 
-    private static void addCellMessageInTotalaccount(Row row, Cell soldeCell, String amount, Cell creditCell, double creditGrandLivre, Cell debitCell, double debitGrandLivre, CellStyle cellStyle) {
+    private static void addCellMessageInTotalaccount(Row row, CellStyle cellStyle) {
         Cell cellMessqage = row.createCell(ID_COMMENT_OF_LEDGER);
-        String formuleIfSolde = "IF(ROUND(" + soldeCell.getAddress() + ",2)=" + Double.parseDouble(amount) + ", \" \", \"Le solde n'est pas égale \")";
-        String formuleIfCredit = "IF(" + creditCell.getAddress() + "=" + creditGrandLivre + ", " + formuleIfSolde + ", \"Le total credit n'est pas égale " + creditGrandLivre + " \")";
-        String formuleIfDebit = "IF(" + debitCell.getAddress() + "=" + debitGrandLivre + ", " + formuleIfCredit + ", \"Le total débit n'est pas égale " + debitGrandLivre + " \")";
-
-        //cellMessqage.setCellFormula(formuleIfDebit);
         cellMessqage.setCellStyle(cellStyle);
     }
 

@@ -8,9 +8,8 @@ import java.time.format.DateTimeFormatter;
 
 public class Constant {
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    public static final Logger LOGGER = LogManager.getLogger();
     public static final String LECTURE_FICHIER = "Erreur lors de la lecture du fichier avec cette erreur {}";
-    public static final String ERREUR_LORS_DE_LA_RECHERCHE_DU_COMPTE_SUR_LA_LIGNE = "Erreur lors de la recherche du compte {} sur la ligne {}";
     public static final String ERREUR_IL_MANQUE_DES_MONTANTS_SUR_LA_LIGNE_DE_TOTAL = "Erreur, il manque des montants sur la ligne de total {}";
     public static final String ERREUR_LORS_DE_LA_RECHERCHE_DU_COMPTE_SUR_LE_TOTAL_DU_COMPTE_DE_LA_LIGNE = "Erreur lors de la recherche du compte sur le total du compte {} de la ligne {}";
     public static final String IL_MANQUE_X_DANS_X_A_LA_LIGNE_X = "Il manque {} dans {} à la ligne {}";

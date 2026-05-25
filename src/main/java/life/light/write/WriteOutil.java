@@ -85,7 +85,7 @@ public class WriteOutil {
         CreationHelper createHelper = row.getSheet().getWorkbook().getCreationHelper();
         Hyperlink link = createHelper.createHyperlink(HyperlinkType.FILE);
         Cell verifCell = row.createCell(ID_VERIFFICATION_OF_LEDGER);
-        if (grandLivre.label().startsWith(REPORT_DE)) {
+        if (grandLivre.label().contains(REPORT_DE)) {
             message = getMessageVerifLineReport(grandLivre, verifCell, style, message);
         } else {
             if (grandLivre.account().account().startsWith(CLASSE_6)
@@ -172,7 +172,7 @@ public class WriteOutil {
                 verifCell.setCellStyle(style);
             } else {
                 message = "Le montant du report est de %s le solde est de  %s le débit est de %s le credit est de %s"
-                        .formatted(amount, Double.parseDouble(nombreFormate), Double.parseDouble(grandLivre.debit()), Double.parseDouble(grandLivre.credit()));
+                        .formatted(amount, Double.parseDouble(nombreFormate), grandLivre.debit(), grandLivre.credit());
                 LOGGER.info("{} sur le compte {}", message, grandLivre.account().account());
                 verifCell.setCellValue(KO);
             }

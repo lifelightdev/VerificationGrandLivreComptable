@@ -40,25 +40,11 @@ public class OutilInfo {
                 .count();
     }
 
-    public TypeAccount getAccount(Map<String, TypeAccount> accounts, String[] words, int indexOfWords) {
+    public TypeAccount getAccount(Map<String, TypeAccount> accounts, String word) {
         TypeAccount account = null;
-        String key = words[indexOfWords];
+        String key = word;
         if (accounts.containsKey(key)) {
             account = accounts.get(key);
-        } else if (words[indexOfWords].contains("-")) {
-            key = words[indexOfWords].substring(0, words[indexOfWords].indexOf("-"));
-            if (key.startsWith(ACCOUNT_CO_OWNER)) {
-                key = ACCOUNT_CO_OWNER + "00-" + words[indexOfWords].substring(words[indexOfWords].indexOf("-") + 1);
-                account = accounts.get(key);
-            } else {
-                account = accounts.get(key);
-            }
-        } else if (key.startsWith(ACCOUNT_CO_OWNER)) {
-            if (accounts.containsKey(key)) {
-                account = accounts.get(key);
-            } else {
-                account = new TypeAccount(key, "Compte de tous les copropriétaires");
-            }
         } else if (key.startsWith("40800")) {
             account = accounts.get("40800");
         } else if (key.startsWith("42100")) {
@@ -67,9 +53,47 @@ public class OutilInfo {
             account = accounts.get("43100");
         } else if (key.startsWith("43200")) {
             account = accounts.get("43200");
-        } else if (key.length() == 9) {
-            key = key.substring(0, 5) + "-" + key.substring(5);
+        } else if (key.startsWith("44200")) {
+            account = accounts.get("44200");
+        } else if (key.startsWith("45020")) {
+            if (word.contains("-")) {
+                account = accounts.get("45000" + key.substring(key.indexOf("-")));
+                String label = account.label() + " -- " + accounts.get("10241").label();
+                account = new TypeAccount(key, label);
+            } else {
+                account = accounts.get(key);
+            }
+        } else if (key.startsWith("45050")) {
+            if (word.contains("-")) {
+                account = accounts.get("45000" + key.substring(key.indexOf("-")));
+                String label = account.label() + " -- " + accounts.get("10500").label();
+                account = new TypeAccount(key, label);
+            } else {
+                account = accounts.get(key);
+            }
+        } else if (key.startsWith("45010")) {
+            if (word.contains("-")) {
+                account = accounts.get("45000" + key.substring(key.indexOf("-")));
+                String label = account.label() + " -- " + accounts.get("70120").label();
+                account = new TypeAccount(key, label);
+            } else {
+                if (key.length() > 5) {
+                    account = accounts.get("45000-" + key.substring(5));
+                    String label = account.label() + " -- " + accounts.get("70120").label();
+                    account = new TypeAccount(key, label);
+                } else {
+                    account = accounts.get(key);
+                }
+            }
+        } else if (key.startsWith("45030")) {
+            account = new TypeAccount(key, "Inconu");
+        } else if (key.startsWith("450")) {
+            account = accounts.get("45000" + key.substring(key.indexOf("-")));
+        } else if (word.contains("-")) {
+            key = word.replace("-", "").toLowerCase();
             account = accounts.get(key);
+        } else if (key.startsWith("40100") && !key.contains("-")) {
+            account = accounts.get("40100-" + key.substring(5));
         }
         return account;
     }
@@ -80,29 +104,7 @@ public class OutilInfo {
     }
 
     public String[] splittingLineIntoWordTable(String line) {
-        String[] words = line.split(" ");
-        String[] resultTemp = new String[words.length + 1];
-        int idResult = 0;
-        for (String word : words) {
-            if ("".equals(word)) {
-                if (idResult > 0 && resultTemp[idResult - 1].contains(" ")) {
-                    resultTemp[idResult - 1] = resultTemp[idResult - 1] + " ";
-                } else {
-                    resultTemp[idResult] = " ";
-                    idResult++;
-                }
-            } else {
-                resultTemp[idResult] = word;
-                idResult++;
-            }
-        }
-        if (line.endsWith(" ")) {
-            resultTemp[idResult] = " ";
-            idResult++;
-        }
-        String[] result = new String[idResult];
-        System.arraycopy(resultTemp, 0, result, 0, idResult);
-        return result;
+        return line.split(";");
     }
 
     public String getDocument(String[] words, int indexOfWords) {

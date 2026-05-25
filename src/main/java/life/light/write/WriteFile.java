@@ -204,7 +204,7 @@ public class WriteFile {
     public void writeFilesExcelCoOwner(Object[] grandLivres, String pathFile, Map<String, TypeAccount> accounts, String pathDirectoryInvoice) {
         for (TypeAccount typeAccount : accounts.values()) {
             if (typeAccount.account().startsWith(ACCOUNT_CO_OWNER)) {
-                String fileName = pathFile + typeAccount.label().trim().replace(" ", "_") + ".xlsx";
+                String fileName = pathFile + typeAccount.label().trim().replace(" ", "_").replace("*","") + ".xlsx";
                 try {
                     // Créer un nouveau classeur Excel
                     Workbook workbook = new XSSFWorkbook();
