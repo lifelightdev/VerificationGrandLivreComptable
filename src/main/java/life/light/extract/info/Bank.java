@@ -15,16 +15,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import static life.light.Constant.CENTURY;
-import static life.light.Constant.TOTAL_DES_OPERATIONS;
-
 public class Bank {
 
-    public static final String BANK_1_DATA_FORMAT = "dd.MM.yy";
-    public static final String BANK_2_DATA_FORMAT = "dd/MM/yyyy";
+    static final String DATA_FORMAT = "dd/MM/yyyy";
     public static final String ACCOUNT_BANK = "512";
-    private static final String BANK_1_ACCOUNT = "";
-    private static final String BANK_2_ACCOUNT = "";
     public static final String NOUVEAU_SOLDE_AU = "Nouveau solde au";
     private final OutilInfo outilInfo = new OutilInfo();
     private final Constant constant = new Constant();
@@ -49,51 +43,27 @@ public class Bank {
                         String line;
                         outilInfo.readNextLineInFile(reader, 6);
                         TypeAccount account = accounts.get(accountBank);
-                        LocalDate operationDate = null;
-                        StringBuilder label = new StringBuilder();
-                        LocalDate valueDate = null;
+                        LocalDate operationDate ;
+                        String label;
+                        LocalDate valueDate ;
                         double debit = 0D;
                         double credit = 0D;
                         while ((line = reader.readLine()) != null) {
                             if (!outilInfo.findDateIn(line).isEmpty() && (!line.contains(NOUVEAU_SOLDE_AU))) {
-                                if (operationDate != null && !label.toString().isEmpty() && valueDate != null) {
-                                    bankLines.add(new BankLine(year, operationDate.getMonthValue(), operationDate, valueDate, account, label.toString().trim(), debit, credit));
-                                } else {
-                                    String[] ligne = line.split(" ");
-                                    int index = 0;
-                                    operationDate = getOperationDate(accountBank, ligne, index, year);
-                                    index = getIndexNotWord(index, ligne);
-                                    // TODO a améliorer
-                                    if (BANK_1_ACCOUNT.equals(accountBank)) {
-                                        while (!ligne[index].isEmpty()) {
-                                            label.append(" ").append(ligne[index]);
-                                            index++;
+                                    String[] ligne = line.split(";");
+                                    operationDate = getOperationDate(ligne);
+                                    valueDate = getValueDate(ligne);
+                                    label = ligne[2];
+                                    if (line.length() > 4) {
+                                        if (ligne[3].isEmpty()){
+                                            debit = 0D;
+                                        } else {
+                                            debit = getAmount(ligne[3]);
                                         }
-                                        index = getIndexNotWord(index, ligne);
-                                        valueDate = getValueDate(accountBank, ligne, index);
+                                    } else if (ligne.length > 3) {
+                                        credit = getAmount(ligne[4]);
                                     }
-                                    if (BANK_2_ACCOUNT.equals(accountBank)) {
-                                        valueDate = getValueDate(accountBank, ligne, index);
-                                        index = getIndexNotWord(index, ligne);
-                                        while (!ligne[index].isEmpty()) {
-                                            label.append(" ").append(ligne[index]);
-                                            index++;
-                                        }
-                                    }
-                                    if (line.endsWith(" ")) {
-                                        debit = getAmount(ligne);
-                                    } else if (!ligne[ligne.length - 1].isEmpty()) {
-                                        credit = getAmount(ligne);
-                                    }
-                                }
-                            } else if (!line.contains(NOUVEAU_SOLDE_AU) && (!line.contains(TOTAL_DES_OPERATIONS))) {
-                                if (label.toString().endsWith(" ")) {
-                                    label.append(line);
-                                } else {
-                                    label.append(" ").append(line);
-                                }
-                            } else if (line.contains(NOUVEAU_SOLDE_AU) && operationDate != null) {
-                                BankLine bankLine = new BankLine(year, operationDate.getMonthValue(), operationDate, valueDate, account, label.toString().trim(), debit, credit);
+                                BankLine bankLine = new BankLine(year, operationDate.getMonthValue(), operationDate, valueDate, account, label.trim(), debit, credit);
                                 bankLines.add(bankLine);
                             }
                         }
@@ -106,41 +76,20 @@ public class Bank {
         return bankLines;
     }
 
-    private static double getAmount(String[] ligne) {
-        return Double.parseDouble(ligne[ligne.length - 1].replace(".", "").replace(",", "."));
+    private static double getAmount(String amount) {
+        return Double.parseDouble(amount.replace(".", "").replace(",", ".").replace(" ", ""));
     }
 
     // TODO a améliorer
-    private LocalDate getOperationDate(String theAccount, String[] ligne, int index, int year) {
-        LocalDate operationDate = null;
-        if (BANK_1_ACCOUNT.equals(theAccount)) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BANK_1_DATA_FORMAT, Locale.FRANCE);
-            operationDate = LocalDate.parse(ligne[index] + "." + (year - CENTURY), formatter);
-        } else if (BANK_2_ACCOUNT.equals(theAccount)) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BANK_2_DATA_FORMAT, Locale.FRANCE);
-            operationDate = LocalDate.parse(ligne[index], formatter);
-        }
-        return operationDate;
+    private LocalDate getOperationDate(String[] ligne ) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATA_FORMAT, Locale.FRANCE);
+        return LocalDate.parse(ligne[0], formatter);
     }
 
     // TODO a améliorer
-    private LocalDate getValueDate(String theAccount, String[] ligne, int index) {
-        LocalDate operationDate = null;
-        if (BANK_1_ACCOUNT.equals(theAccount)) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BANK_1_DATA_FORMAT, Locale.FRANCE);
-            operationDate = LocalDate.parse(ligne[index], formatter);
-        } else if (BANK_2_ACCOUNT.equals(theAccount)) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(BANK_2_DATA_FORMAT, Locale.FRANCE);
-            operationDate = LocalDate.parse(ligne[index], formatter);
-        }
-        return operationDate;
-    }
-
-    private int getIndexNotWord(int index, String[] ligne) {
-        do {
-            index++;
-        } while (ligne[index].isEmpty());
-        return index;
+    private LocalDate getValueDate(String[] ligne) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATA_FORMAT, Locale.FRANCE);
+        return LocalDate.parse(ligne[1], formatter);
     }
 
     public static List<TypeAccount> getBanks(Map<String, TypeAccount> accounts) {

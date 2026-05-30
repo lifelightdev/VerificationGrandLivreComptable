@@ -204,7 +204,7 @@ public class WriteFile {
     public void writeFilesExcelCoOwner(Object[] grandLivres, String pathFile, Map<String, TypeAccount> accounts, String pathDirectoryInvoice) {
         for (TypeAccount typeAccount : accounts.values()) {
             if (typeAccount.account().startsWith(ACCOUNT_CO_OWNER)) {
-                String fileName = pathFile + typeAccount.label().trim().replace(" ", "_").replace("*","") + ".xlsx";
+                String fileName = pathFile + typeAccount.label().trim().replace(" ", "_").replace("*", "") + ".xlsx";
                 try {
                     // Créer un nouveau classeur Excel
                     Workbook workbook = new XSSFWorkbook();
@@ -328,12 +328,12 @@ public class WriteFile {
             for (BankLine bankLine : bankLines) {
                 // TODO il faut verifier la date aussi
                 if (grandLivre.account().account().equals(bankLine.account().account())) {
-                    if (!grandLivre.credit().isEmpty() && Double.parseDouble(grandLivre.credit()) == bankLine.debit()) {
+                    if (grandLivre.amountCredit().equals(bankLine.debit())) {
                         message = OK;
                         bankLineFound = bankLine;
                         break;
                     }
-                    if (!grandLivre.debit().isEmpty() && Double.parseDouble(grandLivre.debit()) == bankLine.credit()) {
+                    if (grandLivre.amountDebit().equals(bankLine.credit())) {
                         message = OK;
                         bankLineFound = bankLine;
                         break;
@@ -344,7 +344,7 @@ public class WriteFile {
             if (message.equals(KO)) {
                 grandLivresKO.add(grandLivre);
             } else {
-                message = "Correspondante entre le grand livre et les relevés de banque";
+                message = "Il n'y a pas de correspondance stricte entre le grand livre et les relevés de la banque";
                 writeLine.getLineEtatRapprochement(grandLivre, row, bankLineFound, message);
                 bankLines.remove(bankLineFound);
                 rowNumPointage++;
@@ -361,12 +361,12 @@ public class WriteFile {
             String message = KO;
             for (BankLine bankLine : bankLinesKO) {
                 // TODO il faut verifier la date aussi
-                if (!grandLivre.credit().isEmpty() && Double.parseDouble(grandLivre.credit()) == bankLine.debit()) {
+                if (grandLivre.amountCredit().equals(bankLine.debit())) {
                     message = OK;
                     bankLineFound = bankLine;
                     break;
                 }
-                if (!grandLivre.debit().isEmpty() && Double.parseDouble(grandLivre.debit()) == bankLine.credit()) {
+                if (grandLivre.amountDebit().equals(bankLine.credit())) {
                     message = OK;
                     bankLineFound = bankLine;
                     break;
@@ -395,12 +395,12 @@ public class WriteFile {
             for (Line grandLivre : grandLivres) {
                 // TODO il faut verifier la date aussi
                 if (grandLivre.account().account().equals(bankLine.account().account())) {
-                    if (!grandLivre.credit().isEmpty() && Double.parseDouble(grandLivre.credit()) == bankLine.debit()) {
+                    if (grandLivre.amountCredit().equals(bankLine.debit())) {
                         message = OK;
                         lineGLFound = grandLivre;
                         break;
                     }
-                    if (!grandLivre.debit().isEmpty() && Double.parseDouble(grandLivre.debit()) == bankLine.credit()) {
+                    if (grandLivre.amountDebit().equals(bankLine.credit())) {
                         message = OK;
                         lineGLFound = grandLivre;
                         break;
@@ -428,12 +428,12 @@ public class WriteFile {
             String message = KO;
             for (Line grandLivre : grandLivresKO) {
                 // TODO il faut verifier la date aussi
-                if (!grandLivre.credit().isEmpty() && Double.parseDouble(grandLivre.credit()) == bankLine.debit()) {
+                if (grandLivre.amountCredit().equals(bankLine.debit())) {
                     message = OK;
                     lineGrandLivreFound = grandLivre;
                     break;
                 }
-                if (!grandLivre.debit().isEmpty() && Double.parseDouble(grandLivre.debit()) == bankLine.credit()) {
+                if (grandLivre.amountDebit().equals(bankLine.credit())) {
                     message = OK;
                     lineGrandLivreFound = grandLivre;
                     break;

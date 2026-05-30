@@ -127,6 +127,9 @@ public class Ledger {
         }
         // Extraction du journal
         String journal = words[3];
+        if (line.contains(REPORT_DE)) {
+            journal = A_NOUVEAU;
+        }
 
         // Extraction du compte de contrepartie
         TypeAccount accountCounterpart = null;

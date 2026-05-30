@@ -17,10 +17,10 @@ public class Constant {
     public static final String IL_N_Y_A_PAS_LE_MEME_NOMBRE_D_OPERATION_POINTEES_OK_DANS_LE_GRAND_LIVRE_ET_SUR_LES_RELEVES_DE_COMPTE = "Il n'y a pas le même nombre d'opération pointées OK dans le grand livre et sur les relevés de compte";
 
     public static final char EURO = '€';
-    public static final int CENTURY = 2000;
     public static final String CSV = ".csv";
     public static final String XLSX = ".xlsx";
     public static final String REPORT_DE = "Report de";
+    public static final String A_NOUVEAU = "A nouveau";
     public static final String ACCOUNTING_PLAN = "Plan comptable ";
     public static final String TOTAL_DES_OPERATIONS = "Total des opérations";
     public static final String TOTAL_IMMEUBLE = "Total immeuble";
