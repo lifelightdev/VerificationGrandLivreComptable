@@ -17,7 +17,6 @@ import static life.light.write.WriteOutil.ID_DEBIT_OF_LEDGER;
 
 public class WriteCell {
 
-    private final WriteOutil writeOutil = new WriteOutil();
     private final Constant constant = new Constant();
 
     public void addCell(Row row, int idColum, String value, CellStyle style, String line, String name, String place) {
@@ -70,12 +69,7 @@ public class WriteCell {
 
     public Cell addCreditCell(Line grandLivre, Row row, CellStyle style) {
         Cell creditCell = row.createCell(ID_CREDIT_OF_LEDGER);
-        creditCell.setCellValue(grandLivre.credit());
-        if (writeOutil.isDouble(grandLivre.credit())) {
-            creditCell.setCellValue(Double.parseDouble(grandLivre.credit()));
-        } else {
-            creditCell.setCellValue(0);
-        }
+        creditCell.setCellValue(grandLivre.amountCredit());
         creditCell.setCellStyle(style);
         return creditCell;
     }
@@ -91,24 +85,23 @@ public class WriteCell {
 
     public Cell addDebitCell(Line grandLivre, Row row, CellStyle style) {
         Cell debitCell = row.createCell(ID_DEBIT_OF_LEDGER);
-        debitCell.setCellValue(grandLivre.debit());
-        if (writeOutil.isDouble(grandLivre.debit())) {
-            debitCell.setCellValue(Double.parseDouble(grandLivre.debit()));
-        } else {
-            debitCell.setCellValue(0D);
-        }
+        debitCell.setCellValue(grandLivre.amountDebit());
         debitCell.setCellStyle(style);
         return debitCell;
     }
 
     public Cell addCellDebitOfTotalAccountInLedger(Row row, int lastRowNumTotal, CellStyle cellStyleAmount) {
-        Cell debitCell = row.createCell(ID_DEBIT_OF_LEDGER);
-        CellAddress debitCellAddressFirst = new CellAddress(lastRowNumTotal + 1, debitCell.getAddress().getColumn());
-        CellAddress debitCellAddressEnd = new CellAddress(debitCell.getAddress().getRow() - 1, debitCell.getAddress().getColumn());
-        debitCell.setCellFormula("SUM(" + debitCellAddressFirst + ":" + debitCellAddressEnd + ")");
+        return addCellAmoutOfTotalAccountInLedger(row, lastRowNumTotal, cellStyleAmount, ID_DEBIT_OF_LEDGER);
+    }
+
+    private Cell addCellAmoutOfTotalAccountInLedger(Row row, int lastRowNumTotal, CellStyle cellStyleAmount, int idColumOfLedger) {
+        Cell amountCell = row.createCell(idColumOfLedger);
+        CellAddress amountCellAddressFirst = new CellAddress(lastRowNumTotal + 1, amountCell.getAddress().getColumn());
+        CellAddress amountCellAddressEnd = new CellAddress(amountCell.getAddress().getRow() - 1, amountCell.getAddress().getColumn());
+        amountCell.setCellFormula("SUM(" + amountCellAddressFirst + ":" + amountCellAddressEnd + ")");
         row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
-        debitCell.setCellStyle(cellStyleAmount);
-        return debitCell;
+        amountCell.setCellStyle(cellStyleAmount);
+        return amountCell;
     }
 
     public Cell addCellAmountOfTotalBuildingInLedger(Row row, int idDebitOfLedger, List<Integer> lineTotals,
@@ -125,12 +118,6 @@ public class WriteCell {
     }
 
     public Cell addCellTotalAmount(Row row, int idColum, int lastRowNumTotal, CellStyle style) {
-        Cell cell = row.createCell(idColum);
-        CellAddress cellAddressFirst = new CellAddress(lastRowNumTotal + 1, cell.getAddress().getColumn());
-        CellAddress cellAddressEnd = new CellAddress(cell.getAddress().getRow() - 1, cell.getAddress().getColumn());
-        cell.setCellFormula("SUM(" + cellAddressFirst + ":" + cellAddressEnd + ")");
-        row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
-        cell.setCellStyle(style);
-        return cell;
+        return addCellAmoutOfTotalAccountInLedger(row, lastRowNumTotal, style, idColum);
     }
 }

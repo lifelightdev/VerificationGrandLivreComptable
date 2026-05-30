@@ -158,23 +158,19 @@ public class WriteOutil {
         if (isDouble(amount)) {
             double amountDouble = Double.parseDouble(amount);
             DecimalFormat df = new DecimalFormat("#.00");
-            double debit = 0;
-            if (isDouble(grandLivre.debit())) {
-                debit = Double.parseDouble(grandLivre.debit());
-            }
-            double credit = 0;
-            if (isDouble(grandLivre.credit())) {
-                credit = Double.parseDouble(grandLivre.credit());
-            }
-            String nombreFormate = df.format((debit - credit)).replace(",", ".");
-            if (amountDouble == Double.parseDouble(nombreFormate)) {
+            Double debit = grandLivre.amountDebit();
+            Double credit = grandLivre.amountCredit();
+            if (amountDouble == (debit - credit)) {
                 verifCell.setCellValue("OK");
                 verifCell.setCellStyle(style);
             } else {
-                message = "Le montant du report est de %s le solde est de  %s le débit est de %s le credit est de %s"
-                        .formatted(amount, Double.parseDouble(nombreFormate), grandLivre.debit(), grandLivre.credit());
-                LOGGER.info("{} sur le compte {}", message, grandLivre.account().account());
-                verifCell.setCellValue(KO);
+                String nombreFormate = df.format((debit - credit)).replace(",", ".");
+                if (amountDouble != Double.parseDouble(nombreFormate)) {
+                    message = "Le montant du report est de %s le solde est de %s le débit est de %s le credit est de %s"
+                            .formatted(amount, Double.parseDouble(nombreFormate), grandLivre.debit(), grandLivre.credit());
+                    LOGGER.info("{} sur le compte {}", message, grandLivre.account().account());
+                    verifCell.setCellValue(KO);
+                }
             }
         }
         return message;

@@ -19,11 +19,9 @@ import static life.light.Constant.*;
 public class Ledger {
 
     private static final String REGEX_NUMBER = "^-?[0-9]+$";
-    private static final String VIRT = "Virt";
     private static final String GRAND_LIVRE = "GrandLivre";
     private static final String DIRECTORY_NAME_COPROPRIETAIRE = "Copropriétaire";
     public static final String TOTAL_COMPTE = "Total compte";
-    public static final String SOLDE = "Solde";
     private final OutilInfo outilInfo = new OutilInfo();
     private final Constant constant = new Constant();
 
@@ -113,169 +111,86 @@ public class Ledger {
         // Correction des espaces avant le signe €
         line = outilInfo.fixedSpacesBeforeEuroSign(line);
 
-        // Calcule de nombre de montants sur la ligne grâce au signe €
-        long numberOfAmounts = outilInfo.getNumberOfAmountsOn(line);
-
         // Découpage de la ligne en un tableau de mot
         String[] words = outilInfo.splittingLineIntoWordTable(line);
 
-        int indexOfWords = 0;
-
-        String document = outilInfo.getDocument(words, indexOfWords);
-        if (!document.isEmpty()) {
-            indexOfWords++;
-        }
-
-        indexOfWords = outilInfo.getIndexOfNextWords(words, indexOfWords);
-
+        String document = words[0];
         // Extraction de la date de l'opération
-        String date = words[indexOfWords];
-        indexOfWords++;
+        String date = words[1];
 
         TypeAccount account;
-
         // Extraction du numéro de compte
-        String numberAccount = words[indexOfWords].trim();
+        String numberAccount = words[2].trim();
         account = outilInfo.getAccount(accounts, numberAccount);
         if (account == null) {
             account = outilInfo.getAccount(accounts, numberAccount);
         }
-        indexOfWords++;
-
-        if (words[indexOfWords].trim().isEmpty()) {
-            indexOfWords++;
-        }
-
         // Extraction du journal
-        String journal = words[indexOfWords];
-        indexOfWords++;
+        String journal = words[3];
 
         // Extraction du compte de contrepartie
         TypeAccount accountCounterpart = null;
-        if (!line.contains(REPORT_DE) && words[indexOfWords].replace("-", "").matches(REGEX_NUMBER)) {
-            accountCounterpart = outilInfo.getAccount(accounts, words[indexOfWords]);
+        if (!line.contains(REPORT_DE) && words[4].replace("-", "").matches(REGEX_NUMBER)) {
+            accountCounterpart = outilInfo.getAccount(accounts, words[4]);
             if (accountCounterpart == null) {
                 LOGGER.info("accountCounterpart is null à la ligne : {}", line);
             }
-            indexOfWords++;
-        }
-
-        if (words[indexOfWords].trim().isEmpty()) {
-            indexOfWords++;
         }
 
         // Extraction du numéro de chéque
-        String checkNumber = "";
-        if (VIRT.equals(words[indexOfWords])) {
-            checkNumber = words[indexOfWords];
-            indexOfWords++;
-        }
-
-        if (words[indexOfWords].trim().isEmpty()) {
-            indexOfWords++;
-        }
+        String checkNumber = words[5];
 
         // Extraction du libellé et des montants
-        StringBuilder label = new StringBuilder();
-        StringBuilder debit = new StringBuilder();
-        StringBuilder credit = new StringBuilder();
-        if (numberOfAmounts == 3) {
-            label.append(words[6]);
-            debit.append(words[7]);
-            credit.append(words[8]);
-        } else if (numberOfAmounts == 2 && words[indexOfWords].contains("Report")) {
-            label.append(words[6]);
-            debit.append(words[7]);
-            if (words.length == 9) {
-                credit.append(words[8]);
-            }
-        } else if (numberOfAmounts == 1) {
-            label.append(words[6]);
-            if (label.toString().startsWith("0 ")) {
-                label = new StringBuilder(label.substring(1).trim());
-            }
-            if (label.toString().startsWith("1 ")) {
-                label = new StringBuilder(label.substring(1).trim());
-            }
-            if (label.toString().startsWith("3 ")) {
-                label = new StringBuilder(label.substring(1).trim());
-            }
-            if (label.toString().startsWith("4 ")) {
-                label = new StringBuilder(label.substring(1).trim());
-            }
-            if (label.toString().startsWith("5 ")) {
-                label = new StringBuilder(label.substring(1).trim());
-            }
-            if (label.toString().startsWith("6 ")) {
-                label = new StringBuilder(label.substring(1).trim());
-            }
-            if (label.toString().startsWith("7 ")) {
-                label = new StringBuilder(label.substring(1).trim());
-            }
-            if (label.toString().startsWith("8 ")) {
-                label = new StringBuilder(label.substring(1).trim());
-            }
-            if (label.toString().startsWith("10 ")) {
-                label = new StringBuilder(label.substring(2).trim());
-            }
-            if (label.toString().startsWith("00 ")) {
-                label = new StringBuilder(label.substring(2).trim());
-            }
-            if (label.toString().startsWith("20 ")) {
-                label = new StringBuilder(label.substring(2).trim());
-            }
-            if (label.toString().startsWith("41 ")) {
-                label = new StringBuilder(label.substring(2).trim());
-            }
-
-            int indexOfWordsStartEnd = words.length - 1;
-            if (words[indexOfWordsStartEnd].trim().isEmpty()) {
-                indexOfWordsStartEnd--;
-            }
-            StringBuilder amount = new StringBuilder(words[indexOfWordsStartEnd]);
-            indexOfWordsStartEnd--;
-            while (words[indexOfWordsStartEnd].replace(".", "").matches(REGEX_NUMBER)) {
-                String word = words[indexOfWordsStartEnd];
-                if (!"2024".equals(word)) {
-                    if ((word.length() != 9)) {
-                        amount.insert(0, word + " ");
-                        indexOfWordsStartEnd--;
-                    } else {
-                        break;
-                    }
-                } else {
-                    break;
-                }
-            }
-            if (!words[words.length - 1].trim().isEmpty()) {
-                credit = amount;
-            } else {
-                debit = amount;
-            }
-        } else if (numberOfAmounts == 0) {
-            while (indexOfWords < words.length) {
-                label.append(" ").append(words[indexOfWords]);
-                indexOfWords++;
-            }
+        String label;
+        String debit = "";
+        String credit = "";
+        label = words[6];
+        if (words.length > 7) {
+            debit = words[7];
+        }
+        if (words.length > 8) {
+            credit = words[8];
         }
 
-        if (!debit.toString().contains(".") && !debit.toString().trim().isEmpty()) {
-            debit = new StringBuilder(debit.substring(0, debit.toString().length() - 3) + "." + debit.substring(debit.toString().length() - 3));
+        if (label.startsWith("0 ")) {
+            label = label.substring(1).trim();
         }
-
-        debit = new StringBuilder(debit.toString().replace(" ", "").replace(Character.toString(EURO), "").trim());
-        credit = new StringBuilder(credit.toString().replace(" ", "").replace(Character.toString(EURO), "").trim());
+        if (label.startsWith("1 ")) {
+            label = label.substring(1).trim();
+        }
+        if (label.startsWith("3 ")) {
+            label = label.substring(1).trim();
+        }
+        if (label.startsWith("4 ")) {
+            label = label.substring(1).trim();
+        }
+        if (label.startsWith("5 ")) {
+            label = label.substring(1).trim();
+        }
+        if (label.startsWith("6 ")) {
+            label = label.substring(1).trim();
+        }
+        if (label.startsWith("7 ")) {
+            label = label.substring(1).trim();
+        }
+        if (label.startsWith("8 ")) {
+            label = label.substring(1).trim();
+        }
+        if (label.startsWith("10 ")) {
+            label = label.substring(2).trim();
+        }
+        if (label.startsWith("00 ")) {
+            label = label.substring(2).trim();
+        }
+        if (label.startsWith("20 ")) {
+            label = label.substring(2).trim();
+        }
+        if (label.startsWith("41 ")) {
+            label = label.substring(2).trim();
+        }
 
         return new Line(document.trim(), date.trim(), account, journal.trim(), accountCounterpart, checkNumber.trim(),
-                label.toString().trim(), debit.toString().trim(), credit.toString().trim());
-    }
-
-    private int getIndexOfWords(String[] words, int indexOfWords, StringBuilder label) {
-        while (outilInfo.isAmount(words[indexOfWords])) {
-            label.append(" ").append(words[indexOfWords]);
-            indexOfWords++;
-        }
-        return indexOfWords;
+                label.trim(), debit.trim(), credit.trim());
     }
 
     public boolean isLigne(String line) {
@@ -296,80 +211,36 @@ public class Ledger {
     }
 
     public TotalAccount totalAccount(String line, Map<String, TypeAccount> accounts) {
-        line = line.replace("| ", " ");
         // Correction des espaces avant le signe €
         line = outilInfo.fixedSpacesBeforeEuroSign(line);
 
-        // Calcule de nombre de montants sur la ligne grâce au signe €
-        long numberOfAmounts = outilInfo.getNumberOfAmountsOn(line);
-
         // Découpage de la ligne en un tableau de mot
         String[] words = outilInfo.splittingLineIntoWordTable(line);
-        int indexOfWords = 0;
-        StringBuilder label = new StringBuilder();
-        while (!words[indexOfWords].endsWith(")")) {
-            label.append(" ").append(words[indexOfWords]);
-            indexOfWords++;
-        }
-        label.append(" ").append(words[indexOfWords]);
-        indexOfWords++;
 
-        StringBuilder debit = new StringBuilder();
-        StringBuilder credit = new StringBuilder();
-        if (numberOfAmounts == 3) {
-            indexOfWords = getIndexOfWords(words, indexOfWords, debit);
-            debit.append(" ").append(words[indexOfWords]);
-            indexOfWords++;
-            indexOfWords = getIndexOfWords(words, indexOfWords, credit);
-            credit.append(" ").append(words[indexOfWords]);
-        } else if (numberOfAmounts >= 2) {
-            indexOfWords = getIndexOfWords(words, indexOfWords, debit);
-            debit.append(" ").append(words[indexOfWords]);
-            credit = debit;
-        } else {
-            constant.logError(ERREUR_IL_MANQUE_DES_MONTANTS_SUR_LA_LIGNE_DE_TOTAL, line);
-        }
+        String label = words[6];
+        String debit = words[7];
+        String credit = words[8];
 
         // Extraction du numéro de compte
-        String[] labels = outilInfo.splittingLineIntoWordTable(label.toString().replace(Ledger.TOTAL_COMPTE, "").trim());
+        String[] labels = label.split(" ");
         TypeAccount account = null;
-        for (int indexOfLabel = 0; indexOfLabel < labels.length; indexOfLabel++) {
-            account = outilInfo.getAccount(accounts, label.toString());
+        for (String s : labels) {
+            account = outilInfo.getAccount(accounts, s);
             if (account != null) {
-                label = new StringBuilder(label.toString().replace(account.account(), "").replace("  ", " "));
+                label = (label.replace(account.account(), "").replace("  ", " "));
                 break;
             }
         }
+
         if (account == null) {
-            StringBuilder numAccount = new StringBuilder();
-            StringBuilder accountInLabel = new StringBuilder();
-            for (String word : labels) {
-                if (word.contains(SOLDE)) {
-                    break;
-                }
-                numAccount.append(word);
-                accountInLabel.append(" ").append(word);
-            }
-            if (!numAccount.isEmpty()) {
-                account = outilInfo.getAccount(accounts, numAccount.toString());
-                if (account != null) {
-                    label = new StringBuilder(label.toString().replace(accountInLabel.toString(), "").replace("  ", " "));
-                }
-            }
-        }
-        if (account == null) {
-            constant.logError(ERREUR_LORS_DE_LA_RECHERCHE_DU_COMPTE_SUR_LE_TOTAL_DU_COMPTE_DE_LA_LIGNE, label.toString(), line);
+            constant.logError(ERREUR_LORS_DE_LA_RECHERCHE_DU_COMPTE_SUR_LE_TOTAL_DU_COMPTE_DE_LA_LIGNE, label, line);
             return null;
         }
-
-        debit = new StringBuilder(debit.toString().replace(" ", "").replace(Character.toString(EURO), "").trim());
-        credit = new StringBuilder(credit.toString().replace(" ", "").replace(Character.toString(EURO), "").trim());
-
-        return new TotalAccount(label.toString().trim(), account, debit.toString(), credit.toString().replace("—", "").trim());
+        return new TotalAccount(label.trim(), account, debit.trim(), credit.trim());
     }
 
     public boolean isTotalAccount(String line) {
-        return line.startsWith(TOTAL_COMPTE);
+        return line.contains(TOTAL_COMPTE);
     }
 
     private String postalCode(String line) {
@@ -377,37 +248,20 @@ public class Ledger {
     }
 
     public boolean isTotalBuilding(String line) {
-        return line.startsWith(TOTAL_IMMEUBLE);
+        return line.contains(TOTAL_IMMEUBLE);
     }
 
     public TotalBuilding totalBuilding(String line) {
         // Correction des espaces avant le signe €
         line = outilInfo.fixedSpacesBeforeEuroSign(line).replace(")", " ) ");
 
-        // Calcule de nombre de montants sur la ligne grâce au signe €
-        long numberOfAmounts = outilInfo.getNumberOfAmountsOn(line);
-
         // Découpage de la ligne en un tableau de mot
         String[] words = outilInfo.splittingLineIntoWordTable(line);
-        int indexOfWords = 0;
-        StringBuilder label = new StringBuilder();
-        StringBuilder debit = new StringBuilder();
-        StringBuilder credit = new StringBuilder();
-        if (numberOfAmounts == 3) {
-            indexOfWords = getIndexOfWords(words, indexOfWords, label);
-            label.append(" ").append(words[indexOfWords]);
-            indexOfWords++;
-            label.append(" ").append(words[indexOfWords]);
-            indexOfWords++;
-            label.append(" ").append(words[indexOfWords]);
-            debit.append(" ").append(words[indexOfWords]);
-            indexOfWords = getIndexOfWords(words, indexOfWords, debit);
-            debit.append(" ").append(words[indexOfWords]);
-            indexOfWords++;
-            indexOfWords = getIndexOfWords(words, indexOfWords, credit);
-            credit.append(" ").append(words[indexOfWords]);
-        }
-        return new TotalBuilding(label.toString().trim().replace(" )", ")"), debit.toString().trim().replace(" ", "").replace(Character.toString(EURO), ""), credit.toString().trim().replace(" ", "").replace(Character.toString(EURO), ""));
+        String label = words[6];
+        String debit = words[7];
+        String credit = words[8];
+
+        return new TotalBuilding(label.trim().replace(" )", ")"), debit.trim().replace(" ", "").replace(Character.toString(EURO), ""), credit.trim().replace(" ", "").replace(Character.toString(EURO), ""));
     }
 
     public List<Line> getInfoBankGrandLivre(Map<String, TypeAccount> accounts,

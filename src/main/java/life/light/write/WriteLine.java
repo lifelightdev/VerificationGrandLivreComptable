@@ -68,10 +68,8 @@ public class WriteLine {
         writeCell.addCell(row, ID_LABEL_OF_LEDGER, lineOfLedger.label(), cellStyle, lineOfLedger.toString(),
                 "le libellé", LE_GRAND_LIVRE);
 
-        Cell debitCell = writeCell.addDebitCell(lineOfLedger, row, cellStyleAmount);
-        Cell creditCell = writeCell.addCreditCell(lineOfLedger, row, cellStyleAmount);
-        writeCell.addSoldeCell(row, debitCell, creditCell, cellStyleAmount,
-                ID_BALANCE_OF_LEDGER, lineOfLedger.label().contains(REPORT_DE), false);
+        writeCell.addDebitCell(lineOfLedger, row, cellStyleAmount);
+        writeCell.addCreditCell(lineOfLedger, row, cellStyleAmount);
 
         if (verif) {
             writeOutil.addVerifCells(lineOfLedger, row, cellStyle, pathDirectoryInvoice);
@@ -178,9 +176,9 @@ public class WriteLine {
         FormulaEvaluator evaluator = row.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
         double solde = getRound(evaluator, soldeCell);
         double debitExcel = getRound(evaluator, debitCell);
-        double debitGrandLivre = Double.parseDouble(lineOfTotalAccountInLedger.debit());
+        double debitGrandLivre = lineOfTotalAccountInLedger.amountDebit();
         double creditExcel = getRound(evaluator, creditCell);
-        double creditGrandLivre = Double.parseDouble(lineOfTotalAccountInLedger.credit());
+        double creditGrandLivre = lineOfTotalAccountInLedger.amountCredit();
         if (Double.parseDouble(amount) == solde) {
             if (debitExcel == debitGrandLivre) {
                 if (creditExcel == creditGrandLivre) {
