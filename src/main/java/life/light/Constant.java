@@ -20,7 +20,7 @@ public class Constant {
     public static final String CSV = ".csv";
     public static final String XLSX = ".xlsx";
     public static final String REPORT_DE = "Report de";
-    public static final String A_NOUVEAU = "A nouveau";
+    public static final String A_NOUVEAU = "AN";
     public static final String ACCOUNTING_PLAN = "Plan comptable ";
     public static final String TOTAL_DES_OPERATIONS = "Total des opérations";
     public static final String TOTAL_IMMEUBLE = "Total immeuble";

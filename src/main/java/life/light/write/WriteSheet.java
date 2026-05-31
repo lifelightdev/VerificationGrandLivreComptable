@@ -37,6 +37,7 @@ public class WriteSheet {
                 writeLine.getLineGrandLivre(line, row, false, pathDirectoryInvoice);
                 rowNum++;
             }
+            writeLine.getTotalJournal(sheetJournal.createRow(rowNum), journal);
             writeOutil.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetJournal);
         }
     }
@@ -71,7 +72,7 @@ public class WriteSheet {
         return ligneOfDocumentMissing;
     }
 
-    public void writeDundraisingAppeal(Object[] ledger, Workbook workbook) {
+    /*public void writeDundraisingAppeal(Object[] ledger, Workbook workbook) {
         // Account 45020
         Sheet sheet45020 = workbook.createSheet("45020");
         writeLine.getCellsEntete(sheet45020, NOM_ENTETE_COLONNE_GRAND_LIVRE);
@@ -85,5 +86,5 @@ public class WriteSheet {
                 }
             }
         }
-    }
+    }*/
 }

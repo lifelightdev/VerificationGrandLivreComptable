@@ -111,7 +111,7 @@ public class WriteOutil {
             }
         }
         if (verifCell.getStringCellValue().equals(KO)) {
-            verifCell.setCellStyle(writeCellStyle.getCellStyleVerifRed(style));
+            verifCell.setCellStyle(writeCellStyle.getCellStyleVerifyRed(style));
         } else {
             verifCell.setCellStyle(style);
         }

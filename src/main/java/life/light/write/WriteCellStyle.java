@@ -11,21 +11,21 @@ public class WriteCellStyle {
     public static final XSSFColor BACKGROUND_COLOR_WHITE = new XSSFColor(new java.awt.Color(255, 255, 255), null);
     private static final XSSFColor BACKGROUND_COLOR_GRAY = new XSSFColor(new java.awt.Color(200, 200, 200), null);
     private static final XSSFColor BACKGROUND_COLOR_RED = new XSSFColor(new java.awt.Color(255, 0, 0), null);
-    private static final short fontSize = 12;
-    private static final short fontSizeTotal = 14;
+    private static final short FONT_SIZE = 12;
+    private static final short FONT_SIZE_TOTAL = 14;
 
     public CellStyle getCellStyleTotalAmount(Workbook workbook) {
         CellStyle style = getCellStyleAmount(workbook);
         style.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        style.setFont(getFont(workbook, fontSizeTotal));
+        style.setFont(getFont(workbook, FONT_SIZE_TOTAL));
         return style;
     }
 
     private CellStyle getCellStyleAmount(Workbook workbook) {
         CellStyle style = workbook.createCellStyle();
         style.setDataFormat(workbook.createDataFormat().getFormat(AMOUNT_FORMATTER));
-        style.setFont(getFont(workbook, fontSize));
+        style.setFont(getFont(workbook, FONT_SIZE));
         return style;
     }
 
@@ -40,7 +40,7 @@ public class WriteCellStyle {
         CellStyle styleTotal = workbook.createCellStyle();
         styleTotal.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
         styleTotal.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        styleTotal.setFont(getFont(workbook, fontSizeTotal));
+        styleTotal.setFont(getFont(workbook, FONT_SIZE_TOTAL));
         return styleTotal;
     }
 
@@ -49,7 +49,7 @@ public class WriteCellStyle {
         style.setAlignment(HorizontalAlignment.CENTER);
         style.setFillForegroundColor(BACKGROUND_COLOR_GRAY);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        style.setFont(getFont(workbook, fontSize));
+        style.setFont(getFont(workbook, FONT_SIZE));
         return style;
     }
 
@@ -62,7 +62,7 @@ public class WriteCellStyle {
         }
         style.setAlignment(HorizontalAlignment.LEFT);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        style.setFont(getFont(workbook, fontSize));
+        style.setFont(getFont(workbook, FONT_SIZE));
         return style;
     }
 
@@ -74,13 +74,20 @@ public class WriteCellStyle {
             styleAmount.setFillForegroundColor(BACKGROUND_COLOR_BLUE);
         }
         styleAmount.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        styleAmount.setFont(getFont(workbook, fontSize));
+        styleAmount.setFont(getFont(workbook, FONT_SIZE));
         return styleAmount;
     }
 
-    public CellStyle getCellStyleVerifRed(CellStyle style) {
+    public CellStyle getCellStyleVerifyRed(CellStyle style) {
         style.setFillForegroundColor(BACKGROUND_COLOR_RED);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        return style;
+    }
+
+    public CellStyle getCellTotalBalance(Workbook workbook){
+        DataFormat format = workbook.createDataFormat();
+        CellStyle style =getCellStyleTotal(workbook);
+        style.setDataFormat(format.getFormat("#,##0.00 €;[Red]-#,##0.00 €"));
         return style;
     }
 }

@@ -29,7 +29,7 @@ public class WriteLine {
     WriteCell writeCell = new WriteCell();
     WriteOutil writeOutil = new WriteOutil();
 
-    public void getLineGrandLivre(LineLedger lineLedgerOfLedger, Row row, boolean verif, String pathDirectoryInvoice) {
+    public void getLineGrandLivre(LineLedger lineLedgerOfLedger, Row row, boolean verify, String pathDirectoryInvoice) {
         boolean isWhite = row.getRowNum() % 2 == 0;
         CellStyle cellStyle = writeCellStyle.getCellStyle(row.getSheet().getWorkbook(), isWhite);
         CellStyle cellStyleAmount = writeCellStyle.getCellStyleAmount(row.getSheet().getWorkbook(), isWhite);
@@ -53,15 +53,15 @@ public class WriteLine {
         writeCell.addCell(row, ID_JOURNAL_OF_LEDGER, lineLedgerOfLedger.journal(), cellStyle, lineLedgerOfLedger.toString(),
                 null, LE_GRAND_LIVRE);
 
-            if (lineLedgerOfLedger.accountCounterpart() != null) {
-                writeCell.addCell(row, ID_COUNTERPART_NUMBER_OF_LEDGER, lineLedgerOfLedger.accountCounterpart().account(),
-                        cellStyle, lineLedgerOfLedger.toString(), "le numéro de compte de la contrepartie",
-                        LE_GRAND_LIVRE);
-                writeCell.addCell(row, ID_COUNTERPART_LABEL_OF_LEDGER, lineLedgerOfLedger.accountCounterpart().label(), cellStyle,
-                        lineLedgerOfLedger.toString(), "le libellé de la contrepartie", LE_GRAND_LIVRE);
-            } else {
-                writeCell.addCellEmpty(ID_COUNTERPART_NUMBER_OF_LEDGER, ID_CHECK_OF_LEDGER, row, cellStyle);
-            }
+        if (lineLedgerOfLedger.accountCounterpart() != null) {
+            writeCell.addCell(row, ID_COUNTERPART_NUMBER_OF_LEDGER, lineLedgerOfLedger.accountCounterpart().account(),
+                    cellStyle, lineLedgerOfLedger.toString(), "le numéro de compte de la contrepartie",
+                    LE_GRAND_LIVRE);
+            writeCell.addCell(row, ID_COUNTERPART_LABEL_OF_LEDGER, lineLedgerOfLedger.accountCounterpart().label(), cellStyle,
+                    lineLedgerOfLedger.toString(), "le libellé de la contrepartie", LE_GRAND_LIVRE);
+        } else {
+            writeCell.addCellEmpty(ID_COUNTERPART_NUMBER_OF_LEDGER, ID_CHECK_OF_LEDGER, row, cellStyle);
+        }
         writeCell.addCell(row, ID_CHECK_OF_LEDGER, lineLedgerOfLedger.checkNumber(), cellStyle, lineLedgerOfLedger.toString(),
                 null, LE_GRAND_LIVRE);
         writeCell.addCell(row, ID_LABEL_OF_LEDGER, lineLedgerOfLedger.label(), cellStyle, lineLedgerOfLedger.toString(),
@@ -72,7 +72,7 @@ public class WriteLine {
 
         writeCell.addCellEmpty(ID_BALANCE_OF_LEDGER, ID_VERIFFICATION_OF_LEDGER, row, cellStyleAmount);
 
-        if (verif) {
+        if (verify) {
             writeOutil.addVerifCells(lineLedgerOfLedger, row, cellStyle, pathDirectoryInvoice);
         }
     }
@@ -195,7 +195,7 @@ public class WriteLine {
             verif = KO;
         }
         if (verif.equals(KO)) {
-            cellVerif.setCellStyle(writeCellStyle.getCellStyleVerifRed(cellStyle));
+            cellVerif.setCellStyle(writeCellStyle.getCellStyleVerifyRed(cellStyle));
             LOGGER.info("Vérification du total du compte [{}] Solde PDF [{}] Solde Excel [{}] débit PDF [{}] débit Excel [{}] crédit PDF [{}] crédit Excel [{}] ligne [{}]",
                     lineOfTotalAccountInLedger.account().account(), amount, solde,
                     debitGrandLivre, debitExcel,
@@ -205,6 +205,30 @@ public class WriteLine {
         cellVerif.setCellValue(verif);
 
         addCellMessageInTotalaccount(row, cellStyle);
+    }
+
+    public void getTotalJournal(Row row, String journalName) {
+
+        CellStyle cellStyle = writeCellStyle.getCellStyleTotal(row.getSheet().getWorkbook());
+        CellStyle cellStyleAmount = writeCellStyle.getCellStyleTotalAmount(row.getSheet().getWorkbook());
+
+        writeCell.addCellEmpty(ID_ACOUNT_NUMBER_OF_LEDGER, ID_DEBIT_OF_LEDGER, row, cellStyle);
+
+        Cell labelCell = row.createCell(ID_LABEL_OF_LEDGER);
+        labelCell.setCellStyle(cellStyle);
+        labelCell.setCellValue("Total du journal " + journalName);
+
+        Cell debitCell = row.createCell(ID_DEBIT_OF_LEDGER);
+        debitCell.setCellStyle(cellStyleAmount);
+        CellAddress debitCellAddressFirst = new CellAddress(1, debitCell.getAddress().getColumn());
+        CellAddress debitCellAddressEnd = new CellAddress(debitCell.getAddress().getRow() - 1, debitCell.getAddress().getColumn());
+        debitCell.setCellFormula("SUM(" + debitCellAddressFirst + ":" + debitCellAddressEnd + ")");
+
+        Cell creditCell = row.createCell(ID_CREDIT_OF_LEDGER);
+        creditCell.setCellStyle(cellStyleAmount);
+        CellAddress creditCellAddressFirst = new CellAddress(1, creditCell.getAddress().getColumn());
+        CellAddress creditCellAddressEnd = new CellAddress(creditCell.getAddress().getRow() - 1, creditCell.getAddress().getColumn());
+        creditCell.setCellFormula("SUM(" + creditCellAddressFirst + ":" + creditCellAddressEnd + ")");
     }
 
     private double getRound(FormulaEvaluator evaluator, Cell soldeCell) {
@@ -285,7 +309,7 @@ public class WriteLine {
                 double amount = Double.parseDouble(line.amount());
                 row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
                 if (!Double.toString(amount).equals(Double.toString(cellvalue))) {
-                    cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
+                    cell.setCellStyle(writeCellStyle.getCellStyleVerifyRed(row.getSheet().getWorkbook().createCellStyle()));
                     message += "Le montant est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier.";
                 }
                 cell = row.createCell(ID_DEDUCTION_OF_LIST_OF_EXPENSES);
@@ -298,7 +322,7 @@ public class WriteLine {
                 cellvalue = getRound(evaluator, cell);
                 amount = Double.parseDouble(line.deduction());
                 if (!Double.toString(amount).equals(Double.toString(cellvalue))) {
-                    cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
+                    cell.setCellStyle(writeCellStyle.getCellStyleVerifyRed(row.getSheet().getWorkbook().createCellStyle()));
                     message += "La déduction est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
                 }
                 cell = row.createCell(ID_RECOVERY_OF_LIST_OF_EXPENSES);
@@ -311,7 +335,7 @@ public class WriteLine {
                 cellvalue = getRound(evaluator, cell);
                 amount = Double.parseDouble(line.recovery());
                 if (!Double.toString(amount).equals(Double.toString(cellvalue))) {
-                    cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
+                    cell.setCellStyle(writeCellStyle.getCellStyleVerifyRed(row.getSheet().getWorkbook().createCellStyle()));
                     message += "La récupération est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
                 }
             }
@@ -341,7 +365,7 @@ public class WriteLine {
                 double cellvalue = getRound(evaluator, cell);
                 double amount = Double.parseDouble(line.amount());
                 if (Double.toString(amount).equals(Double.toString(cellvalue))) {
-                    cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
+                    cell.setCellStyle(writeCellStyle.getCellStyleVerifyRed(row.getSheet().getWorkbook().createCellStyle()));
                     message += "Le montant est de " + Double.parseDouble(line.amount()) + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
                 }
                 cell = row.createCell(ID_DEDUCTION_OF_LIST_OF_EXPENSES);
@@ -354,7 +378,7 @@ public class WriteLine {
                 cellvalue = getRound(evaluator, cell);
                 amount = Double.parseDouble(line.deduction());
                 if (Double.toString(amount).equals(Double.toString(cellvalue))) {
-                    cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
+                    cell.setCellStyle(writeCellStyle.getCellStyleVerifyRed(row.getSheet().getWorkbook().createCellStyle()));
                     message += "La déduction est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
                 }
                 cell = row.createCell(ID_RECOVERY_OF_LIST_OF_EXPENSES);
@@ -367,7 +391,7 @@ public class WriteLine {
                 cellvalue = getRound(evaluator, cell);
                 amount = Double.parseDouble(line.recovery());
                 if (Double.toString(amount).equals(Double.toString(cellvalue))) {
-                    cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
+                    cell.setCellStyle(writeCellStyle.getCellStyleVerifyRed(row.getSheet().getWorkbook().createCellStyle()));
                     message += "La récupération est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
                 }
             }
@@ -389,7 +413,7 @@ public class WriteLine {
         double cellvalue = getRound(evaluator, cell);
         String message = "";
         if (!Double.toString(amount).equals(Double.toString(cellvalue))) {
-            cell.setCellStyle(writeCellStyle.getCellStyleVerifRed(row.getSheet().getWorkbook().createCellStyle()));
+            cell.setCellStyle(writeCellStyle.getCellStyleVerifyRed(row.getSheet().getWorkbook().createCellStyle()));
             message = name + " est de " + amount + " dans le PDF au lieu de " + cellvalue + " dans ce fichier. ";
         }
         return message;

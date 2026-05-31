@@ -17,6 +17,7 @@ import static life.light.write.WriteOutil.ID_DEBIT_OF_LEDGER;
 
 public class WriteCell {
 
+    WriteCellStyle writeCellStyle = new WriteCellStyle();
     private final Constant constant = new Constant();
 
     public void addCell(Row row, int idColum, String value, CellStyle style, String line, String name, String place) {
@@ -62,7 +63,7 @@ public class WriteCell {
             formule = beforeSoldeCellAddress + "+" + debitCell.getAddress() + "-" + creditCell.getAddress();
         }
         soldeCell.setCellFormula(formule);
-        soldeCell.setCellStyle(style);
+        soldeCell.setCellStyle(writeCellStyle.getCellTotalBalance(row.getSheet().getWorkbook()));
         row.getSheet().getWorkbook().setForceFormulaRecalculation(true);
         return soldeCell;
     }
