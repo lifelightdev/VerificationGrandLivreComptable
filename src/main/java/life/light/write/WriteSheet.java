@@ -1,12 +1,13 @@
 package life.light.write;
 
-import life.light.type.Line;
+import life.light.type.LineLedger;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -21,20 +22,19 @@ public class WriteSheet {
         int rowNum;
         for (String journal : journals) {
             Sheet sheetJournal = workbook.createSheet(journal);
-            TreeMap<String, Line> ligneOfJournal = new TreeMap<>();
+            List<LineLedger> ligneOfJournal = new ArrayList<>();
             for (Object grandLivre : grandLivres) {
-                if (grandLivre instanceof Line) {
-                    if (journal.equals(((Line) grandLivre).journal())) {
-                        ligneOfJournal.put(((Line) grandLivre).document(), (Line) grandLivre);
+                if (grandLivre instanceof LineLedger) {
+                    if (journal.equals(((LineLedger) grandLivre).journal())) {
+                        ligneOfJournal.add((LineLedger) grandLivre);
                     }
                 }
             }
-            writeLine.getCellsEntete(sheetJournal,NOM_ENTETE_COLONNE_GRAND_LIVRE);
             rowNum = 1;
             writeLine.getCellsEntete(sheetJournal, NOM_ENTETE_COLONNE_GRAND_LIVRE);
-            for (Map.Entry<String, Line> line : ligneOfJournal.entrySet()) {
+            for ( LineLedger line : ligneOfJournal) {
                 Row row = sheetJournal.createRow(rowNum);
-                writeLine.getLineGrandLivre(line.getValue(), row, false, pathDirectoryInvoice);
+                writeLine.getLineGrandLivre(line, row, false, pathDirectoryInvoice);
                 rowNum++;
             }
             writeOutil.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetJournal);
@@ -69,5 +69,21 @@ public class WriteSheet {
             }
         }
         return ligneOfDocumentMissing;
+    }
+
+    public void writeDundraisingAppeal(Object[] ledger, Workbook workbook) {
+        // Account 45020
+        Sheet sheet45020 = workbook.createSheet("45020");
+        writeLine.getCellsEntete(sheet45020, NOM_ENTETE_COLONNE_GRAND_LIVRE);
+        int rowNum = 1;
+        for (Object lineOfLedger : ledger) {
+            if (lineOfLedger instanceof LineLedger) {
+                if (((LineLedger) lineOfLedger).account().account().startsWith("45020")) {
+                    Row row = sheet45020.createRow(rowNum);
+                    writeLine.getLineGrandLivre((LineLedger) lineOfLedger, row, false, null);
+                    rowNum++;
+                }
+            }
+        }
     }
 }

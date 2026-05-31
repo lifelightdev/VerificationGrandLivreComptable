@@ -29,63 +29,64 @@ public class WriteLine {
     WriteCell writeCell = new WriteCell();
     WriteOutil writeOutil = new WriteOutil();
 
-    public void getLineGrandLivre(Line lineOfLedger, Row row, boolean verif, String pathDirectoryInvoice) {
+    public void getLineGrandLivre(LineLedger lineLedgerOfLedger, Row row, boolean verif, String pathDirectoryInvoice) {
         boolean isWhite = row.getRowNum() % 2 == 0;
         CellStyle cellStyle = writeCellStyle.getCellStyle(row.getSheet().getWorkbook(), isWhite);
         CellStyle cellStyleAmount = writeCellStyle.getCellStyleAmount(row.getSheet().getWorkbook(), isWhite);
 
-        writeCell.addCell(row, ID_ACOUNT_NUMBER_OF_LEDGER, lineOfLedger.account().account(), cellStyle,
-                lineOfLedger.toString(), "le numéro de compte", LE_GRAND_LIVRE);
-        writeCell.addCell(row, ID_ACOUNT_LABEL_OF_LEDGER, lineOfLedger.account().label(), cellStyle,
-                lineOfLedger.toString(), "le libellé du compte", LE_GRAND_LIVRE);
+        writeCell.addCell(row, ID_ACOUNT_NUMBER_OF_LEDGER, lineLedgerOfLedger.account().account(), cellStyle,
+                lineLedgerOfLedger.toString(), "le numéro de compte", LE_GRAND_LIVRE);
+        writeCell.addCell(row, ID_ACOUNT_LABEL_OF_LEDGER, lineLedgerOfLedger.account().label(), cellStyle,
+                lineLedgerOfLedger.toString(), "le libellé du compte", LE_GRAND_LIVRE);
 
-        boolean isReportLine = lineOfLedger.label().contains(REPORT_DE);
+        boolean isReportLine = lineLedgerOfLedger.label().contains(REPORT_DE);
 
         if (isReportLine) {
             writeCell.addCellEmpty(ID_DOCUMENT_OF_LEDGER, ID_DATE_OF_LEDGER, row, cellStyle);
         } else {
-            writeCell.addCell(row, ID_DOCUMENT_OF_LEDGER, lineOfLedger.document(), cellStyle, lineOfLedger.toString(),
+            writeCell.addCell(row, ID_DOCUMENT_OF_LEDGER, lineLedgerOfLedger.document(), cellStyle, lineLedgerOfLedger.toString(),
                     "la piéce", LE_GRAND_LIVRE);
         }
-        writeCell.addCell(row, ID_DATE_OF_LEDGER, lineOfLedger.date(), cellStyle, lineOfLedger.toString(),
+        writeCell.addCell(row, ID_DATE_OF_LEDGER, lineLedgerOfLedger.date(), cellStyle, lineLedgerOfLedger.toString(),
                 "la date", LE_GRAND_LIVRE);
 
-        if (isReportLine) {
-            writeCell.addCellEmpty(ID_JOURNAL_OF_LEDGER, ID_CHECK_OF_LEDGER, row, cellStyle);
-        } else {
-            writeCell.addCell(row, ID_JOURNAL_OF_LEDGER, lineOfLedger.journal(), cellStyle, lineOfLedger.toString(),
-                    null, LE_GRAND_LIVRE);
-            if (lineOfLedger.accountCounterpart() != null) {
-                writeCell.addCell(row, ID_COUNTERPART_NUMBER_OF_LEDGER, lineOfLedger.accountCounterpart().account(),
-                        cellStyle, lineOfLedger.toString(), "le numéro de compte de la contrepartie",
-                        LE_GRAND_LIVRE);
-                writeCell.addCell(row, ID_COUNTERPART_LABEL_OF_LEDGER, lineOfLedger.accountCounterpart().label(), cellStyle,
-                        lineOfLedger.toString(), "le libellé de la contrepartie", LE_GRAND_LIVRE);
-            }
-        }
-        writeCell.addCell(row, ID_CHECK_OF_LEDGER, lineOfLedger.checkNumber(), cellStyle, lineOfLedger.toString(),
+        writeCell.addCell(row, ID_JOURNAL_OF_LEDGER, lineLedgerOfLedger.journal(), cellStyle, lineLedgerOfLedger.toString(),
                 null, LE_GRAND_LIVRE);
-        writeCell.addCell(row, ID_LABEL_OF_LEDGER, lineOfLedger.label(), cellStyle, lineOfLedger.toString(),
+
+            if (lineLedgerOfLedger.accountCounterpart() != null) {
+                writeCell.addCell(row, ID_COUNTERPART_NUMBER_OF_LEDGER, lineLedgerOfLedger.accountCounterpart().account(),
+                        cellStyle, lineLedgerOfLedger.toString(), "le numéro de compte de la contrepartie",
+                        LE_GRAND_LIVRE);
+                writeCell.addCell(row, ID_COUNTERPART_LABEL_OF_LEDGER, lineLedgerOfLedger.accountCounterpart().label(), cellStyle,
+                        lineLedgerOfLedger.toString(), "le libellé de la contrepartie", LE_GRAND_LIVRE);
+            } else {
+                writeCell.addCellEmpty(ID_COUNTERPART_NUMBER_OF_LEDGER, ID_CHECK_OF_LEDGER, row, cellStyle);
+            }
+        writeCell.addCell(row, ID_CHECK_OF_LEDGER, lineLedgerOfLedger.checkNumber(), cellStyle, lineLedgerOfLedger.toString(),
+                null, LE_GRAND_LIVRE);
+        writeCell.addCell(row, ID_LABEL_OF_LEDGER, lineLedgerOfLedger.label(), cellStyle, lineLedgerOfLedger.toString(),
                 "le libellé", LE_GRAND_LIVRE);
 
-        writeCell.addDebitCell(lineOfLedger, row, cellStyleAmount);
-        writeCell.addCreditCell(lineOfLedger, row, cellStyleAmount);
+        writeCell.addDebitCell(lineLedgerOfLedger, row, cellStyleAmount);
+        writeCell.addCreditCell(lineLedgerOfLedger, row, cellStyleAmount);
+
+        writeCell.addCellEmpty(ID_BALANCE_OF_LEDGER, ID_VERIFFICATION_OF_LEDGER, row, cellStyleAmount);
 
         if (verif) {
-            writeOutil.addVerifCells(lineOfLedger, row, cellStyle, pathDirectoryInvoice);
+            writeOutil.addVerifCells(lineLedgerOfLedger, row, cellStyle, pathDirectoryInvoice);
         }
     }
 
-    public void getLineEtatRapprochement(Line lineOfLedger, Row row, BankLine bankLine, String message) {
+    public void getLineEtatRapprochement(LineLedger lineLedgerOfLedger, Row row, BankLine bankLine, String message) {
         boolean isWhite = row.getRowNum() % 2 == 0;
         CellStyle cellStyle = writeCellStyle.getCellStyle(row.getSheet().getWorkbook(), isWhite);
         CellStyle cellStyleAmount = writeCellStyle.getCellStyleAmount(row.getSheet().getWorkbook(), isWhite);
 
-        if (lineOfLedger != null) {
-            List<CellValues> values = getCellValuesOfLedgerInLineEtatRapprochement(lineOfLedger, cellStyle);
+        if (lineLedgerOfLedger != null) {
+            List<CellValues> values = getCellValuesOfLedgerInLineEtatRapprochement(lineLedgerOfLedger, cellStyle);
             writeCell.addCells(row, values, LE_GRAND_LIVRE_DE_L_ETAT_DE_RAPPROCHEMENT);
-            writeCell.addDebitCell(lineOfLedger, row, cellStyleAmount);
-            writeCell.addCreditCell(lineOfLedger, row, cellStyleAmount);
+            writeCell.addDebitCell(lineLedgerOfLedger, row, cellStyleAmount);
+            writeCell.addCreditCell(lineLedgerOfLedger, row, cellStyleAmount);
         }
 
         if (bankLine != null) {
@@ -98,11 +99,11 @@ public class WriteLine {
 
     private List<CellValues> getCellValuesObBankInEtatRapprochement(BankLine bankLine, CellStyle cellStyle, CellStyle cellStyleAmount) {
         List<CellValues> values = new ArrayList<>();
-        values.add(new CellValues(ID_MONTH_OF_SATEMENT_OF_RECONCILIATION, bankLine.year() + "-" + bankLine.mounth(), cellStyle,
+        values.add(new CellValues(ID_MONTH_OF_STATEMENT_OF_RECONCILIATION, bankLine.year() + "-" + bankLine.mounth(), cellStyle,
                 bankLine.toString(), "le mois et l'année"));
-        values.add(new CellValues(ID_ACOUNT_NUMBER_OF_RECONCILIATION, bankLine.account().account(), cellStyle,
+        values.add(new CellValues(ID_ACCOUNT_NUMBER_OF_RECONCILIATION, bankLine.account().account(), cellStyle,
                 bankLine.toString(), "le numéro du compte"));
-        values.add(new CellValues(ID_ACOUNT_LABEL_OF_RECONCILIATION, bankLine.account().label(), cellStyle,
+        values.add(new CellValues(ID_ACCOUNT_LABEL_OF_RECONCILIATION, bankLine.account().label(), cellStyle,
                 bankLine.toString(), "le libellé du compte"));
         values.add(new CellValues(ID_OPERATION_DATE_OF_RECONCILIATION, bankLine.operationDate().format(DATE_FORMATTER), cellStyle,
                 bankLine.toString(), "la date de l'opération"));
@@ -117,26 +118,26 @@ public class WriteLine {
         return values;
     }
 
-    private static List<CellValues> getCellValuesOfLedgerInLineEtatRapprochement(Line lineOfLedger, CellStyle cellStyle) {
+    private static List<CellValues> getCellValuesOfLedgerInLineEtatRapprochement(LineLedger lineLedgerOfLedger, CellStyle cellStyle) {
         List<CellValues> values = new ArrayList<>();
-        values.add(new CellValues(ID_ACOUNT_NUMBER_OF_LEDGER, lineOfLedger.account().account(), cellStyle,
-                lineOfLedger.toString(), "le numéro de compte"));
-        values.add(new CellValues(ID_ACOUNT_LABEL_OF_LEDGER, lineOfLedger.account().label(), cellStyle,
-                lineOfLedger.toString(), "le libellé du compte"));
-        values.add(new CellValues(ID_DOCUMENT_OF_LEDGER, lineOfLedger.document(), cellStyle,
-                lineOfLedger.toString(), "la piéce"));
-        values.add(new CellValues(ID_DATE_OF_LEDGER, lineOfLedger.date(), cellStyle,
-                lineOfLedger.toString(), "la date"));
-        values.add(new CellValues(ID_JOURNAL_OF_LEDGER, lineOfLedger.journal(), cellStyle,
-                lineOfLedger.toString(), null));
-        values.add(new CellValues(ID_COUNTERPART_NUMBER_OF_LEDGER, lineOfLedger.accountCounterpart().account(), cellStyle,
-                lineOfLedger.toString(), "le numéro de compte de la contrepartie"));
-        values.add(new CellValues(ID_COUNTERPART_LABEL_OF_LEDGER, lineOfLedger.accountCounterpart().label(), cellStyle,
-                lineOfLedger.toString(), "le libellé de la contrepartie"));
-        values.add(new CellValues(ID_CHECK_OF_LEDGER, lineOfLedger.checkNumber(), cellStyle,
-                lineOfLedger.toString(), null));
-        values.add(new CellValues(ID_LABEL_OF_LEDGER, lineOfLedger.label(), cellStyle,
-                lineOfLedger.toString(), "le libellé"));
+        values.add(new CellValues(ID_ACOUNT_NUMBER_OF_LEDGER, lineLedgerOfLedger.account().account(), cellStyle,
+                lineLedgerOfLedger.toString(), "le numéro de compte"));
+        values.add(new CellValues(ID_ACOUNT_LABEL_OF_LEDGER, lineLedgerOfLedger.account().label(), cellStyle,
+                lineLedgerOfLedger.toString(), "le libellé du compte"));
+        values.add(new CellValues(ID_DOCUMENT_OF_LEDGER, lineLedgerOfLedger.document(), cellStyle,
+                lineLedgerOfLedger.toString(), "la piéce"));
+        values.add(new CellValues(ID_DATE_OF_LEDGER, lineLedgerOfLedger.date(), cellStyle,
+                lineLedgerOfLedger.toString(), "la date"));
+        values.add(new CellValues(ID_JOURNAL_OF_LEDGER, lineLedgerOfLedger.journal(), cellStyle,
+                lineLedgerOfLedger.toString(), null));
+        values.add(new CellValues(ID_COUNTERPART_NUMBER_OF_LEDGER, lineLedgerOfLedger.accountCounterpart().account(), cellStyle,
+                lineLedgerOfLedger.toString(), "le numéro de compte de la contrepartie"));
+        values.add(new CellValues(ID_COUNTERPART_LABEL_OF_LEDGER, lineLedgerOfLedger.accountCounterpart().label(), cellStyle,
+                lineLedgerOfLedger.toString(), "le libellé de la contrepartie"));
+        values.add(new CellValues(ID_CHECK_OF_LEDGER, lineLedgerOfLedger.checkNumber(), cellStyle,
+                lineLedgerOfLedger.toString(), null));
+        values.add(new CellValues(ID_LABEL_OF_LEDGER, lineLedgerOfLedger.label(), cellStyle,
+                lineLedgerOfLedger.toString(), "le libellé"));
         return values;
     }
 

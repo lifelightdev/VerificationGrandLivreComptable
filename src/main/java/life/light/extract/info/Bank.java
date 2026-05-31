@@ -41,28 +41,30 @@ public class Bank {
                 if (fichier.isFile()) {
                     try (BufferedReader reader = new BufferedReader(new FileReader(fichier))) {
                         String line;
-                        outilInfo.readNextLineInFile(reader, 6);
                         TypeAccount account = accounts.get(accountBank);
-                        LocalDate operationDate ;
+                        LocalDate operationDate;
                         String label;
-                        LocalDate valueDate ;
+                        LocalDate valueDate;
                         double debit = 0D;
-                        double credit = 0D;
+                        double credit;
                         while ((line = reader.readLine()) != null) {
-                            if (!outilInfo.findDateIn(line).isEmpty() && (!line.contains(NOUVEAU_SOLDE_AU))) {
-                                    String[] ligne = line.split(";");
-                                    operationDate = getOperationDate(ligne);
-                                    valueDate = getValueDate(ligne);
-                                    label = ligne[2];
-                                    if (line.length() > 4) {
-                                        if (ligne[3].isEmpty()){
-                                            debit = 0D;
-                                        } else {
-                                            debit = getAmount(ligne[3]);
-                                        }
-                                    } else if (ligne.length > 3) {
-                                        credit = getAmount(ligne[4]);
+                            String[] ligne = line.split(";");
+                            if (!outilInfo.findDateIn(ligne[0]).isEmpty() && (!line.contains(NOUVEAU_SOLDE_AU))) {
+                                operationDate = getOperationDate(ligne);
+                                valueDate = getValueDate(ligne);
+                                label = ligne[2];
+                                if (line.length() > 3) {
+                                    if (ligne[3].isEmpty()) {
+                                        debit = 0D;
+                                    } else {
+                                        debit = getAmount(ligne[3]);
                                     }
+                                }
+                                if (ligne.length > 4) {
+                                    credit = getAmount(ligne[4]);
+                                } else {
+                                    credit = 0D;
+                                }
                                 BankLine bankLine = new BankLine(year, operationDate.getMonthValue(), operationDate, valueDate, account, label.trim(), debit, credit);
                                 bankLines.add(bankLine);
                             }
@@ -81,7 +83,7 @@ public class Bank {
     }
 
     // TODO a améliorer
-    private LocalDate getOperationDate(String[] ligne ) {
+    private LocalDate getOperationDate(String[] ligne) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATA_FORMAT, Locale.FRANCE);
         return LocalDate.parse(ligne[0], formatter);
     }

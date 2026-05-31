@@ -2,15 +2,13 @@ package life.light.write;
 
 import life.light.Constant;
 import life.light.type.*;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static life.light.Constant.ERREUR_LORS_DE_L_ECRITURE_DANS_LE_FICHIER_DE_SORTIE;
@@ -100,24 +98,24 @@ public class WriteFile {
             writer.write(line.toString());
             for (Object grandLivre : grandLivres) {
                 line = new StringBuilder();
-                if (grandLivre instanceof Line) {
-                    line.append(((Line) grandLivre).document()).append(COLUMN_SEPARATOR);
-                    line.append(((Line) grandLivre).date()).append(COLUMN_SEPARATOR);
-                    if (((Line) grandLivre).account() != null) {
-                        line.append(((Line) grandLivre).account().account()).append(COLUMN_SEPARATOR);
+                if (grandLivre instanceof LineLedger) {
+                    line.append(((LineLedger) grandLivre).document()).append(COLUMN_SEPARATOR);
+                    line.append(((LineLedger) grandLivre).date()).append(COLUMN_SEPARATOR);
+                    if (((LineLedger) grandLivre).account() != null) {
+                        line.append(((LineLedger) grandLivre).account().account()).append(COLUMN_SEPARATOR);
                     } else {
                         line.append(COLUMN_SEPARATOR);
                     }
-                    line.append(((Line) grandLivre).journal()).append(COLUMN_SEPARATOR);
-                    if (((Line) grandLivre).accountCounterpart() != null) {
-                        line.append(((Line) grandLivre).accountCounterpart().account()).append(COLUMN_SEPARATOR);
+                    line.append(((LineLedger) grandLivre).journal()).append(COLUMN_SEPARATOR);
+                    if (((LineLedger) grandLivre).accountCounterpart() != null) {
+                        line.append(((LineLedger) grandLivre).accountCounterpart().account()).append(COLUMN_SEPARATOR);
                     } else {
                         line.append(COLUMN_SEPARATOR);
                     }
-                    line.append(((Line) grandLivre).checkNumber()).append(COLUMN_SEPARATOR);
-                    line.append(((Line) grandLivre).label()).append(COLUMN_SEPARATOR);
-                    line.append(((Line) grandLivre).debit()).append(COLUMN_SEPARATOR);
-                    line.append(((Line) grandLivre).credit()).append(COLUMN_SEPARATOR);
+                    line.append(((LineLedger) grandLivre).checkNumber()).append(COLUMN_SEPARATOR);
+                    line.append(((LineLedger) grandLivre).label()).append(COLUMN_SEPARATOR);
+                    line.append(((LineLedger) grandLivre).debit()).append(COLUMN_SEPARATOR);
+                    line.append(((LineLedger) grandLivre).credit()).append(COLUMN_SEPARATOR);
                     line.append(System.lineSeparator());
                 }
                 if (grandLivre instanceof TotalAccount) {
@@ -169,8 +167,8 @@ public class WriteFile {
             for (Object grandLivre : grandLivres) {
                 if (grandLivre != null) {
                     Row row = sheet.createRow(rowNum);
-                    if (grandLivre instanceof Line) {
-                        writeLine.getLineGrandLivre((Line) grandLivre, row, true, pathDirectoryInvoice);
+                    if (grandLivre instanceof LineLedger) {
+                        writeLine.getLineGrandLivre((LineLedger) grandLivre, row, true, pathDirectoryInvoice);
                     }
                     if (grandLivre instanceof TotalAccount) {
                         writeLine.getTotalAccount((TotalAccount) grandLivre, row, lastRowNumTotal);
@@ -191,6 +189,9 @@ public class WriteFile {
 
             // Créer une nouvelle feuille pour les pieces manquantes
             writeSheet.writeDocumentMission(workbook, sheet, ID_COMMENT_OF_LEDGER, ID_DOCUMENT_OF_LEDGER);
+
+            // Créer une nouvelle feuille pour chaque type d'appel de fond
+            writeSheet.writeDundraisingAppeal(grandLivres, workbook);
 
             // Écrire le contenu du classeur dans un fichier
             writeOutil.writeWorkbook(pathNameFile, workbook);
@@ -213,10 +214,10 @@ public class WriteFile {
                     writeLine.getCellsEntete(sheet, NOM_ENTETE_COLONNE_GRAND_LIVRE);
                     int rowNum = 1;
                     for (Object grandLivre : grandLivres) {
-                        if (grandLivre instanceof Line line) {
-                            if (line.account().account().equals(typeAccount.account())) {
+                        if (grandLivre instanceof LineLedger lineLedger) {
+                            if (lineLedger.account().account().equals(typeAccount.account())) {
                                 Row row = sheet.createRow(rowNum);
-                                writeLine.getLineGrandLivre(line, row, true, pathDirectoryInvoice);
+                                writeLine.getLineGrandLivre(lineLedger, row, true, pathDirectoryInvoice);
                                 rowNum++;
                             }
                         }
@@ -294,7 +295,7 @@ public class WriteFile {
         }
     }
 
-    public void writeFileExcelEtatRaprochement(List<Line> grandLivres, String exitFile, List<BankLine> bankLines) {
+    public void writeFileExcelEtatRaprochement(List<LineLedger> grandLivres, String exitFile, List<BankLine> bankLines) {
         try {
             // Créer un nouveau classeur Excel
             Workbook workbook = new XSSFWorkbook();
@@ -315,13 +316,13 @@ public class WriteFile {
         }
     }
 
-    private void pointageReleve(List<Line> grandLivres, List<BankLine> bankLines, Workbook workbook) {
+    private void pointageReleve(List<LineLedger> grandLivres, List<BankLine> bankLines, Workbook workbook) {
         Sheet sheetPointage = workbook.createSheet(POINTAGE_RELEVE_OK);
-        List<Line> grandLivresKO = new ArrayList<>();
+        List<LineLedger> grandLivresKO = new ArrayList<>();
         List<BankLine> bankLinesKO = new ArrayList<>();
         writeLine.getCellsEnteteEtatRapprochement(sheetPointage);
         int rowNumPointage = 1;
-        for (Line grandLivre : grandLivres) {
+        for (LineLedger grandLivre : grandLivres) {
             Row row = sheetPointage.createRow(rowNumPointage);
             BankLine bankLineFound = null;
             String message = KO;
@@ -355,7 +356,7 @@ public class WriteFile {
         Sheet sheetPointage1 = workbook.createSheet("Pointage Relevé KO");
         writeLine.getCellsEnteteEtatRapprochement(sheetPointage1);
         rowNumPointage = 1;
-        for (Line grandLivre : grandLivresKO) {
+        for (LineLedger grandLivre : grandLivresKO) {
             Row row = sheetPointage1.createRow(rowNumPointage);
             BankLine bankLineFound = null;
             String message = KO;
@@ -382,27 +383,27 @@ public class WriteFile {
         writeOutil.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetPointage1);
     }
 
-    private void pointageGL(List<Line> grandLivres, List<BankLine> bankLines, Workbook workbook) {
+    private void pointageGL(List<LineLedger> grandLivres, List<BankLine> bankLines, Workbook workbook) {
         Sheet sheetPointage = workbook.createSheet(POINTAGE_GL_OK);
-        List<Line> grandLivresKO = new ArrayList<>();
+        List<LineLedger> grandLivresKO = new ArrayList<>();
         List<BankLine> bankLinesKO = new ArrayList<>();
         writeLine.getCellsEnteteEtatRapprochement(sheetPointage);
         int rowNumPointage = 1;
         for (BankLine bankLine : bankLines) {
             Row row = sheetPointage.createRow(rowNumPointage);
-            Line lineGLFound = null;
+            LineLedger lineLedgerGLFound = null;
             String message = KO;
-            for (Line grandLivre : grandLivres) {
+            for (LineLedger grandLivre : grandLivres) {
                 // TODO il faut verifier la date aussi
                 if (grandLivre.account().account().equals(bankLine.account().account())) {
                     if (grandLivre.amountCredit().equals(bankLine.debit())) {
                         message = OK;
-                        lineGLFound = grandLivre;
+                        lineLedgerGLFound = grandLivre;
                         break;
                     }
                     if (grandLivre.amountDebit().equals(bankLine.credit())) {
                         message = OK;
-                        lineGLFound = grandLivre;
+                        lineLedgerGLFound = grandLivre;
                         break;
                     }
                     grandLivresKO.add(grandLivre);
@@ -412,8 +413,8 @@ public class WriteFile {
                 bankLinesKO.add(bankLine);
             } else {
                 message = "Correspondante entre le grand livre et les relevés de banque";
-                writeLine.getLineEtatRapprochement(lineGLFound, row, bankLine, message);
-                grandLivres.remove(lineGLFound);
+                writeLine.getLineEtatRapprochement(lineLedgerGLFound, row, bankLine, message);
+                grandLivres.remove(lineLedgerGLFound);
                 rowNumPointage++;
             }
         }
@@ -424,28 +425,115 @@ public class WriteFile {
         rowNumPointage = 1;
         for (BankLine bankLine : bankLinesKO) {
             Row row = sheetPointage1.createRow(rowNumPointage);
-            Line lineGrandLivreFound = null;
+            LineLedger lineLedgerGrandLivreFound = null;
             String message = KO;
-            for (Line grandLivre : grandLivresKO) {
+            for (LineLedger grandLivre : grandLivresKO) {
                 // TODO il faut verifier la date aussi
                 if (grandLivre.amountCredit().equals(bankLine.debit())) {
                     message = OK;
-                    lineGrandLivreFound = grandLivre;
+                    lineLedgerGrandLivreFound = grandLivre;
                     break;
                 }
                 if (grandLivre.amountDebit().equals(bankLine.credit())) {
                     message = OK;
-                    lineGrandLivreFound = grandLivre;
+                    lineLedgerGrandLivreFound = grandLivre;
                     break;
                 }
             }
             if (message.equals(KO)) {
                 message = "Aucune correspondance du relevé de banque dans le grand livre";
-                writeLine.getLineEtatRapprochement(lineGrandLivreFound, row, bankLine, message);
-                grandLivres.remove(lineGrandLivreFound);
+                writeLine.getLineEtatRapprochement(lineLedgerGrandLivreFound, row, bankLine, message);
+                grandLivres.remove(lineLedgerGrandLivreFound);
                 rowNumPointage++;
             }
         }
         writeOutil.autoSizeCollum(NOM_ENTETE_COLONNE_GRAND_LIVRE.length, sheetPointage1);
+    }
+
+    public void writeFileExcelStateOfReconciliation(StateOfReconciliation stateOfReconciliation, String nameFile) {
+        try {
+            // Créer un nouveau classeur Excel
+            Workbook workbook = new XSSFWorkbook();
+            WriteCellStyle writeCellStyle = new WriteCellStyle();
+            WriteCell writeCell = new WriteCell();
+            WriteOutil writeOutil = new WriteOutil();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.FRANCE);
+
+            Sheet sheet = workbook.createSheet("Trouvé ");
+            writeLine.getCellsEntete(sheet, NOM_ENTETE_COLONNE_ETAT_RAPPROCHEMENT);
+            int rowNum = 1;
+            for (LineOfStateOfReconciliation line : stateOfReconciliation.find()) {
+                if (line != null) {
+                    Row row = sheet.createRow(rowNum);
+                    boolean isWhite = row.getRowNum() % 2 == 0;
+                    CellStyle cellStyle = writeCellStyle.getCellStyle(row.getSheet().getWorkbook(), isWhite);
+                    CellStyle cellStyleAmount = writeCellStyle.getCellStyleAmount(row.getSheet().getWorkbook(), isWhite);
+                    List<CellValues> values = new ArrayList<>();
+                    //values.add(new CellValues(0, line.ledgerAccount().account(), cellStyle, line.toString(), "le numéro de compte"));
+                    //values.add(new CellValues(1, line.ledgerAccount().label(), cellStyle, line.toString(), "le libellé du compte"));
+                    //values.add(new CellValues(2, line.ledgerDocument(), cellStyle, line.toString(), "la piéce"));
+                    values.add(new CellValues(0, line.ledgerDate(), cellStyle, line.toString(), "la date"));
+                    //values.add(new CellValues(4, line.ledgerJournal(), cellStyle, line.toString(), null));
+                    values.add(new CellValues(1, line.ledgerAccountCounterpart().account(), cellStyle, line.toString(), "le numéro de compte de la contrepartie"));
+                    values.add(new CellValues(2, line.ledgerAccountCounterpart().label(), cellStyle, line.toString(), "le libellé de la contrepartie"));
+                    //values.add(new CellValues(7, line.ledgerCheckNumber(), cellStyle, line.toString(), null));
+                    values.add(new CellValues(3, line.ledgerLabel(), cellStyle, line.toString(), "le libellé"));
+                    values.add(new CellValues(4, line.ledgerDebit().toString(), cellStyleAmount, line.toString(), "le débit"));
+                    values.add(new CellValues(5, line.ledgerCredit().toString(), cellStyleAmount, line.toString(), "le crédit"));
+                    values.add(new CellValues(7, line.bankMonth(), cellStyle, line.toString(), "le moi du relevé"));
+                    //values.add(new CellValues(13, line.bankTransactionDate().format(formatter), cellStyle, line.toString(), "la date de l'opération"));
+                    //values.add(new CellValues(14, line.bankValueDate().format(formatter), cellStyle, line.toString(), "la date de valeur"));
+                    values.add(new CellValues(8, line.bankLabel(), cellStyle, line.toString(), "le libellé"));
+                    values.add(new CellValues(9, line.bankDebit().toString(), cellStyleAmount, line.toString(), "le débit"));
+                    values.add(new CellValues(10, line.bankCredit().toString(), cellStyleAmount, line.toString(), "le crédit"));
+                    values.add(new CellValues(11, line.bankComment(), cellStyle, line.toString(), "le commentaire"));
+                    writeCell.addCells(row, values, "L'état de rapprochement");
+                    rowNum++;
+                }
+            }
+            writeOutil.autoSizeCollum(NOM_ENTETE_COLONNE_ETAT_RAPPROCHEMENT.length, sheet);
+
+            Sheet sheetLedger = workbook.createSheet("Non trouvé dans le GL");
+            writeLine.getCellsEntete(sheetLedger, NOM_ENTETE_COLONNE_ETAT_RAPPROCHEMENT);
+            rowNum = 1;
+            for (LineOfStateOfReconciliation line : stateOfReconciliation.noFindInLegder()) {
+                if (line != null) {
+                    Row row = sheetLedger.createRow(rowNum);
+                    boolean isWhite = row.getRowNum() % 2 == 0;
+                    CellStyle cellStyle = writeCellStyle.getCellStyle(row.getSheet().getWorkbook(), isWhite);
+                    CellStyle cellStyleAmount = writeCellStyle.getCellStyleAmount(row.getSheet().getWorkbook(), isWhite);
+                    List<CellValues> values = new ArrayList<>();
+                    //values.add(new CellValues(0, line.ledgerAccount().account(), cellStyle, line.toString(), "le numéro de compte"));
+                    //values.add(new CellValues(1, line.ledgerAccount().label(), cellStyle, line.toString(), "le libellé du compte"));
+                    //values.add(new CellValues(2, line.ledgerDocument(), cellStyle, line.toString(), "la piéce"));
+                    values.add(new CellValues(0, line.ledgerDate(), cellStyle, line.toString(), "la date"));
+                    //values.add(new CellValues(4, line.ledgerJournal(), cellStyle, line.toString(), null));
+                    values.add(new CellValues(1, line.ledgerAccountCounterpart().account(), cellStyle, line.toString(), "le numéro de compte de la contrepartie"));
+                    values.add(new CellValues(2, line.ledgerAccountCounterpart().label(), cellStyle, line.toString(), "le libellé de la contrepartie"));
+                    //values.add(new CellValues(7, line.ledgerCheckNumber(), cellStyle, line.toString(), null));
+                    values.add(new CellValues(3, line.ledgerLabel(), cellStyle, line.toString(), "le libellé"));
+                    values.add(new CellValues(4, line.ledgerDebit().toString(), cellStyleAmount, line.toString(), "le débit"));
+                    values.add(new CellValues(5, line.ledgerCredit().toString(), cellStyleAmount, line.toString(), "le crédit"));
+                    values.add(new CellValues(7, line.bankMonth(), cellStyle, line.toString(), "le moi du relevé"));
+                    values.add(new CellValues(8, line.bankTransactionDate().format(formatter), cellStyle, line.toString(), "la date de l'opération"));
+                    //values.add(new CellValues(14, line.bankValueDate().format(formatter), cellStyle, line.toString(), "la date de valeur"));
+                    //values.add(new CellValues(15, line.bankLabel(), cellStyle, line.toString(), "le libellé"));
+                    values.add(new CellValues(9, line.bankDebit().toString(), cellStyleAmount, line.toString(), "le débit"));
+                    values.add(new CellValues(10, line.bankCredit().toString(), cellStyleAmount, line.toString(), "le crédit"));
+                    values.add(new CellValues(11, line.bankComment(), cellStyle, line.toString(), "le commentaire"));
+                    writeCell.addCells(row, values, "L'état de rapprochement");
+                    rowNum++;
+                }
+            }
+            writeOutil.autoSizeCollum(NOM_ENTETE_COLONNE_ETAT_RAPPROCHEMENT.length, sheetLedger);
+
+            // Écrire le contenu du classeur dans un fichier
+            writeOutil.writeWorkbook(nameFile, workbook);
+            // Fermer le classeur
+            workbook.close();
+        } catch (
+                IOException e) {
+            constant.logError(ERREUR_LORS_DE_L_ECRITURE_DANS_LE_FICHIER_DE_SORTIE, nameFile, e.getMessage());
+        }
     }
 }

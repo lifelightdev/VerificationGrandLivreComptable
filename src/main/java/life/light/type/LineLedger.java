@@ -1,7 +1,7 @@
 package life.light.type;
 
-public record Line(String document, String date, TypeAccount account, String journal, TypeAccount accountCounterpart,
-                   String checkNumber, String label, String debit, String credit) {
+public record LineLedger(String document, String date, TypeAccount account, String journal, TypeAccount accountCounterpart,
+                         String checkNumber, String label, String debit, String credit) {
     public Double amountDebit(){
         String d = debit.replace(" ","").replace(",",".").replace("€","").trim();
         try {

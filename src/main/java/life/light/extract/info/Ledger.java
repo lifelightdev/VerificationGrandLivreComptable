@@ -104,7 +104,7 @@ public class Ledger {
         return false;
     }
 
-    public Line line(String line, Map<String, TypeAccount> accounts) {
+    public LineLedger line(String line, Map<String, TypeAccount> accounts) {
         // Supprime les caractères parasites
         line = outilInfo.removesStrayCharactersInLine(line);
 
@@ -192,7 +192,7 @@ public class Ledger {
             label = label.substring(2).trim();
         }
 
-        return new Line(document.trim(), date.trim(), account, journal.trim(), accountCounterpart, checkNumber.trim(),
+        return new LineLedger(document.trim(), date.trim(), account, journal.trim(), accountCounterpart, checkNumber.trim(),
                 label.trim(), debit.trim(), credit.trim());
     }
 
@@ -267,13 +267,13 @@ public class Ledger {
         return new TotalBuilding(label.trim().replace(" )", ")"), debit.trim().replace(" ", "").replace(Character.toString(EURO), ""), credit.trim().replace(" ", "").replace(Character.toString(EURO), ""));
     }
 
-    public List<Line> getInfoBankGrandLivre(Map<String, TypeAccount> accounts,
-                                            String pathDirectoryLeger, String pathDirectoryInvoice,
-                                            List<String> accountsbank) {
+    public List<LineLedger> getInfoBankGrandLivre(Map<String, TypeAccount> accounts,
+                                                  String pathDirectoryLeger, String pathDirectoryInvoice,
+                                                  List<String> accountsbank) {
         // Géneration du grand livre
         Object[] grandLivres = new Object[outilInfo.getNumberOfLineInFile(pathDirectoryLeger)];
         TreeSet<String> journals = new TreeSet<>();
-        List<Line> lineBankInGrandLivre = new ArrayList<>();
+        List<LineLedger> lineLedgerBankInLineLedger = new ArrayList<>();
         int indexInGrandLivres = 0;
         try (BufferedReader reader = new BufferedReader(new FileReader(pathDirectoryLeger))) {
             String line;
@@ -282,17 +282,17 @@ public class Ledger {
                     continue;
                 }
                 if (isLigne(line)) {
-                    Line lineOfGrandLivre = line(line, accounts);
-                    if (lineOfGrandLivre == null) {
+                    LineLedger lineLedgerOfLineLedger = line(line, accounts);
+                    if (lineLedgerOfLineLedger == null) {
                         continue;
                     }
-                    grandLivres[indexInGrandLivres++] = lineOfGrandLivre;
-                    if (!lineOfGrandLivre.journal().isEmpty()) {
-                        journals.add(lineOfGrandLivre.journal());
+                    grandLivres[indexInGrandLivres++] = lineLedgerOfLineLedger;
+                    if (!lineLedgerOfLineLedger.journal().isEmpty()) {
+                        journals.add(lineLedgerOfLineLedger.journal());
                     }
-                    String accountNumber = lineOfGrandLivre.account().account();
-                    if (accountsbank.contains(accountNumber) && !lineOfGrandLivre.label().contains(REPORT_DE)) {
-                        lineBankInGrandLivre.add(lineOfGrandLivre);
+                    String accountNumber = lineLedgerOfLineLedger.account().account();
+                    if (accountsbank.contains(accountNumber) && !lineLedgerOfLineLedger.label().contains(REPORT_DE)) {
+                        lineLedgerBankInLineLedger.add(lineLedgerOfLineLedger);
                     }
                 } else if (isTotalAccount(line)) {
                     TotalAccount totalAccount = totalAccount(line, accounts);
@@ -314,6 +314,6 @@ public class Ledger {
         writeFile.writeFileExcelGrandLivre(grandLivres, path, journals, pathDirectoryInvoice);
 
         writeFile.writeFilesExcelCoOwner(grandLivres, PATH + DIRECTORY_NAME_COPROPRIETAIRE + File.separator, accounts, pathDirectoryInvoice);
-        return lineBankInGrandLivre;
+        return lineLedgerBankInLineLedger;
     }
 }

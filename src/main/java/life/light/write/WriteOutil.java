@@ -1,7 +1,7 @@
 package life.light.write;
 
 import life.light.check.OutilChek;
-import life.light.type.Line;
+import life.light.type.LineLedger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.common.usermodel.HyperlinkType;
@@ -50,14 +50,18 @@ public class WriteOutil {
     public static final int ID_VERIFFICATION_OF_LEDGER = 12;
     public static final int ID_COMMENT_OF_LEDGER = 13;
 
-    protected static final String[] NOM_ENTETE_COLONNE_ETAT_RAPPROCHEMENT = {"Compte", "Intitulé du compte", "Pièce",
+    /*protected static final String[] NOM_ENTETE_COLONNE_ETAT_RAPPROCHEMENT = {"Compte", "Intitulé du compte", "Pièce",
             "Date", "Journal", "Contrepartie", "Intitulé de la contrepartie", "N° chèque", "Libellé", "Débit", "Crédit",
             "----",
-            "Mois du relevé", "Compte", "Intitulé du compte", "Date de l'opération", "Date de valeur", "Libellé",
-            "Débit", "Crédit", "Commentaire"};
-    public static final int ID_MONTH_OF_SATEMENT_OF_RECONCILIATION = 12;
-    public static final int ID_ACOUNT_NUMBER_OF_RECONCILIATION = 13;
-    public static final int ID_ACOUNT_LABEL_OF_RECONCILIATION = 14;
+            "Mois du relevé", "Date de l'opération", "Date de valeur", "Libellé",
+            "Débit", "Crédit", "Commentaire"};*/
+    protected static final String[] NOM_ENTETE_COLONNE_ETAT_RAPPROCHEMENT = {
+            "Date", "Contrepartie", "Libellé contrepartie", "Libellé", "Débit", "Crédit",
+            "----",
+            "Mois du relevé", "Libellé", "Débit", "Crédit", "Commentaire"};
+    public static final int ID_MONTH_OF_STATEMENT_OF_RECONCILIATION = 12;
+    public static final int ID_ACCOUNT_NUMBER_OF_RECONCILIATION = 13;
+    public static final int ID_ACCOUNT_LABEL_OF_RECONCILIATION = 14;
     public static final int ID_OPERATION_DATE_OF_RECONCILIATION = 15;
     public static final int ID_VALUE_DATE_OF_RECONCILIATION = 16;
     public static final int ID_LABEL_OF_RECONCILIATION = 17;
@@ -80,7 +84,7 @@ public class WriteOutil {
         }
     }
 
-    public void addVerifCells(Line grandLivre, Row row, CellStyle style, String pathDirectoryInvoice) {
+    public void addVerifCells(LineLedger grandLivre, Row row, CellStyle style, String pathDirectoryInvoice) {
         String message = "";
         CreationHelper createHelper = row.getSheet().getWorkbook().getCreationHelper();
         Hyperlink link = createHelper.createHyperlink(HyperlinkType.FILE);
@@ -120,7 +124,7 @@ public class WriteOutil {
         messageCell.setCellStyle(style);
     }
 
-    private static void logError(Line grandLivre, String message) {
+    private static void logError(LineLedger grandLivre, String message) {
         LOGGER.error("{} sur cette ligne : {}", message, grandLivre);
     }
 
@@ -152,7 +156,7 @@ public class WriteOutil {
         return message;
     }
 
-    private String getMessageVerifLineReport(Line grandLivre, Cell verifCell, CellStyle style, String message) {
+    private String getMessageVerifLineReport(LineLedger grandLivre, Cell verifCell, CellStyle style, String message) {
         verifCell.setCellStyle(style);
         String amount = getAmountInLineReport(grandLivre);
         if (isDouble(amount)) {
@@ -176,7 +180,7 @@ public class WriteOutil {
         return message;
     }
 
-    private String getAmountInLineReport(Line grandLivre) {
+    private String getAmountInLineReport(LineLedger grandLivre) {
         return grandLivre.label().substring(REPORT_DE.length(), grandLivre.label().length() - 1).trim().replace(" ", "");
     }
 

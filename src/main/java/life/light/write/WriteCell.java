@@ -2,7 +2,7 @@ package life.light.write;
 
 import life.light.Constant;
 import life.light.type.CellValues;
-import life.light.type.Line;
+import life.light.type.LineLedger;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
@@ -67,7 +67,7 @@ public class WriteCell {
         return soldeCell;
     }
 
-    public Cell addCreditCell(Line grandLivre, Row row, CellStyle style) {
+    public Cell addCreditCell(LineLedger grandLivre, Row row, CellStyle style) {
         Cell creditCell = row.createCell(ID_CREDIT_OF_LEDGER);
         creditCell.setCellValue(grandLivre.amountCredit());
         creditCell.setCellStyle(style);
@@ -83,7 +83,7 @@ public class WriteCell {
         return creditCell;
     }
 
-    public Cell addDebitCell(Line grandLivre, Row row, CellStyle style) {
+    public Cell addDebitCell(LineLedger grandLivre, Row row, CellStyle style) {
         Cell debitCell = row.createCell(ID_DEBIT_OF_LEDGER);
         debitCell.setCellValue(grandLivre.amountDebit());
         debitCell.setCellStyle(style);
